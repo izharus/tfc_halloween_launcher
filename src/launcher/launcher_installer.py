@@ -375,11 +375,14 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         """
         options = mine_lib.utils.generate_test_options()
         options["username"] = self.nickname
+        # options["gameDirectory"] = self.minecraft_directory
         minecraft_command = mine_lib.command.get_minecraft_command(
             self.minecraft_profile, self.minecraft_directory, options
         )
-        subprocess.Popen(minecraft_command)
-        minecraft_process.wait()
+        with subprocess.Popen(
+            minecraft_command, cwd=self.minecraft_directory,
+            ) as minecraft_process:
+            minecraft_process.wait()  # Wait for the subprocess to complete
 
 
 def init_logging_basic_config(log_dir: str) -> None:
