@@ -19,7 +19,7 @@ icon, and provides safety timers for updating input data from the UI.
 import logging
 import os
 import sys
-import threading
+import traceback
 
 import win32con
 import win32console
@@ -128,6 +128,19 @@ class Window(QtWidgets.QMainWindow):
         icon_file_path = self.path_manager.get_current_root_path("icon.ico")
         self.setWindowIcon(QIcon(icon_file_path))
 
+    def create_msg_box(
+        self,
+        msg_box_tile: str,
+        msg_box_icon: QtWidgets.QMessageBox,
+        msg_box_info: str = "",
+    ) -> None:
+        """Create a simple msg box."""
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(msg_box_icon)
+        msg.setText(msg_box_tile)
+        msg.setInformativeText(msg_box_info)
+        msg.exec()
+
     def _install_shaders(self) -> None:
         """
         Initiates the installation of shaders.
@@ -151,8 +164,21 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
+        self.hide()
         self._ui_instance.progressBar.hide()
         self.input_data.change_input_edit_status(bool_stop_edit=False)
+
+        if self._install_thread.is_last_install_failed():
+            logging.critical("Не удалось установить майнкрафт.")
+            msg_title = "Не удалось установить майнкрафт."
+            msg_icon = QtWidgets.QMessageBox.Icon.Warning
+            self.create_msg_box(msg_title, msg_icon)
+            return
+
+        nickname = self.input_data.extract_element("lineEdit_nickname")
+        self._executer = MinecraftExecuterThread(nickname)
+        self._executer.finished.connect(lambda: self.show())
+        self._executer.start()
 
     def _install_shaders_thread_finished(self) -> None:
         """
@@ -167,61 +193,17 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.hide()
         self.input_data.change_input_edit_status(bool_stop_edit=False)
         if self._install_shaders_thread.is_last_install_failed():
+            msg_title = "Не удалось установить шейдеры."
+            msg_icon = QtWidgets.QMessageBox.Icon.Warning
             logging.error("Не удалось установить шейдеры")
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
-            msg.setText("Не удалось установить шейдеры.")
             self._ui_instance.progressBar.hide()
-            msg.exec()
-            return
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        msg.setText("Shaders were installed!")
-        msg.setInformativeText("Turn on shaders in the game settings.")
-
-        msg.exec()
-
-    def execute_minecraft_and_wait(self, set_visibility_flag):
-        """
-        Executes Minecraft and waits for the execution to complete.
-
-        This method initiates the execution of Minecraft with the specified
-        nickname and waits for the execution to finish. It also handles the
-        visibility of the progress bar and displays error messages if
-        necessary.
-
-        Args:
-            set_visibility_flag (function): A function to set the visibility
-                state of UI elements.
-
-        Returns:
-            None
-        """
-        if not self.is_working:
-            return
-        if self._install_thread.is_working:
-            logging.info("Ожиданию установку..")
-            threading.Timer(
-                2, self.execute_minecraft_and_wait, args=[set_visibility_flag]
-            ).start()
+            self.create_msg_box(msg_title, msg_icon)
             return
 
-        if self._install_thread.is_last_install_failed():
-            logging.critical("Не удалось установить майнкрафт.")
-            msg = QtWidgets.QMessageBox()
-            msg.setText("Не удалось установить майнкрафт.")
-            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
-            msg.exec()
-            return
-        nickname = self.input_data.extract_element("lineEdit_nickname")
-        executer = MinecraftExecuterThread(nickname)
-        thread = threading.Thread(target=executer.execute_minecraft)
-        set_visibility_flag(False)
-        thread.start()
-        thread.join()
-        set_visibility_flag(True)
-        self._ui_instance.progressBar.hide()
-        self._ui_instance.progressBar.setFormat("")
+        msg_icon = QtWidgets.QMessageBox.Icon.Information
+        msg_title = "Shaders were installed!"
+        msg_info = "Turn on shaders in the game settings."
+        self.create_msg_box(msg_title, msg_icon, msg_info)
 
     def _install_minecraft_multi_thread(self) -> None:
         """
@@ -234,16 +216,16 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
+        nickname = self.input_data.extract_element("lineEdit_nickname")
+        if len(nickname) < 3:
+            msg_icon = QtWidgets.QMessageBox.Icon.Warning
+            msg_title = "Nickname too short!"
+            self.create_msg_box(msg_title, msg_icon)
+            return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
         self.input_data.update_input_data_from_ui()
         self._install_thread.start()
-
-        threading.Timer(
-            1,
-            self.execute_minecraft_and_wait,
-            args=[lambda flag: self.setVisible(flag)],
-        ).start()
 
     # pylint: disable = C0103
     def closeEvent(self, event) -> None:
@@ -275,4 +257,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        logging.critical(f"Application crashed {error}...")
+        logging.debug(traceback.format_exc())

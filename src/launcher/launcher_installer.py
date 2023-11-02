@@ -32,11 +32,11 @@ import datetime
 import logging
 import os
 import subprocess
+import traceback
 from dataclasses import dataclass
 
 import minecraft_launcher_lib as mine_lib
 import requests
-from PyQt6 import QtWidgets
 from PyQt6.QtCore import QThread, pyqtSignal
 
 
@@ -63,7 +63,7 @@ class MinecraftLauncherConfig:
     forge_version = "1.18.2-40.2.9"
     minecraft_profile = forge_version.replace("-", "-forge-")
     minecraft_directory = mine_lib.utils.get_minecraft_directory()
-    minecraft_directory += "_imperial"
+    minecraft_directory += "_tfc_halloween"
     repo_url = "https://api.github.com/repos/izharus/tfc_hallowen_modpack"
 
 
@@ -159,6 +159,7 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
             return True
         except Exception as error:
             logging.critical(f"An error occurred: {str(error)}")
+            logging.debug(traceback.format_exc())
             return False
 
     def download_files_multiple_dirs(
@@ -363,40 +364,7 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         MinecraftLauncherConfig.__init__(self)
         self.nickname = nickname
 
-    # Define a function to show a message box
-    def is_nicnname_incorrect(self, nickname: str) -> bool:
-        """
-        Check if the provided nickname is too short and display a warning
-        message if it doesn't meet the minimum length requirement.
-
-        Args:
-            nickname (str): The nickname to be checked.
-
-        Returns:
-            bool: True if the nickname is too short, False otherwise.
-
-        This method checks the length of the provided nickname and, if it is
-        shorter than or equal to three characters, displays a warning message
-        using a message box. The warning informs the user that the nickname is
-        too short and suggests entering a nickname with more than five
-        characters. It returns True if the nickname is too short and False
-        otherwise.
-
-        """
-        if len(nickname) <= 3:
-            self.input_data.change_input_edit_status(bool_stop_edit=False)
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
-            msg.setText("Nickname is too short!")
-            msg.setInformativeText(
-                "Please enter a nickname with more than 5 characters."
-            )
-            msg.setWindowTitle("Nickname Length Warning")
-            msg.exec()
-            return True
-        return False
-
-    def execute_minecraft(self):
+    def run(self):
         """
         Execute the Minecraft game with the specified nickname.
 
@@ -405,14 +373,13 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         nickname, and runs the Minecraft game.
 
         """
-        if self.is_nicnname_incorrect(self.nickname):
-            return
         options = mine_lib.utils.generate_test_options()
         options["username"] = self.nickname
         minecraft_command = mine_lib.command.get_minecraft_command(
             self.minecraft_profile, self.minecraft_directory, options
         )
-        subprocess.run(minecraft_command, check=True)
+        subprocess.Popen(minecraft_command)
+        minecraft_process.wait()
 
 
 def init_logging_basic_config(log_dir: str) -> None:
