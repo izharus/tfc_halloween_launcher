@@ -37,6 +37,7 @@ from dataclasses import dataclass
 
 import minecraft_launcher_lib as mine_lib
 import requests
+from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
 
@@ -45,10 +46,11 @@ class MinecraftLauncherConfig:
     """
     Configuration settings for a Minecraft launcher.
 
-    This class defines various configuration settings such as the Minecraft
-    version, Forge version, Minecraft profile, and the directory where
-    Minecraft files are stored. It also appends "_imperial" to the Minecraft
-    directory name.
+    This class defines various configuration settings for a Minecraft launcher,
+    including the Minecraft version, Forge version (if applicable), Minecraft
+    profile, and the directory where Minecraft files are stored, with an added
+    "_tfc_halloween" suffix. It also provides settings for the repository URL,
+    Minecraft server IP, and Minecraft server port.
 
     Attributes:
         minecraft_version (str): The Minecraft version to use (e.g., "1.18.2").
@@ -56,7 +58,10 @@ class MinecraftLauncherConfig:
         minecraft_profile (str): The Minecraft profile with Forge version
             (if applicable).
         minecraft_directory (str): The directory where Minecraft files are
-            stored, including "_imperial".
+            stored, including "_tfc_halloween".
+        repo_url (str): The URL for the GitHub repository.
+        minecraft_server_ip (str): The IP address of the Minecraft server.
+        minecraft_server_port (str): The port number of the Minecraft server.
     """
 
     minecraft_version = "1.18.2"
@@ -65,6 +70,8 @@ class MinecraftLauncherConfig:
     minecraft_directory = mine_lib.utils.get_minecraft_directory()
     minecraft_directory += "_tfc_halloween"
     repo_url = "https://api.github.com/repos/izharus/tfc_hallowen_modpack"
+    minecraft_server_ip = "77.239.232.50"
+    minecraft_server_port = "25565"
 
 
 class ModDownloader(QThread, MinecraftLauncherConfig):
@@ -364,6 +371,29 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         MinecraftLauncherConfig.__init__(self)
         self.nickname = nickname
 
+    def create_launcher_options(self) -> MinecraftOptions:
+        """
+        Create launcher options for connecting to a Minecraft server.
+
+        This method generates and returns a dictionary of options for
+        configuring the connection to a Minecraft server. It sets the
+        username, server IP, and port based on the attributes of the current
+        instance.
+
+        Returns:
+            MinecraftOptions: A dictionary containing options for Minecraft
+                server connection, including the username, server IP, and port.
+
+        Note:
+            The `MinecraftOptions` dictionary should be used to configure the
+            connection to a Minecraft server.
+        """
+        options = mine_lib.utils.generate_test_options()
+        options["username"] = self.nickname
+        options["server"] = self.minecraft_server_ip
+        options["port"] = self.minecraft_server_port
+        return options
+
     def run(self):
         """
         Execute the Minecraft game with the specified nickname.
@@ -373,15 +403,17 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         nickname, and runs the Minecraft game.
 
         """
-        options = mine_lib.utils.generate_test_options()
-        options["username"] = self.nickname
+
         # options["gameDirectory"] = self.minecraft_directory
         minecraft_command = mine_lib.command.get_minecraft_command(
-            self.minecraft_profile, self.minecraft_directory, options
+            self.minecraft_profile,
+            self.minecraft_directory,
+            self.create_launcher_options(),
         )
         with subprocess.Popen(
-            minecraft_command, cwd=self.minecraft_directory,
-            ) as minecraft_process:
+            minecraft_command,
+            cwd=self.minecraft_directory,
+        ) as minecraft_process:
             minecraft_process.wait()  # Wait for the subprocess to complete
 
 
