@@ -1,0 +1,8 @@
+{
+  "exclude": ["custom_widget.py"],
+  "py3-plus": true,
+  "py37-plus": true,
+  "setuptools": "auto",
+  "methods": "auto",
+  "none-type": true
+}

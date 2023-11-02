@@ -1,0 +1,9 @@
+[pylint]
+#W0718:broad-exception-caught
+#W1203: using f-strings in logging func
+#R1705: Unnecessary "else" after "return"
+max-line-length=79
+disable = W1203, W0718, W1201, E0611, R1705, I1101
+
+# Ignore the custom_widget.py file (it generate automatically by qtdesigner)
+ignore = design.py

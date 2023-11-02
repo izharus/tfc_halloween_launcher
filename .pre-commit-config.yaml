@@ -1,0 +1,51 @@
+repos:
+  -   repo: 'https://github.com/psf/black'
+      rev: '23.9.1'
+      hooks:
+      -   id: black
+  -   repo: https://github.com/pycqa/isort
+      rev: '5.12.0'
+      hooks:
+      -   id: isort
+  -   repo: 'https://github.com/pycqa/flake8'
+      rev: '6.1.0'  
+      hooks:
+      -   id: flake8
+          additional_dependencies:
+            -   flake8-bugbear
+            -   flake8-print
+  -   repo: 'https://github.com/asottile/pyupgrade'
+      rev: v3.15.0
+      hooks:
+      -   id: pyupgrade   
+          exclude: 'custom_widget.py'
+  -   repo: 'https://github.com/crate-ci/typos'
+      rev: v1.13.4
+      hooks:
+      -   id: typos    
+  - repo: local
+    hooks:
+      -     id: pylint
+            name: pylint
+            entry: 'python -m pylint'
+            language: system
+            types: [python]
+
+
+
+  -   repo: 'https://github.com/pre-commit/mirrors-mypy'
+      rev: v0.991
+      hooks:
+      -   id: mypy
+          additional_dependencies: [types-requests==2.31.0.9]     
+  -   repo: 'https://github.com/jazzband/pip-tools'
+      rev: '7.3.0'
+      hooks:
+      -   id: pip-compile
+          name: pip-compile requirements/prod.in
+          args: [requirements/prod.in]
+          files: ^requirements/prod\.(in|txt)$     
+      -   id: pip-compile
+          name: pip-compile requirements/dev.in
+          args: [requirements/dev.in]
+          files: ^requirements/dev\.(in|txt)$    
