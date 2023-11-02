@@ -9,13 +9,15 @@ The project dependencies are stored in the "requirements" directory. There are t
 - To set up a development environment, you can create a virtual environment with the following commands:
 ```bash
 python -m venv dev_venv
-pip install -r requirements/dev.txt --target dev_venv
+.\dev_venv\scripts\activate
+python -m pip install -r requirements/dev.txt
 ```
 ### Production Environment
 - To set up a production environment, create a virtual environment as follows:
 ```bash
 python -m venv prod_venv
-pip install -r requirements/prod.txt --target prod_venv
+.\prod_venv\scripts\activate
+python -m pip install -r requirements/prod.txt
 ```
 ## Launch Program
 To launch the program, you can execute the main.py file:
@@ -26,8 +28,8 @@ python main.py
 If you want to make commits and add new dependencies to the project, follow these steps:
 - Install pip-tools and pre-commit:
 ```bash
-pip install pip-tools
-pip install pre-commit
+python -m pip install pip-tools
+python -m pip install pre-commit
 pre-commit install
 ```
 ### Adding a new pip module to the development environment
@@ -36,21 +38,14 @@ pre-commit install
 ```bash
 pip-compile requirements/dev.in
 ```
-Install the new dependencies to the development environment:
-```bash
-pip install -r requirements/dev.txt --target dev_venv```
-```
+- Install the new dependencies to the development environment
 ### Adding a new pip module to the production environment:
 - Write the module name and its version to the "requirements/prod.in" file.
 - Compile the requirements:
 ```
 pip-compile requirements/prod.in
 ```
-- Install the new dependencies to both the production and development environments:
-```bash
-pip install -r requirements/prod.txt --target prod_venv
-pip install -r requirements/prod.txt --target dev_venv
-```
+- Install the new dependencies to both the production and development environments
 ### Conversion of UI File
 
 To convert the UI file created in PyQt6 Designer (design.ui) into a Python file (design.py), you can use the following command:
@@ -74,4 +69,4 @@ pre-commit run pylint
 ```bash
 pre-commit run --all-files
 ```
-eel free to adjust and expand this readme as needed for your project documentation.
+Feel free to adjust and expand this readme as needed for your project documentation.
