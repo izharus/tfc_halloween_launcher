@@ -21,6 +21,8 @@ class Ui_MainWindow:
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.lineEdit_nickname = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit_nickname.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
@@ -49,7 +51,37 @@ class Ui_MainWindow:
             ""
         )
         self.lineEdit_nickname.setObjectName("lineEdit_nickname")
-        self.verticalLayout.addWidget(self.lineEdit_nickname)
+        self.horizontalLayout_2.addWidget(self.lineEdit_nickname)
+        self.pushButton_minecraft_dir = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_minecraft_dir.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #3A92F7;\n"
+            "  border: none;\n"
+            "  border-radius: 5px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #303EF7;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #1000F7;\n"
+            "  border: 1px solid #00274D;\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_minecraft_dir.setObjectName("pushButton_minecraft_dir")
+        self.horizontalLayout_2.addWidget(self.pushButton_minecraft_dir)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.progressBar = QtWidgets.QProgressBar(parent=self.centralwidget)
         font = QtGui.QFont()
         font.setUnderline(False)
@@ -144,6 +176,9 @@ class Ui_MainWindow:
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.lineEdit_nickname.setPlaceholderText(
             _translate("MainWindow", "Ник игрока")
+        )
+        self.pushButton_minecraft_dir.setText(
+            _translate("MainWindow", "Папка с игрой")
         )
         self.pushButton_install_shaders.setText(
             _translate("MainWindow", "Установить шейдеры")

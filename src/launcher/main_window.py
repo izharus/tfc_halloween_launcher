@@ -25,8 +25,8 @@ import win32con
 import win32console
 import win32gui
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QTimer, QUrl
+from PyQt6.QtGui import QDesktopServices, QIcon
 
 from .design.design import Ui_MainWindow
 from .launcher_installer import (
@@ -57,6 +57,7 @@ hide_console()
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
+    # pylint: disable = R0902
     def __init__(self) -> None:
         super().__init__()
         self._ui_instance = Ui_MainWindow()
@@ -101,7 +102,11 @@ class Window(QtWidgets.QMainWindow):
             self._install_minecraft_multi_thread
         )
 
-        ui_data_file_path = MinecraftLauncherConfig.minecraft_directory
+        minecraft_directory = MinecraftLauncherConfig.minecraft_directory
+        self._ui_instance.pushButton_minecraft_dir.clicked.connect(
+            lambda: self.open_directory(minecraft_directory)
+        )
+        ui_data_file_path = minecraft_directory
         ui_data_file_path = os.path.join(
             ui_data_file_path,
             "halloween_data\\ui_inputs_data\\input_data",
@@ -127,6 +132,7 @@ class Window(QtWidgets.QMainWindow):
         self.path_manager = PathManager(script_dir)
         icon_file_path = self.path_manager.get_current_root_path("icon.ico")
         self.setWindowIcon(QIcon(icon_file_path))
+        self._executer: MinecraftExecuterThread
 
     def create_msg_box(
         self,
@@ -140,6 +146,16 @@ class Window(QtWidgets.QMainWindow):
         msg.setText(msg_box_tile)
         msg.setInformativeText(msg_box_info)
         msg.exec()
+
+    def open_directory(self, path_to_directory: str):
+        """
+        Open the file explorer at the specified directory.
+
+        Args:
+            path_to_directory (str): The path to the directory to be opened.
+        """
+        url = QUrl.fromLocalFile(path_to_directory)
+        QDesktopServices.openUrl(url)
 
     def _install_shaders(self) -> None:
         """
