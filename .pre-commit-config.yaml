@@ -22,7 +22,8 @@ repos:
   -   repo: 'https://github.com/crate-ci/typos'
       rev: v1.13.4
       hooks:
-      -   id: typos    
+      -   id: typos
+          files: ^(?!main\.spec$)
   - repo: local
     hooks:
       -     id: pylint

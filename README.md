@@ -53,6 +53,11 @@ To convert the UI file created in PyQt6 Designer (design.ui) into a Python file 
 ```bash
 pyuic6 design.ui -o design.py
 ```
+### Packing to exe
+```bash
+.\prod_venv\scripts\activate
+pyinstaller main.spec
+```
 ## Code Style and Linting
 Maintaining code quality and style is essential. You can use the following commands to ensure code consistency (there are many hooks in the pre-commit config):
 - Activate the development virtual environment:
