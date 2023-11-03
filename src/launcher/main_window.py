@@ -20,6 +20,8 @@ import logging
 import os
 import sys
 import traceback
+import webbrowser
+from typing import Callable, Optional
 
 import win32con
 import win32console
@@ -35,6 +37,7 @@ from .launcher_installer import (
     MinecraftExecuterThread,
     MinecraftLauncherConfig,
     init_logging_basic_config,
+    is_java_17_or_better_installed,
 )
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
@@ -139,13 +142,19 @@ class Window(QtWidgets.QMainWindow):
         msg_box_tile: str,
         msg_box_icon: QtWidgets.QMessageBox,
         msg_box_info: str = "",
+        callback_function: Optional[Callable] = None,
     ) -> None:
-        """Create a simple msg box."""
+        """
+        Create a simple message box and execute an optional function after it's
+        closed.
+        """
         msg = QtWidgets.QMessageBox()
         msg.setIcon(msg_box_icon)
         msg.setText(msg_box_tile)
         msg.setInformativeText(msg_box_info)
         msg.exec()
+        if callback_function and callable(callback_function):
+            callback_function()
 
     def open_directory(self, path_to_directory: str):
         """
@@ -237,6 +246,17 @@ class Window(QtWidgets.QMainWindow):
             msg_icon = QtWidgets.QMessageBox.Icon.Warning
             msg_title = "Nickname too short!"
             self.create_msg_box(msg_title, msg_icon)
+            return
+        if not is_java_17_or_better_installed():
+            msg_icon = QtWidgets.QMessageBox.Icon.Warning
+            msg_title = "Java 17 or newer not installed."
+            java_install_url = MinecraftLauncherConfig.java_install_url
+            self.create_msg_box(
+                msg_title,
+                msg_icon,
+                callback_function=lambda: webbrowser.open(java_install_url),
+            )
+
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)

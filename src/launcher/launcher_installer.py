@@ -31,6 +31,7 @@ launching a customized Minecraft environment.
 import datetime
 import logging
 import os
+import re
 import subprocess
 import traceback
 from dataclasses import dataclass
@@ -72,6 +73,8 @@ class MinecraftLauncherConfig:
     repo_url = "https://api.github.com/repos/izharus/tfc_hallowen_modpack"
     minecraft_server_ip = "77.239.232.50"
     minecraft_server_port = "25565"
+    # pylint: disable = C0301
+    java_install_url = "https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html"
 
 
 class ModDownloader(QThread, MinecraftLauncherConfig):
@@ -415,6 +418,38 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
             cwd=self.minecraft_directory,
         ) as minecraft_process:
             minecraft_process.wait()  # Wait for the subprocess to complete
+
+
+def is_java_17_or_better_installed():
+    """
+    Check if Java 17 or a newer version is installed on the system.
+
+    This function runs the 'java -version' command, extracts the Java version
+    from the first line of the output, and checks if it is version 17 or
+    a newer version.
+
+    Returns:
+        bool: True if Java 17 or a newer version is installed, False otherwise.
+    """
+    try:
+        # Run the 'java -version' command to check the Java version
+        output = subprocess.check_output(
+            ["java", "-version"],
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
+        first_line = output.split("\n", maxsplit=1)[0]
+        version_match = re.search(r"(\d+\.\d+\.\d+)", first_line)
+        if version_match:
+            java_version = int(
+                version_match.group(1).split(".", maxsplit=1)[0]
+            )
+            if java_version >= 17:
+                return True
+
+        return False
+    except (subprocess.CalledProcessError, ValueError):
+        return False
 
 
 def init_logging_basic_config(log_dir: str) -> None:
