@@ -393,8 +393,8 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         """
         options = mine_lib.utils.generate_test_options()
         options["username"] = self.nickname
-        options["server"] = self.minecraft_server_ip
-        options["port"] = self.minecraft_server_port
+        # options["server"] = self.minecraft_server_ip
+        # options["port"] = self.minecraft_server_port
         return options
 
     def run(self):
