@@ -4,6 +4,8 @@ import sys
 root_path = os.getcwd()
 data_files = []
 data_files.append(('icon.ico', "root_dir"))
+data_files.append(("data\\image", "data\\image"))
+
 icon_path = 'icon.ico'
 
 main_module_name = 'main.py'

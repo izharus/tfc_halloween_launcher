@@ -28,7 +28,7 @@ import win32console
 import win32gui
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QTimer, QUrl
-from PyQt6.QtGui import QDesktopServices, QIcon
+from PyQt6.QtGui import QDesktopServices, QIcon, QPixmap
 
 from .design.design import Ui_MainWindow
 from .launcher_installer import (
@@ -131,11 +131,17 @@ class Window(QtWidgets.QMainWindow):
         log_dir = os.path.join(log_dir, "halloween_logs")
 
         init_logging_basic_config(log_dir)
-        script_dir = os.path.dirname(__file__)
+        script_dir = os.getcwd()
         self.path_manager = PathManager(script_dir)
         icon_file_path = self.path_manager.get_current_root_path("icon.ico")
         self.setWindowIcon(QIcon(icon_file_path))
         self._executer: MinecraftExecuterThread
+        background_image_path = self.path_manager.get_image_path(
+            "background.jpg"
+        )
+        self._ui_instance.label_background.setPixmap(
+            QPixmap(background_image_path)
+        )
 
     def create_msg_box(
         self,

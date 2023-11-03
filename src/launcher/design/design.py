@@ -12,10 +12,19 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow:
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(760, 250)
-        MainWindow.setMinimumSize(QtCore.QSize(760, 250))
-        MainWindow.setMaximumSize(QtCore.QSize(760, 250))
+        MainWindow.resize(1368, 696)
+        MainWindow.setMinimumSize(QtCore.QSize(1366, 696))
+        MainWindow.setMaximumSize(QtCore.QSize(2578, 1231))
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
+        self.centralwidget.setStyleSheet(
+            "\n"
+            "    QWidget#myWidget {\n"
+            '        background-image: url("E:\\MAIN\\source\\repos\\Retsam\\tfc_halloween_launcher\\background.jpg");  /* Replace with the path to your image */\n'
+            "        background-repeat: no-repeat;\n"
+            "        background-position: center;\n"
+            "        background-attachment: fixed; /* Optional, to prevent scrolling with the content */\n"
+            "    }"
+        )
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -24,6 +33,8 @@ class Ui_MainWindow:
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.lineEdit_nickname = QtWidgets.QLineEdit(parent=self.centralwidget)
+        self.lineEdit_nickname.setMinimumSize(QtCore.QSize(300, 0))
+        self.lineEdit_nickname.setMaximumSize(QtCore.QSize(300, 16777215))
         self.lineEdit_nickname.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
             ".QLineEdit {\n"
@@ -55,6 +66,10 @@ class Ui_MainWindow:
         self.pushButton_minecraft_dir = QtWidgets.QPushButton(
             parent=self.centralwidget
         )
+        self.pushButton_minecraft_dir.setMinimumSize(QtCore.QSize(200, 0))
+        self.pushButton_minecraft_dir.setMaximumSize(
+            QtCore.QSize(200, 16777215)
+        )
         self.pushButton_minecraft_dir.setStyleSheet(
             "QPushButton {\n"
             "  background-color: #3A92F7;\n"
@@ -81,6 +96,13 @@ class Ui_MainWindow:
         )
         self.pushButton_minecraft_dir.setObjectName("pushButton_minecraft_dir")
         self.horizontalLayout_2.addWidget(self.pushButton_minecraft_dir)
+        spacerItem = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
+        self.horizontalLayout_2.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.progressBar = QtWidgets.QProgressBar(parent=self.centralwidget)
         font = QtGui.QFont()
@@ -163,6 +185,14 @@ class Ui_MainWindow:
         self.horizontalLayout.addWidget(self.pushButton_install_and_launch)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.label_background = QtWidgets.QLabel(parent=self.centralwidget)
+        self.label_background.setText("")
+        self.label_background.setPixmap(
+            QtGui.QPixmap("../../../data/image/background.jpg")
+        )
+        self.label_background.setScaledContents(True)
+        self.label_background.setObjectName("label_background")
+        self.verticalLayout_2.addWidget(self.label_background)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
