@@ -133,8 +133,10 @@ class Window(QtWidgets.QMainWindow):
         init_logging_basic_config(log_dir)
         script_dir = os.getcwd()
         self.path_manager = PathManager(script_dir)
-        icon_file_path = self.path_manager.get_current_root_path("icon.ico")
-        self.setWindowIcon(QIcon(icon_file_path))
+        self.icon_file_path = self.path_manager.get_current_root_path(
+            "icon.ico"
+        )
+        self.setWindowIcon(QIcon(self.icon_file_path))
         self._executer: MinecraftExecuterThread
         background_image_path = self.path_manager.get_image_path(
             "background.jpg"
@@ -156,6 +158,7 @@ class Window(QtWidgets.QMainWindow):
         """
         msg = QtWidgets.QMessageBox()
         msg.setIcon(msg_box_icon)
+        msg.setWindowIcon(QIcon(self.icon_file_path))
         msg.setText(msg_box_tile)
         msg.setInformativeText(msg_box_info)
         msg.exec()
@@ -232,8 +235,11 @@ class Window(QtWidgets.QMainWindow):
             return
 
         msg_icon = QtWidgets.QMessageBox.Icon.Information
-        msg_title = "Shaders were installed!"
-        msg_info = "Turn on shaders in the game settings."
+        msg_title = "Шейдеры успешно установлены."
+        msg_info = (
+            "Шейдеры требовательны системе. "
+            "Включить/отключить шейдеры можно в игре, в меню видеонастроек."
+        )
         self.create_msg_box(msg_title, msg_icon, msg_info)
 
     def _install_minecraft_multi_thread(self) -> None:
@@ -250,12 +256,12 @@ class Window(QtWidgets.QMainWindow):
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if len(nickname) < 3:
             msg_icon = QtWidgets.QMessageBox.Icon.Warning
-            msg_title = "Nickname too short!"
+            msg_title = "Никнейм отсутствует или слишком короткий."
             self.create_msg_box(msg_title, msg_icon)
             return
         if not is_java_17_or_better_installed():
             msg_icon = QtWidgets.QMessageBox.Icon.Warning
-            msg_title = "Java 17 or newer not installed."
+            msg_title = "Java 17 или выше не установлена в системе."
             java_install_url = MinecraftLauncherConfig.java_install_url
             self.create_msg_box(
                 msg_title,
