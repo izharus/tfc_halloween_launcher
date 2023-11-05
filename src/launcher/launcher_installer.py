@@ -172,8 +172,10 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
             logging.info("All mods downloaded successfully.")
             return True
         except Exception as error:
-            logging.critical(f"An error occurred: {str(error)}")
-            logging.debug(traceback.format_exc())
+            logging.error(
+                f"An error occurred while downloading file: {file_name}"
+            )
+            logging.debug(f"'{error}':\n{traceback.format_exc()}")
             return False
 
     def download_files_multiple_dirs(
@@ -232,8 +234,6 @@ class InstallThread(QThread, MinecraftLauncherConfig):
             installation failed.
 
     Methods:
-        is_last_install_failed(): Check if the last installation process
-            failed.
         run(): The main method for running the installation process in the
             thread.
     """
@@ -253,19 +253,21 @@ class InstallThread(QThread, MinecraftLauncherConfig):
             "setProgress": lambda progress: self.progress.emit(progress),
         }
         self.is_working = False
-        self._is_installation_failed: bool
-
-    def is_last_install_failed(self):
-        """
-        Check if the last installation process failed.
-
-        Returns:
-            bool: True if the last installation process failed,
-                False otherwise.
-        """
-        return self._is_installation_failed
+        self.runtime_error: Optional[Exception] = None
 
     def run(self) -> None:
+        """Call main_worker an handle any exceptions."""
+        self.runtime_error = None
+        try:
+            self.main_worker()
+        except Exception as error:
+            logging.error(
+                "Unexpected error in InstallThread thread:\n"
+                f"{traceback.format_exc()}"
+            )
+            self.runtime_error = error
+
+    def main_worker(self):
         """
         Run the installation process in a separate thread.
 
@@ -276,8 +278,6 @@ class InstallThread(QThread, MinecraftLauncherConfig):
         Returns:
             None
         """
-        self.is_working = True
-        self._is_installation_failed = False
         mine_lib.forge.install_forge_version(
             self.forge_version,
             self.minecraft_directory,
@@ -304,11 +304,10 @@ class InstallThread(QThread, MinecraftLauncherConfig):
             self._callback_dict,
             map_dirs,
         ):
-            self._is_installation_failed = True
-            self.is_working = False
-            return
-        self._callback_dict["setStatus"]("Launching minecraft...")
-        self.is_working = False
+            logging.error("Failed to download of custom launcher main files.")
+        else:
+            logging.info("Download of custom launcher main files finished.")
+            self._callback_dict["setStatus"]("Launching minecraft...")
 
 
 class InstallShadersThread(InstallThread):
@@ -324,10 +323,7 @@ class InstallShadersThread(InstallThread):
             and shaderpacks.
     """
 
-    def run(self) -> None:
-        self.is_working = True
-        self._is_installation_failed = False
-
+    def main_worker(self) -> None:
         # pylint: disable = C0301
         map_dirs = [
             {
@@ -346,10 +342,12 @@ class InstallShadersThread(InstallThread):
             self._callback_dict,
             map_dirs,
         ):
-            self._is_installation_failed = True
-            self.is_working = False
-            return
-        self.is_working = False
+            logging.error(
+                "Failed to download of custom launcher shader files."
+            )
+        else:
+            logging.info("Download of custom launcher shader files finished.")
+            self._callback_dict["setStatus"]("Launching minecraft...")
 
 
 class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
@@ -376,7 +374,7 @@ class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
         QThread.__init__(self)
         MinecraftLauncherConfig.__init__(self)
         self.nickname = nickname
-        self.runtime_error: Optional[Exception]
+        self.runtime_error: Optional[Exception] = None
 
     def create_launcher_options(self) -> MinecraftOptions:
         """

@@ -174,11 +174,14 @@ class Window(QtWidgets.QMainWindow):
         """
         self._ui_instance.progressBar.hide()
         self.input_data.change_input_edit_status(bool_stop_edit=False)
-        if self._install_shaders_thread.is_last_install_failed():
+        if self._install_shaders_thread.runtime_error:
             msg_title = "Не удалось установить шейдеры."
-            logging.error("Не удалось установить шейдеры")
+            logging.error(msg_title)
             self._ui_instance.progressBar.hide()
-            self.msg_box.warn(msg_title)
+            self.msg_box.warn(
+                msg_title,
+                "За подрбностями обращайтесь к логу.",
+            )
             return
 
         msg_title = "Шейдеры успешно установлены."
@@ -224,10 +227,13 @@ class Window(QtWidgets.QMainWindow):
         self.hide()
         self._ui_instance.progressBar.hide()
 
-        if self._install_thread.is_last_install_failed():
-            logging.critical("Не удалось установить майнкрафт.")
+        if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
-            self.msg_box.warn(msg_title)
+            logging.critical(msg_title)
+            self.msg_box.warn(
+                msg_title,
+                "За подрбностями обращайтесь к логу.",
+            )
             return
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
