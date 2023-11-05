@@ -42,6 +42,7 @@ import requests
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
+from .utillity.custom_decorators import log_operation
 from .utillity.custom_exceptions import JavaGetVersionError
 
 
@@ -62,23 +63,25 @@ class MinecraftLauncherConfig:
         minecraft_profile (str): The Minecraft profile with Forge version
             (if applicable).
         minecraft_directory (str): The directory where Minecraft files are
-            stored, including "_tfc_halloween".
+            stored, including f"_{launcher_name}".
         repo_url (str): The URL for the GitHub repository.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port number of the Minecraft server.
     """
 
+    launcher_name = "tfc_halloween"
     minecraft_version = "1.18.2"
     forge_version = "1.18.2-40.2.9"
     minecraft_profile = forge_version.replace("-", "-forge-")
     minecraft_directory = mine_lib.utils.get_minecraft_directory()
-    minecraft_directory += "_tfc_halloween"
+    minecraft_directory += f"_{launcher_name}"
     repo_url = "https://api.github.com/repos/izharus/tfc_hallowen_modpack"
     minecraft_server_ip = "77.239.232.50"
     minecraft_server_port = "25565"
     # pylint: disable = C0301
     java_install_url = "https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html"
     minecraft_java_version = 17
+    logging_dir = os.path.join(minecraft_directory, f"{launcher_name}_logs")
 
 
 class ModDownloader(QThread, MinecraftLauncherConfig):
@@ -106,6 +109,7 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
         QThread.__init__(self)
         self.repo_url = repo_url
 
+    @log_operation
     def download_files(self, callback, content_path, sub_directory="") -> bool:
         """
         Download and install mod files from the repository.
@@ -178,6 +182,7 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
             logging.debug(f"'{error}':\n{traceback.format_exc()}")
             return False
 
+    @log_operation
     def download_files_multiple_dirs(
         self,
         callback,
@@ -429,6 +434,7 @@ class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
             )
 
 
+@log_operation
 def get_java_major_version() -> int:
     """
     Get the major version of Java installed on the system.
