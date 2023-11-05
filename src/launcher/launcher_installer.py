@@ -348,7 +348,6 @@ class InstallShadersThread(InstallThread):
             self._is_installation_failed = True
             self.is_working = False
             return
-        self._callback_dict["setStatus"]("Shaders installed...")
         self.is_working = False
 
 

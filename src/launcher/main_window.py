@@ -19,26 +19,24 @@ icon, and provides safety timers for updating input data from the UI.
 import logging
 import os
 import sys
-import webbrowser
-from typing import Callable, Optional
 
 import win32con
 import win32console
 import win32gui
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QTimer, QUrl
-from PyQt6.QtGui import QDesktopServices, QIcon, QPixmap
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIcon, QPixmap
 
+from .data_validation import Validator
 from .design.design import Ui_MainWindow
+from .design.utillity import MessageBoxManager, open_directory
 from .launcher_installer import (
     InstallShadersThread,
     InstallThread,
     MinecraftExecuterThread,
     MinecraftLauncherConfig,
-    get_java_major_version,
     init_logging_basic_config,
 )
-from .utillity.custom_exceptions import JavaGetVersionError
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
 
@@ -62,6 +60,7 @@ def hide_console() -> None:
 hide_console()
 
 
+# pylint: disable = R0903
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
@@ -74,6 +73,13 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.setupUi(self)
         self.resize(500, 125)  # Adjust 800 to your desired width
 
+        script_dir = os.getcwd()
+        self.path_manager = PathManager(script_dir)
+        self.icon_file_path = self.path_manager.get_current_root_path(
+            "icon.ico"
+        )
+        self._validator = Validator(self.icon_file_path)
+        self.msg_box = MessageBoxManager(self.icon_file_path)
         self._install_thread = InstallThread()
         self._install_shaders_thread = InstallShadersThread()
 
@@ -113,7 +119,7 @@ class Window(QtWidgets.QMainWindow):
 
         minecraft_directory = MinecraftLauncherConfig.minecraft_directory
         self._ui_instance.pushButton_minecraft_dir.clicked.connect(
-            lambda: self.open_directory(minecraft_directory)
+            lambda: open_directory(minecraft_directory)
         )
         ui_data_file_path = minecraft_directory
         ui_data_file_path = os.path.join(
@@ -133,11 +139,6 @@ class Window(QtWidgets.QMainWindow):
         self.safe_inputs_timer.setInterval(self.input_data.time_delay)
         self.safe_inputs_timer.start()
 
-        script_dir = os.getcwd()
-        self.path_manager = PathManager(script_dir)
-        self.icon_file_path = self.path_manager.get_current_root_path(
-            "icon.ico"
-        )
         self.setWindowIcon(QIcon(self.icon_file_path))
         self._executer: MinecraftExecuterThread
         background_image_path = self.path_manager.get_image_path(
@@ -146,36 +147,6 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.label_background.setPixmap(
             QPixmap(background_image_path)
         )
-
-    def create_msg_box(
-        self,
-        msg_box_tile: str,
-        msg_box_icon: QtWidgets.QMessageBox,
-        msg_box_info: str = "",
-        callback_function: Optional[Callable] = None,
-    ) -> None:
-        """
-        Create a simple message box and execute an optional function after it's
-        closed.
-        """
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(msg_box_icon)
-        msg.setWindowIcon(QIcon(self.icon_file_path))
-        msg.setText(msg_box_tile)
-        msg.setInformativeText(msg_box_info)
-        msg.exec()
-        if callback_function and callable(callback_function):
-            callback_function()
-
-    def open_directory(self, path_to_directory: str):
-        """
-        Open the file explorer at the specified directory.
-
-        Args:
-            path_to_directory (str): The path to the directory to be opened.
-        """
-        url = QUrl.fromLocalFile(path_to_directory)
-        QDesktopServices.openUrl(url)
 
     def _install_shaders(self) -> None:
         """
@@ -191,31 +162,6 @@ class Window(QtWidgets.QMainWindow):
         self.input_data.change_input_edit_status(bool_stop_edit=True)
         self._install_shaders_thread.start()
 
-    def _install_thread_finished(self) -> None:
-        """
-        Handles the completion of the installation thread.
-
-        This method hides the progress bar and enables input editing.
-
-        Returns:
-            None
-        """
-        self.hide()
-        self._ui_instance.progressBar.hide()
-        self.input_data.change_input_edit_status(bool_stop_edit=False)
-
-        if self._install_thread.is_last_install_failed():
-            logging.critical("Не удалось установить майнкрафт.")
-            msg_title = "Не удалось установить майнкрафт."
-            msg_icon = QtWidgets.QMessageBox.Icon.Warning
-            self.create_msg_box(msg_title, msg_icon)
-            return
-
-        nickname = self.input_data.extract_element("lineEdit_nickname")
-        self._executer = MinecraftExecuterThread(nickname)
-        self._executer.finished.connect(lambda: self.show())
-        self._executer.start()
-
     def _install_shaders_thread_finished(self) -> None:
         """
         Handles the completion of the shaders installation thread.
@@ -230,19 +176,17 @@ class Window(QtWidgets.QMainWindow):
         self.input_data.change_input_edit_status(bool_stop_edit=False)
         if self._install_shaders_thread.is_last_install_failed():
             msg_title = "Не удалось установить шейдеры."
-            msg_icon = QtWidgets.QMessageBox.Icon.Warning
             logging.error("Не удалось установить шейдеры")
             self._ui_instance.progressBar.hide()
-            self.create_msg_box(msg_title, msg_icon)
+            self.msg_box.warn(msg_title)
             return
 
-        msg_icon = QtWidgets.QMessageBox.Icon.Information
         msg_title = "Шейдеры успешно установлены."
         msg_info = (
             "Шейдеры требовательны системе. "
             "Включить/отключить шейдеры можно в игре, в меню видеонастроек."
         )
-        self.create_msg_box(msg_title, msg_icon, msg_info)
+        self.msg_box.info(msg_title, msg_info)
 
     def _install_minecraft_multi_thread(self) -> None:
         """
@@ -257,40 +201,42 @@ class Window(QtWidgets.QMainWindow):
         """
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
-        if len(nickname) < 3:
-            msg_icon = QtWidgets.QMessageBox.Icon.Warning
-            msg_title = "Никнейм отсутствует или слишком короткий."
-            self.create_msg_box(msg_title, msg_icon)
+        if not self._validator.is_valid_nickname(nickname):
             return
-        required_version = MinecraftLauncherConfig.minecraft_java_version
-        try:
-            version = get_java_major_version()
-        except JavaGetVersionError as error_msg:
-            java_install_url = MinecraftLauncherConfig.java_install_url
-            self.create_msg_box(
-                "Не удалось найти Java в система.",
-                QtWidgets.QMessageBox.Icon.Warning,
-                msg_box_info=str(error_msg),
-                callback_function=lambda: webbrowser.open(java_install_url),
-            )
-            return
-        if version < required_version:
-            java_install_url = MinecraftLauncherConfig.java_install_url
-            self.create_msg_box(
-                f"Java {required_version} или выше не установлена в системе.",
-                QtWidgets.QMessageBox.Icon.Warning,
-                callback_function=lambda: webbrowser.open(java_install_url),
-                msg_box_info=f"Версия java найдена: '{version}'. "
-                "Проверьте чтобы java была добавлена в PATH.",
-            )
+        if not self._validator.is_java_version_supported():
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
         self.input_data.update_input_data_from_ui()
         self._install_thread.start()
 
-    # pylint: disable = C0103
+    def _install_thread_finished(self) -> None:
+        """
+        Handle the completion of the installation thread.
 
+        This method is called when the installation thread has finished its
+        task. It hides the progress bar and re-enables input editing. It also
+        initiates the execution of Minecraft and waits for its completion.
+
+        Returns:
+            None
+        """
+        self.hide()
+        self._ui_instance.progressBar.hide()
+
+        if self._install_thread.is_last_install_failed():
+            logging.critical("Не удалось установить майнкрафт.")
+            msg_title = "Не удалось установить майнкрафт."
+            self.msg_box.warn(msg_title)
+            return
+
+        nickname = self.input_data.extract_element("lineEdit_nickname")
+        self._executer = MinecraftExecuterThread(nickname)
+        self._executer.finished.connect(lambda: self.show())
+        self._executer.start()
+        self.input_data.change_input_edit_status(bool_stop_edit=False)
+
+    # pylint: disable = C0103
     def closeEvent(self, event) -> None:
         """
         Override the close event of the main window.
