@@ -33,7 +33,7 @@ from .design.utillity import MessageBoxManager, open_directory
 from .launcher_installer import (
     InstallShadersThread,
     InstallThread,
-    MinecraftExecuterThread,
+    MinecraftExecutorThread,
     MinecraftLauncherConfig,
     init_logging_basic_config,
 )
@@ -140,7 +140,7 @@ class Window(QtWidgets.QMainWindow):
         self.safe_inputs_timer.start()
 
         self.setWindowIcon(QIcon(self.icon_file_path))
-        self._executer: MinecraftExecuterThread
+        self._executor: MinecraftExecutorThread
         background_image_path = self.path_manager.get_image_path(
             "background.jpg"
         )
@@ -231,10 +231,19 @@ class Window(QtWidgets.QMainWindow):
             return
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
-        self._executer = MinecraftExecuterThread(nickname)
-        self._executer.finished.connect(lambda: self.show())
-        self._executer.start()
+        self._executor = MinecraftExecutorThread(nickname)
+        self._executor.finished.connect(lambda: self.show())
+        self._executor.finished.connect(self._executor_thread_finished)
+        self._executor.start()
+
         self.input_data.change_input_edit_status(bool_stop_edit=False)
+
+    def _executor_thread_finished(self):
+        if self._executor.runtime_error:
+            self.msg_box.warn(
+                "Запуск игры завершлися с ошибкой",
+                "За подрбностями обращайтесь к логу.",
+            )
 
     # pylint: disable = C0103
     def closeEvent(self, event) -> None:

@@ -11,7 +11,7 @@ Classes:
         repository.
     - InstallThread: A threaded installer for Minecraft, Forge, and mods.
     - InstallShadersThread: A threaded installer for shaders and shaderpacks.
-    - MinecraftExecuterThread: A threaded executor for launching th
+    - MinecraftExecutorThread: A threaded executor for launching th
         Minecraft game.
 
 Functions:
@@ -35,6 +35,7 @@ import re
 import subprocess
 import traceback
 from dataclasses import dataclass
+from typing import Optional
 
 import minecraft_launcher_lib as mine_lib
 import requests
@@ -351,7 +352,7 @@ class InstallShadersThread(InstallThread):
         self.is_working = False
 
 
-class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
+class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
     """
     Thread for executing the Minecraft game.
 
@@ -375,6 +376,7 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         QThread.__init__(self)
         MinecraftLauncherConfig.__init__(self)
         self.nickname = nickname
+        self.runtime_error: Optional[Exception]
 
     def create_launcher_options(self) -> MinecraftOptions:
         """
@@ -408,18 +410,25 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
         nickname, and runs the Minecraft game.
 
         """
-
-        # options["gameDirectory"] = self.minecraft_directory
-        minecraft_command = mine_lib.command.get_minecraft_command(
-            self.minecraft_profile,
-            self.minecraft_directory,
-            self.create_launcher_options(),
-        )
-        with subprocess.Popen(
-            minecraft_command,
-            cwd=self.minecraft_directory,
-        ) as minecraft_process:
-            minecraft_process.wait()  # Wait for the subprocess to complete
+        self.runtime_error = None
+        try:
+            # options["gameDirectory"] = self.minecraft_directory
+            minecraft_command = mine_lib.command.get_minecraft_command(
+                self.minecraft_profile,
+                self.minecraft_directory,
+                self.create_launcher_options(),
+            )
+            with subprocess.Popen(
+                minecraft_command,
+                cwd=self.minecraft_directory,
+            ) as minecraft_process:
+                minecraft_process.wait()  # Wait for the subprocess to complete
+        except Exception as error:
+            self.runtime_error = error
+            logging.debug(
+                "Unexpected error wile executing minecraft:\n"
+                f"{traceback.format_exc()}"
+            )
 
 
 def get_java_major_version() -> int:
