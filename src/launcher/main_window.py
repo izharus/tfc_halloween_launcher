@@ -19,7 +19,6 @@ icon, and provides safety timers for updating input data from the UI.
 import logging
 import os
 import sys
-import traceback
 import webbrowser
 from typing import Callable, Optional
 
@@ -36,11 +35,17 @@ from .launcher_installer import (
     InstallThread,
     MinecraftExecuterThread,
     MinecraftLauncherConfig,
+    get_java_major_version,
     init_logging_basic_config,
-    is_java_17_or_better_installed,
 )
+from .utillity.custom_exceptions import JavaGetVersionError
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
+
+log_dir = MinecraftLauncherConfig.minecraft_directory
+log_dir = os.path.join(log_dir, "halloween_logs")
+
+init_logging_basic_config(log_dir)
 
 
 def hide_console() -> None:
@@ -61,6 +66,7 @@ class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
     # pylint: disable = R0902
+
     def __init__(self) -> None:
         super().__init__()
         self._ui_instance = Ui_MainWindow()
@@ -127,10 +133,6 @@ class Window(QtWidgets.QMainWindow):
         self.safe_inputs_timer.setInterval(self.input_data.time_delay)
         self.safe_inputs_timer.start()
 
-        log_dir = MinecraftLauncherConfig.minecraft_directory
-        log_dir = os.path.join(log_dir, "halloween_logs")
-
-        init_logging_basic_config(log_dir)
         script_dir = os.getcwd()
         self.path_manager = PathManager(script_dir)
         self.icon_file_path = self.path_manager.get_current_root_path(
@@ -253,22 +255,34 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
+
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if len(nickname) < 3:
             msg_icon = QtWidgets.QMessageBox.Icon.Warning
             msg_title = "Никнейм отсутствует или слишком короткий."
             self.create_msg_box(msg_title, msg_icon)
             return
-        if not is_java_17_or_better_installed():
-            msg_icon = QtWidgets.QMessageBox.Icon.Warning
-            msg_title = "Java 17 или выше не установлена в системе."
+        required_version = MinecraftLauncherConfig.minecraft_java_version
+        try:
+            version = get_java_major_version()
+        except JavaGetVersionError as error_msg:
             java_install_url = MinecraftLauncherConfig.java_install_url
             self.create_msg_box(
-                msg_title,
-                msg_icon,
+                "Не удалось найти Java в система.",
+                QtWidgets.QMessageBox.Icon.Warning,
+                msg_box_info=str(error_msg),
                 callback_function=lambda: webbrowser.open(java_install_url),
             )
-
+            return
+        if version < required_version:
+            java_install_url = MinecraftLauncherConfig.java_install_url
+            self.create_msg_box(
+                f"Java {required_version} или выше не установлена в системе.",
+                QtWidgets.QMessageBox.Icon.Warning,
+                callback_function=lambda: webbrowser.open(java_install_url),
+                msg_box_info=f"Версия java найдена: '{version}'. "
+                "Проверьте чтобы java была добавлена в PATH.",
+            )
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
@@ -276,6 +290,7 @@ class Window(QtWidgets.QMainWindow):
         self._install_thread.start()
 
     # pylint: disable = C0103
+
     def closeEvent(self, event) -> None:
         """
         Override the close event of the main window.
@@ -305,8 +320,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as error:
-        logging.critical(f"Application crashed {error}...")
-        logging.debug(traceback.format_exc())
+    main()

@@ -41,6 +41,8 @@ import requests
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
+from .utillity.custom_exceptions import JavaGetVersionError
+
 
 @dataclass
 class MinecraftLauncherConfig:
@@ -75,6 +77,7 @@ class MinecraftLauncherConfig:
     minecraft_server_port = "25565"
     # pylint: disable = C0301
     java_install_url = "https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html"
+    minecraft_java_version = 17
 
 
 class ModDownloader(QThread, MinecraftLauncherConfig):
@@ -420,16 +423,30 @@ class MinecraftExecuterThread(QThread, MinecraftLauncherConfig):
             minecraft_process.wait()  # Wait for the subprocess to complete
 
 
-def is_java_17_or_better_installed():
+def get_java_major_version() -> int:
     """
-    Check if Java 17 or a newer version is installed on the system.
+    Get the major version of Java installed on the system.
 
-    This function runs the 'java -version' command, extracts the Java version
-    from the first line of the output, and checks if it is version 17 or
-    a newer version.
+    This function runs the 'java -version' command to check the Java version
+    and extracts the major version number.
 
     Returns:
-        bool: True if Java 17 or a newer version is installed, False otherwise.
+        int: The major Java version
+
+    Note:
+        The function returns the major version number of the installed Java,
+        for example, 8 for Java 8.
+
+        The 'java -version' command typically provides a detailed output,
+        but this function extracts the major version from the first line.
+
+    Raises:
+        JavaGetVersionError: If an error occurs during the version
+            retrieval process, a custom exception is raised to indicate
+            the issue.
+
+    Example of expected 'java -version' command output (first line):
+    java version "17.0.9" 2023-10-17 LTS
     """
     try:
         # Run the 'java -version' command to check the Java version
@@ -444,12 +461,15 @@ def is_java_17_or_better_installed():
             java_version = int(
                 version_match.group(1).split(".", maxsplit=1)[0]
             )
-            if java_version >= 17:
-                return True
+            return java_version
+    except Exception as error:
+        logging.error(f"failed to get java version: {error}")
+        logging.debug(traceback.format_exc())
+        raise JavaGetVersionError() from error
 
-        return False
-    except (subprocess.CalledProcessError, ValueError):
-        return False
+    # If the function reaches this point
+    # it means Java was found but its version is unknown
+    raise JavaGetVersionError("Java found in system, but version is unknown")
 
 
 def init_logging_basic_config(log_dir: str) -> None:
