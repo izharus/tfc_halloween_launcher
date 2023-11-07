@@ -31,18 +31,23 @@ class Validator:
             return False
         return True
 
-    def is_java_version_supported(self) -> bool:
+    def is_java_version_supported(
+        self, config: MinecraftLauncherConfig
+    ) -> bool:
         """
         Check if Java version correct.
+
+        Args:
+            config (MinecraftLauncherConfig): current config.
 
         Returns:
             bool: if Java version supported, False otherwise.
         """
-        required_version = MinecraftLauncherConfig.minecraft_java_version
+        required_version = config.minecraft_java_version
         try:
             version = get_java_major_version()
         except JavaGetVersionError as error_msg:
-            java_install_url = MinecraftLauncherConfig.java_install_url
+            java_install_url = config.java_install_url
             self.msg_box.warn(
                 "Не удалось найти Java в система.",
                 msg_box_info=str(error_msg),
@@ -50,7 +55,7 @@ class Validator:
             )
             return False
         if version < required_version:
-            java_install_url = MinecraftLauncherConfig.java_install_url
+            java_install_url = config.java_install_url
             self.msg_box.warn(
                 f"Java {required_version} или выше не установлена в системе.",
                 callback_function=lambda: webbrowser.open(java_install_url),

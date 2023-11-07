@@ -30,6 +30,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
 from .design.utillity import MessageBoxManager, open_directory
+from .launcher_configs import LauncherConfig, get_config
 from .launcher_installer import (
     InstallShadersThread,
     InstallThread,
@@ -40,10 +41,7 @@ from .launcher_installer import (
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
 
-log_dir = MinecraftLauncherConfig.minecraft_directory
-log_dir = os.path.join(log_dir, "halloween_logs")
-
-init_logging_basic_config(log_dir)
+init_logging_basic_config(MinecraftLauncherConfig.logging_dir)
 
 
 def hide_console() -> None:
@@ -57,7 +55,10 @@ def hide_console() -> None:
     win32gui.ShowWindow(window, win32con.SW_HIDE)
 
 
-hide_console()
+LAUNCHER_CONFIGS = {
+    0: "terrafirmacraft",
+    1: "terrafirmacraft_test",
+}
 
 
 # pylint: disable = R0903
@@ -82,6 +83,21 @@ class Window(QtWidgets.QMainWindow):
         self.msg_box = MessageBoxManager(self.icon_file_path)
         self._install_thread = InstallThread()
         self._install_shaders_thread = InstallShadersThread()
+
+        minecraft_root_directory = LauncherConfig.minecraft_root_directory
+        ui_data_file_path = minecraft_root_directory
+        ui_data_file_path = os.path.join(
+            ui_data_file_path,
+            "halloween_data\\ui_inputs_data\\input_data",
+        )
+        self.input_data = ThreadUiInputData(
+            self._ui_instance, str_path=ui_data_file_path
+        )
+        self.config = get_config(
+            LAUNCHER_CONFIGS[
+                self.input_data.extract_element("comboBox_server_type")
+            ]
+        )
 
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
@@ -117,20 +133,11 @@ class Window(QtWidgets.QMainWindow):
             self._install_minecraft_multi_thread
         )
 
-        minecraft_directory = MinecraftLauncherConfig.minecraft_directory
-        self._ui_instance.pushButton_minecraft_dir.clicked.connect(
-            lambda: open_directory(minecraft_directory)
-        )
-        ui_data_file_path = minecraft_directory
-        ui_data_file_path = os.path.join(
-            ui_data_file_path,
-            "halloween_data\\ui_inputs_data\\input_data",
-        )
         self.setWindowTitle("TFC-Halloween")
-        self.input_data = ThreadUiInputData(
-            self._ui_instance, str_path=ui_data_file_path
-        )
 
+        self._ui_instance.pushButton_minecraft_dir.clicked.connect(
+            lambda: open_directory(self.config.minecraft_directory)
+        )
         self.is_working = True
         self.safe_inputs_timer = QTimer()
         self.safe_inputs_timer.timeout.connect(
@@ -160,6 +167,13 @@ class Window(QtWidgets.QMainWindow):
         """
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
+
+        self.config = get_config(
+            LAUNCHER_CONFIGS[
+                self.input_data.extract_element("comboBox_server_type")
+            ]
+        )
+        self._install_shaders_thread.set_config(self.config)
         self._install_shaders_thread.start()
 
     def _install_shaders_thread_finished(self) -> None:
@@ -206,11 +220,17 @@ class Window(QtWidgets.QMainWindow):
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
             return
-        if not self._validator.is_java_version_supported():
+        if not self._validator.is_java_version_supported(self.config):
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
         self.input_data.update_input_data_from_ui()
+        self.config = get_config(
+            LAUNCHER_CONFIGS[
+                self.input_data.extract_element("comboBox_server_type")
+            ]
+        )
+        self._install_thread.set_config(self.config)
         self._install_thread.start()
 
     def _install_thread_finished(self) -> None:
@@ -229,7 +249,7 @@ class Window(QtWidgets.QMainWindow):
 
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
-            logging.critical(msg_title)
+            logging.error(msg_title)
             self.msg_box.warn(
                 msg_title,
                 "За подрбностями обращайтесь к логу.",
@@ -237,7 +257,7 @@ class Window(QtWidgets.QMainWindow):
             return
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
-        self._executor = MinecraftExecutorThread(nickname)
+        self._executor = MinecraftExecutorThread(nickname, self.config)
         self._executor.finished.connect(lambda: self.show())
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()

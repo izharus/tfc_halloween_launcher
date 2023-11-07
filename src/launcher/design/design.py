@@ -96,6 +96,39 @@ class Ui_MainWindow:
         )
         self.pushButton_minecraft_dir.setObjectName("pushButton_minecraft_dir")
         self.horizontalLayout_2.addWidget(self.pushButton_minecraft_dir)
+        self.comboBox_server_type = QtWidgets.QComboBox(
+            parent=self.centralwidget
+        )
+        self.comboBox_server_type.setMinimumSize(QtCore.QSize(200, 0))
+        self.comboBox_server_type.setStyleSheet(
+            "/* Modern Style QLineEdit */\n"
+            ".QComboBox {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "  color: #333;\n"
+            "  padding: 10px;\n"
+            "  font-size: 16px;\n"
+            "  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
+            "}\n"
+            "\n"
+            ".QComboBox:focus {\n"
+            "  outline: none;\n"
+            "  border-color: #4287f5;\n"
+            "  background-color: #fff;\n"
+            "}\n"
+            "\n"
+            ".QComboBox::placeholder {\n"
+            "  color: #999;\n"
+            "}\n"
+            "\n"
+            ".QComboBox:hover {\n"
+            "  border-color: #999;\n"
+            "}"
+        )
+        self.comboBox_server_type.setObjectName("comboBox_server_type")
+        self.comboBox_server_type.addItem("")
+        self.comboBox_server_type.addItem("")
+        self.horizontalLayout_2.addWidget(self.comboBox_server_type)
         spacerItem = QtWidgets.QSpacerItem(
             40,
             20,
@@ -209,6 +242,12 @@ class Ui_MainWindow:
         )
         self.pushButton_minecraft_dir.setText(
             _translate("MainWindow", "Папка с игрой")
+        )
+        self.comboBox_server_type.setItemText(
+            0, _translate("MainWindow", "TFC Halloween")
+        )
+        self.comboBox_server_type.setItemText(
+            1, _translate("MainWindow", "TFC Halloween test")
         )
         self.pushButton_install_shaders.setText(
             _translate("MainWindow", "Установить шейдеры")

@@ -34,7 +34,6 @@ import os
 import re
 import subprocess
 import traceback
-from dataclasses import dataclass
 from typing import Optional
 
 import minecraft_launcher_lib as mine_lib
@@ -42,62 +41,25 @@ import requests
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
+from .launcher_configs import MinecraftLauncherConfig
 from .utillity.custom_decorators import log_operation
-from .utillity.custom_exceptions import JavaGetVersionError
+from .utillity.custom_exceptions import (
+    JavaGetVersionError,
+    MinecraftLauncherConfigNotSet,
+)
 
 
-@dataclass
-class MinecraftLauncherConfig:
-    """
-    Configuration settings for a Minecraft launcher.
-
-    This class defines various configuration settings for a Minecraft launcher,
-    including the Minecraft version, Forge version (if applicable), Minecraft
-    profile, and the directory where Minecraft files are stored, with an added
-    "_tfc_halloween" suffix. It also provides settings for the repository URL,
-    Minecraft server IP, and Minecraft server port.
-
-    Attributes:
-        minecraft_version (str): The Minecraft version to use (e.g., "1.18.2").
-        forge_version (str): The Forge version to use (e.g., "1.18.2-40.2.9").
-        minecraft_profile (str): The Minecraft profile with Forge version
-            (if applicable).
-        minecraft_directory (str): The directory where Minecraft files are
-            stored, including f"_{launcher_name}".
-        repo_url (str): The URL for the GitHub repository.
-        minecraft_server_ip (str): The IP address of the Minecraft server.
-        minecraft_server_port (str): The port number of the Minecraft server.
-    """
-
-    launcher_name = "tfc_halloween"
-    minecraft_version = "1.18.2"
-    forge_version = "1.18.2-40.2.9"
-    minecraft_profile = forge_version.replace("-", "-forge-")
-    minecraft_directory = mine_lib.utils.get_minecraft_directory()
-    minecraft_directory += f"_{launcher_name}"
-    repo_url = "https://api.github.com/repos/izharus/tfc_hallowen_modpack"
-    minecraft_server_ip = "77.239.232.50"
-    minecraft_server_port = "25565"
-    # pylint: disable = C0301
-    java_install_url = "https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html"
-    minecraft_java_version = 17
-    logging_dir = os.path.join(minecraft_directory, f"{launcher_name}_logs")
-
-
-class ModDownloader(QThread, MinecraftLauncherConfig):
+class ModDownloader(QThread):
     """
     A class for downloading and installing Minecraft mods from a remote
     repository.
 
-    This class inherits from QThread and MinecraftLauncherConfig to manage
-    downloading and installing Minecraft mods. It provides a method,
+    This class inherits from QThread. It provides a method,
     download_files, to fetch and install mod files from a remote repository.
 
     Args:
         repo_url (str): The base URL of the mod repository.
-
-    Attributes:
-        Inherits attributes from the MinecraftLauncherConfig class.
+        minecraft_directore (str): Path to minecraft dir.
 
     Methods:
         download_files(callback, content_path, sub_directory="") -> bool:
@@ -105,9 +67,10 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
 
     """
 
-    def __init__(self, repo_url):
+    def __init__(self, repo_url, minecraft_directory: str):
         QThread.__init__(self)
         self.repo_url = repo_url
+        self.minecraft_directory = minecraft_directory
 
     @log_operation
     def download_files(self, callback, content_path, sub_directory="") -> bool:
@@ -216,7 +179,7 @@ class ModDownloader(QThread, MinecraftLauncherConfig):
         return True
 
 
-class InstallThread(QThread, MinecraftLauncherConfig):
+class InstallThread(QThread):
     """
     Thread for installing Minecraft, Forge, and mods.
 
@@ -237,7 +200,6 @@ class InstallThread(QThread, MinecraftLauncherConfig):
             is in progress.
         _is_installation_failed (bool): Flag indicating if the last
             installation failed.
-
     Methods:
         run(): The main method for running the installation process in the
             thread.
@@ -247,9 +209,11 @@ class InstallThread(QThread, MinecraftLauncherConfig):
     progress = pyqtSignal("int")
     text = pyqtSignal("QString")
 
-    def __init__(self) -> None:
+    def __init__(
+        self, config: Optional[MinecraftLauncherConfig] = None
+    ) -> None:
         QThread.__init__(self)
-        MinecraftLauncherConfig.__init__(self)
+        self.config = config
         self._callback_dict = {
             "setStatus": lambda text: self.text.emit(text),
             "setMax": lambda max_progress: self.progress_max.emit(
@@ -259,6 +223,12 @@ class InstallThread(QThread, MinecraftLauncherConfig):
         }
         self.is_working = False
         self.runtime_error: Optional[Exception] = None
+
+    def set_config(self, config: MinecraftLauncherConfig):
+        """
+        Set or update the configuration for the installation thread.
+        """
+        self.config = config
 
     def run(self) -> None:
         """Call main_worker an handle any exceptions."""
@@ -283,9 +253,11 @@ class InstallThread(QThread, MinecraftLauncherConfig):
         Returns:
             None
         """
+        if not self.config:
+            raise MinecraftLauncherConfigNotSet()
         mine_lib.forge.install_forge_version(
-            self.forge_version,
-            self.minecraft_directory,
+            self.config.forge_version,
+            self.config.minecraft_directory,
             callback=self._callback_dict,
         )
         map_dirs = [
@@ -303,7 +275,9 @@ class InstallThread(QThread, MinecraftLauncherConfig):
             },
         ]
 
-        downloader = ModDownloader(self.repo_url)
+        downloader = ModDownloader(
+            self.config.repo_url, self.config.minecraft_directory
+        )
 
         if not downloader.download_files_multiple_dirs(
             self._callback_dict,
@@ -340,8 +314,11 @@ class InstallShadersThread(InstallThread):
                 "dist_sub_path": "mods",
             },
         ]
-
-        downloader = ModDownloader(self.repo_url)
+        if not self.config:
+            raise MinecraftLauncherConfigNotSet()
+        downloader = ModDownloader(
+            self.config.repo_url, self.config.minecraft_directory
+        )
 
         if not downloader.download_files_multiple_dirs(
             self._callback_dict,
@@ -355,12 +332,11 @@ class InstallShadersThread(InstallThread):
             self._callback_dict["setStatus"]("Launching minecraft...")
 
 
-class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
+class MinecraftExecutorThread(QThread):
     """
     Thread for executing the Minecraft game.
 
-    This class extends QThread and MinecraftLauncherConfig to create a
-    dedicated thread for executing the Minecraft game. It handles the
+    This class extends QThread. It handles the
     configuration and execution of Minecraft with a specified nickname.
 
     Attributes:
@@ -375,10 +351,10 @@ class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
 
     """
 
-    def __init__(self, nickname: str):
+    def __init__(self, nickname: str, config: MinecraftLauncherConfig):
         QThread.__init__(self)
-        MinecraftLauncherConfig.__init__(self)
         self.nickname = nickname
+        self.config = config
         self.runtime_error: Optional[Exception] = None
 
     def create_launcher_options(self) -> MinecraftOptions:
@@ -417,13 +393,13 @@ class MinecraftExecutorThread(QThread, MinecraftLauncherConfig):
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
-                self.minecraft_profile,
-                self.minecraft_directory,
+                self.config.minecraft_profile,
+                self.config.minecraft_directory,
                 self.create_launcher_options(),
             )
             with subprocess.Popen(
                 minecraft_command,
-                cwd=self.minecraft_directory,
+                cwd=self.config.minecraft_directory,
             ) as minecraft_process:
                 minecraft_process.wait()  # Wait for the subprocess to complete
         except Exception as error:

@@ -129,6 +129,51 @@ QPushButton:pressed {
          </widget>
         </item>
         <item>
+         <widget class="QComboBox" name="comboBox_server_type">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">/* Modern Style QLineEdit */
+.QComboBox {
+  border: 2px solid #ccc;
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 15px; /* Adjust the value to control the corner smoothness */
+}
+
+.QComboBox:focus {
+  outline: none;
+  border-color: #4287f5;
+  background-color: #fff;
+}
+
+.QComboBox::placeholder {
+  color: #999;
+}
+
+.QComboBox:hover {
+  border-color: #999;
+}</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>TFC Halloween</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>TFC Halloween test</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
