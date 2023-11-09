@@ -8,13 +8,6 @@ class JavaGetVersionError(ValueError):
         super().__init__(message)
 
 
-class UndefinedMinecraftLauncherConfig(ValueError):
-    """Raises if lancher access to undefined MinecraftLauncherConfig."""
-
-    def __init__(self, message="Undefined MinecraftLauncherConfig."):
-        super().__init__(message)
-
-
 class MinecraftLauncherConfigNotSet(RuntimeError):
     """Raises if lancher config not set"""
 

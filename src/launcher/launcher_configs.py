@@ -13,7 +13,6 @@ from typing import Callable, Dict, Optional
 
 import minecraft_launcher_lib as mine_lib
 
-from .utillity.custom_exceptions import UndefinedMinecraftLauncherConfig
 from .utillity.file_downloader import FileDownloader
 
 
@@ -169,16 +168,15 @@ def get_config(config_name: str) -> Callable[[], MinecraftLauncherConfig]:
     Returns:
         MinecraftLauncherConfig: The specified launcher configuration function.
 
-    Raises:
-        UndefinedMinecraftLauncherConfig: If the specified
-            configuration is undefined.
 
     """
     try:
         return SUPPORTED_CONFIGS[config_name]
-    except IndexError as error:
-        logging.critical("get_config(): couldn't get launcher config")
-        raise UndefinedMinecraftLauncherConfig() from error
+    except KeyError:
+        default_config = list(SUPPORTED_CONFIGS.values())[0]
+        logging.error(f"Unknown config name: {config_name}")
+        logging.error(f"Setting default config: {default_config}")
+        return default_config
 
 
 SUPPORTED_CONFIGS = {

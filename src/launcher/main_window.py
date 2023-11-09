@@ -54,9 +54,6 @@ def hide_console() -> None:
     win32gui.ShowWindow(window, win32con.SW_HIDE)
 
 
-hide_console()
-
-
 # pylint: disable = R0903
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
@@ -124,6 +121,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.label_background.setPixmap(
             QPixmap(background_image_path)
         )
+        hide_console()
 
     def get_input_data(self):
         """
