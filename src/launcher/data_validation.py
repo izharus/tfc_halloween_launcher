@@ -1,5 +1,4 @@
 """Module for validating data tools."""
-import webbrowser
 
 from .design.utillity import MessageBoxManager
 from .launcher_installer import MinecraftLauncherConfig, get_java_major_version
@@ -43,24 +42,24 @@ class Validator:
         Returns:
             bool: if Java version supported, False otherwise.
         """
+        java_install_url = config.java_install_url
+        install_java_link = f'<a href="{java_install_url}">\
+Я хочу установить Java сейчас!</a> '
         required_version = config.minecraft_java_version
         try:
             version = get_java_major_version()
-        except JavaGetVersionError as error_msg:
-            java_install_url = config.java_install_url
+        except JavaGetVersionError:
             self.msg_box.warn(
                 "Не удалось найти Java в система.",
-                msg_box_info=str(error_msg),
-                callback_function=lambda: webbrowser.open(java_install_url),
+                msg_box_info=install_java_link,
             )
             return False
         if version < required_version:
-            java_install_url = config.java_install_url
             self.msg_box.warn(
                 f"Java {required_version} или выше не установлена в системе.",
-                callback_function=lambda: webbrowser.open(java_install_url),
                 msg_box_info=f"Версия java найдена: '{version}'. "
-                "Проверьте чтобы java была добавлена в PATH.",
+                "Проверьте чтобы java была добавлена в PATH. "
+                f"{install_java_link}",
             )
             return False
         return True

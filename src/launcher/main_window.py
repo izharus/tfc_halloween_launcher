@@ -32,7 +32,6 @@ from .design.design import Ui_MainWindow
 from .design.utillity import MessageBoxManager, open_directory
 from .launcher_configs import LauncherConfig, get_config
 from .launcher_installer import (
-    InstallShadersThread,
     InstallThread,
     MinecraftExecutorThread,
     MinecraftLauncherConfig,
@@ -55,10 +54,7 @@ def hide_console() -> None:
     win32gui.ShowWindow(window, win32con.SW_HIDE)
 
 
-LAUNCHER_CONFIGS = {
-    0: "terrafirmacraft",
-    1: "terrafirmacraft_test",
-}
+hide_console()
 
 
 # pylint: disable = R0903
@@ -82,22 +78,11 @@ class Window(QtWidgets.QMainWindow):
         self._validator = Validator(self.icon_file_path)
         self.msg_box = MessageBoxManager(self.icon_file_path)
         self._install_thread = InstallThread()
-        self._install_shaders_thread = InstallShadersThread()
 
-        minecraft_root_directory = LauncherConfig.minecraft_root_directory
-        ui_data_file_path = minecraft_root_directory
-        ui_data_file_path = os.path.join(
-            ui_data_file_path,
-            "halloween_data\\ui_inputs_data\\input_data",
-        )
-        self.input_data = ThreadUiInputData(
-            self._ui_instance, str_path=ui_data_file_path
-        )
+        self.input_data = self.get_input_data()
         self.config = get_config(
-            LAUNCHER_CONFIGS[
-                self.input_data.extract_element("comboBox_server_type")
-            ]
-        )
+            self.input_data.extract_element("comboBox_server_type")
+        )()
 
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
@@ -113,29 +98,14 @@ class Window(QtWidgets.QMainWindow):
         )
         self._install_thread.finished.connect(self._install_thread_finished)
 
-        self._install_shaders_thread.progress_max.connect(
-            lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
-        )
-        self._install_shaders_thread.progress.connect(
-            lambda value: self._ui_instance.progressBar.setValue(value)
-        )
-        self._install_shaders_thread.text.connect(
-            lambda text: self._ui_instance.progressBar.setFormat(text)
-        )
-        self._install_shaders_thread.finished.connect(
-            self._install_shaders_thread_finished
-        )
-
-        self._ui_instance.pushButton_install_shaders.clicked.connect(
-            self._install_shaders
-        )
         self._ui_instance.pushButton_install_and_launch.clicked.connect(
             self._install_minecraft_multi_thread
         )
 
         self.setWindowTitle("TFC-Halloween")
 
-        self._ui_instance.pushButton_minecraft_dir.clicked.connect(
+        # pylint: disable = C0301
+        self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
             lambda: open_directory(self.config.minecraft_directory)
         )
         self.is_working = True
@@ -155,55 +125,16 @@ class Window(QtWidgets.QMainWindow):
             QPixmap(background_image_path)
         )
 
-    def _install_shaders(self) -> None:
+    def get_input_data(self):
         """
-        Initiates the installation of shaders.
-
-        This method shows the progress bar and disables input editing to start
-        the installation of shaders in a separate thread.
+        Returns a class instance of ThreadUiInputData with
+        values of all fields in frontend inputs.
 
         Returns:
-            None
+            ThreadUiInputData : an instance of ThreadUiInputData class
         """
-        self._ui_instance.progressBar.show()
-        self.input_data.change_input_edit_status(bool_stop_edit=True)
-
-        self.config = get_config(
-            LAUNCHER_CONFIGS[
-                self.input_data.extract_element("comboBox_server_type")
-            ]
-        )
-        self._install_shaders_thread.set_config(self.config)
-        self._install_shaders_thread.start()
-
-    def _install_shaders_thread_finished(self) -> None:
-        """
-        Handles the completion of the shaders installation thread.
-
-        This method hides the progress bar, enables input editing, and displays
-        a message box indicating the result of the shaders installation.
-
-        Returns:
-            None
-        """
-        self._ui_instance.progressBar.hide()
-        self.input_data.change_input_edit_status(bool_stop_edit=False)
-        if self._install_shaders_thread.runtime_error:
-            msg_title = "Не удалось установить шейдеры."
-            logging.error(msg_title)
-            self._ui_instance.progressBar.hide()
-            self.msg_box.warn(
-                msg_title,
-                "За подрбностями обращайтесь к логу.",
-            )
-            return
-
-        msg_title = "Шейдеры успешно установлены."
-        msg_info = (
-            "Шейдеры требовательны системе. "
-            "Включить/отключить шейдеры можно в игре, в меню видеонастроек."
-        )
-        self.msg_box.info(msg_title, msg_info)
+        ui_data_file_path = LauncherConfig.ui_data_path
+        return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
     def _install_minecraft_multi_thread(self) -> None:
         """
@@ -216,7 +147,7 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-
+        self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
             return
@@ -224,29 +155,29 @@ class Window(QtWidgets.QMainWindow):
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
-        self.input_data.update_input_data_from_ui()
+
         self.config = get_config(
-            LAUNCHER_CONFIGS[
-                self.input_data.extract_element("comboBox_server_type")
-            ]
-        )
+            self.input_data.extract_element("comboBox_server_type")
+        )()
         self._install_thread.set_config(self.config)
+        is_install_shaders = self.input_data.extract_element(
+            "checkBox_is_install_shaders"
+        )
+        self._install_thread.change_install_shaders_status(is_install_shaders)
         self._install_thread.start()
 
     def _install_thread_finished(self) -> None:
         """
         Handle the completion of the installation thread.
 
-        This method is called when the installation thread has finished its
-        task. It hides the progress bar and re-enables input editing. It also
-        initiates the execution of Minecraft and waits for its completion.
-
+        This method is called when the installation thread has finished
+        its task. It hides the progress bar and re-enables input
+        editing. It also initiates the execution of Minecraft and waits
+        for its completion.
         Returns:
             None
         """
-        self.hide()
         self._ui_instance.progressBar.hide()
-
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
             logging.error(msg_title)
@@ -254,7 +185,9 @@ class Window(QtWidgets.QMainWindow):
                 msg_title,
                 "За подрбностями обращайтесь к логу.",
             )
+            self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
+        self.hide()
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
         self._executor = MinecraftExecutorThread(nickname, self.config)

@@ -32,149 +32,120 @@ import datetime
 import logging
 import os
 import re
+import shelve
 import subprocess
 import traceback
-from typing import Optional
+from typing import Callable, Dict, List, Optional
 
 import minecraft_launcher_lib as mine_lib
-import requests
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from .launcher_configs import MinecraftLauncherConfig
 from .utillity.custom_decorators import log_operation
 from .utillity.custom_exceptions import (
+    CalculateHashFailed,
+    FilesSaveError,
     JavaGetVersionError,
     MinecraftLauncherConfigNotSet,
+    RequestDownloadError,
 )
+from .utillity.file_downloader import FileDownloader
 
 
-class ModDownloader(QThread):
-    """
-    A class for downloading and installing Minecraft mods from a remote
-    repository.
+class ModsInstaller(QThread, FileDownloader):
+    """Class for save downloading and deleting unknown files"""
 
-    This class inherits from QThread. It provides a method,
-    download_files, to fetch and install mod files from a remote repository.
-
-    Args:
-        repo_url (str): The base URL of the mod repository.
-        minecraft_directore (str): Path to minecraft dir.
-
-    Methods:
-        download_files(callback, content_path, sub_directory="") -> bool:
-            Downloads and installs mod files from the repository.
-
-    """
-
-    def __init__(self, repo_url, minecraft_directory: str):
+    def __init__(
+        self,
+        files_info_list: List[Dict],
+        minecraft_directory: str,
+        mods_directory: str = "mods",
+    ):
         QThread.__init__(self)
-        self.repo_url = repo_url
+        self.files_info_list = files_info_list
         self.minecraft_directory = minecraft_directory
+        self.mods_directory = os.path.join(minecraft_directory, mods_directory)
 
     @log_operation
-    def download_files(self, callback, content_path, sub_directory="") -> bool:
+    def delete_unknown_mods(self):
         """
-        Download and install mod files from the repository.
-
-        Args:
-            callback (dict): A dictionary containing callback functions for
-                updating the UI.
-            content_path (str): The path to the mod content on the repository.
-            sub_directory (str): An optional sub-directory within the
-                Minecraft directory.
+        Deletes all files in directory 'mods' which do not exists in
+        self.files_info_list.
 
         Returns:
-            bool: True if all mods were downloaded successfully,
-                False on any error.
-
-        This method downloads mod files from the specified content path on the
-        remote repository and installs them in the specified sub-directory
-        within the Minecraft directory. It provides progress updates through
-        the provided callback functions.
-
+            bool: True if all files were deleted, False otherwise.
         """
-        directory = os.path.join(self.minecraft_directory, sub_directory)
-        api_url = f"{self.repo_url}/{content_path}"
-        try:
-            logging.debug("download_files() started")
-            # Create the target directory if it doesn't exist
-            os.makedirs(directory, exist_ok=True)
+        validate_file_names = list(
+            file_info["file_name"]
+            for file_info in self.files_info_list
+            if file_info["file_name"].split(".")[-1] == "jar"
+        )
 
-            # Fetch the list of mod files from the GitHub repository
-            response = requests.get(api_url, timeout=10)
-            response.raise_for_status()
-            mod_files = response.json()
-
-            # Initialize the progress bar
-            total_mods = len(mod_files)
-            progress = 0
-            callback["setMax"](total_mods)
-            callback["setProgress"](progress)
-
-            # Download each mod file
-            for mod_file in mod_files:
-                file_name = mod_file["name"]
-                callback["setStatus"](f"installing mode '{file_name}'...")
-                download_url = mod_file["download_url"]
-                file_path = os.path.join(directory, file_name)
-
-                # Check if the file already exists
-                if os.path.exists(file_path):
-                    logging.info(f"Skipped: {file_name} (already downloaded)")
-                else:
-                    # Download the mod file
-                    response = requests.get(download_url, timeout=10)
-                    response.raise_for_status()
-
-                    # Save the mod file to the specified directory
-                    with open(file_path, "wb") as mod_file:
-                        mod_file.write(response.content)
-                    logging.info(f"Downloaded: {file_name}")
-
-                # Update the progress
-                progress += 1
-                callback["setProgress"](progress)
-
-            logging.info("All mods downloaded successfully.")
-            return True
-        except Exception as error:
-            logging.error(
-                f"An error occurred while downloading file: {file_name}"
-            )
-            logging.debug(f"'{error}':\n{traceback.format_exc()}")
-            return False
+        for _root, _directories, files in os.walk(self.mods_directory):
+            for file in files:
+                if file not in validate_file_names:
+                    undifinied_file_path = os.path.join(
+                        self.mods_directory, file
+                    )
+                    logging.info(
+                        f"Deleting unknown file: {undifinied_file_path}"
+                    )
+                    try:
+                        os.remove(undifinied_file_path)
+                    except Exception as error:
+                        logging.error(
+                            "Error filed deleting the file:"
+                            f"{undifinied_file_path}, {error}"
+                        )
+                        return False
+        return True
 
     @log_operation
-    def download_files_multiple_dirs(
+    def check_and_download(
         self,
-        callback,
-        map_dirs,
+        callback: Optional[Dict[str, Callable]] = None,
     ) -> bool:
         """
-        Download and install mod files from multiple directories on the
-        repository.
-
+        Checks hash for all file in self.files_info_list and downloads
+        them again if hash incorrect or if files do not exist.
         Args:
-            callback (dict): A dictionary containing callback functions for
-                updating the UI.
-            map_dirs (list of dict): A list of dictionaries where each
-                dictionary contains information about the content path and
-                destination sub-directory for downloading mod files.
-
+            callback (dict): A dictionary of callback functions for
+            updating the UI.
         Returns:
-            bool: True if all mods were downloaded successfully from all
-                specified directories, False on any error.
+            bool: True if all files were deleted, False otherwise.
         """
-        for data in map_dirs:
-            content_path = data["content_path"]
-            sub_directory = data["dist_sub_path"]
-            status = self.download_files(
-                callback,
-                content_path,
-                sub_directory,
-            )
-            if not status:
+        if callback:
+            callback["setMax"](len(self.files_info_list))
+            progress_bar_index = 0
+        for file_info in self.files_info_list:
+            file_name = file_info["file_name"]
+            dist_file_path = file_info["dist_file_path"]
+            file_path = os.path.join(self.minecraft_directory, dist_file_path)
+            if callback:
+                callback["setProgress"](progress_bar_index)
+                callback["setStatus"](f"Checking file hash: {file_name}...")
+                progress_bar_index += 1
+            if os.path.exists(file_path):
+                try:
+                    file_hash = self.calculate_hash(file_path)
+                except CalculateHashFailed:
+                    logging.error(
+                        f"Failed to calculate hash for: {file_name}."
+                    )
+                    return False
+                if file_hash == file_info["hash"]:
+                    logging.info(f"File hash correct: {file_name}")
+                    continue
+                logging.info(f"File hash incorrect: {file_name}")
+            if callback:
+                callback["setStatus"](f"Downloading file: {file_name}...")
+            try:
+                self.save_file(
+                    file_path, self.download_file(file_info["api_url"])
+                )
+            except (FilesSaveError, RequestDownloadError):
+                logging.error(f"Failed to download file: {file_name}.")
                 return False
         return True
 
@@ -223,12 +194,40 @@ class InstallThread(QThread):
         }
         self.is_working = False
         self.runtime_error: Optional[Exception] = None
+        self.is_install_shaders = False
+
+    def change_install_shaders_status(self, is_install_shaders: bool):
+        """Indicates if shaders should be installed."""
+        self.is_install_shaders = is_install_shaders
 
     def set_config(self, config: MinecraftLauncherConfig):
         """
         Set or update the configuration for the installation thread.
         """
         self.config = config
+
+    def is_minecraft_installed(
+        self,
+        launcher_data_path: str,
+        launcher_config_name: str,
+    ) -> bool:
+        """
+        Check in mineraft has already installed for current
+        config profile.
+
+        Args:
+            launcher_data_path: path to launcher data file.
+            launcher_config_name: current launcher config name.
+        Returns:
+            bool : True if minecraft installed, False otherwise.
+        Raises:
+            MinecraftLauncherConfigNotSet: if self.config no configured.
+        """
+        if self.config:
+            with shelve.open(launcher_data_path) as launcher_data:
+                field = launcher_config_name + "_is_installed"
+                return launcher_data.get(field, False)
+        raise MinecraftLauncherConfigNotSet()
 
     def run(self) -> None:
         """Call main_worker an handle any exceptions."""
@@ -250,86 +249,51 @@ class InstallThread(QThread):
         It installs Minecraft, Forge, and mods, and provides progress updates
         to the UI.
 
+        Raises:
+            MinecraftLauncherConfigNotSet: if self.config no configured.
         Returns:
             None
         """
         if not self.config:
             raise MinecraftLauncherConfigNotSet()
-        mine_lib.forge.install_forge_version(
-            self.config.forge_version,
-            self.config.minecraft_directory,
+
+        if not self.is_minecraft_installed(
+            self.config.launcher_data,
+            self.config.launcher_name,
+        ):
+            mine_lib.forge.install_forge_version(
+                self.config.forge_version,
+                self.config.minecraft_directory,
+                callback=self._callback_dict,
+            )
+        map_dirs = self.config.map_json_data["main_data"]
+        map_dirs += self.config.map_json_data["client_data"]
+        if self.is_install_shaders:
+            if "client_data_shaders" in self.config.map_json_data:
+                map_dirs += self.config.map_json_data["client_data_shaders"]
+            else:
+                logging.error(
+                    "Shaders couldn't be installed for "
+                    f"{self.config.config_name}"
+                )
+                self.runtime_error = True
+                return
+
+        files_data = list(
+            file_data
+            for file_data in map_dirs
+            if file_data["install_on_client"]
+        )
+        downloader = ModsInstaller(files_data, self.config.minecraft_directory)
+        status = downloader.check_and_download(
             callback=self._callback_dict,
         )
-        map_dirs = [
-            {
-                "content_path": "contents/main_data/mods",
-                "dist_sub_path": "mods",
-            },
-            {
-                "content_path": "contents/client_data/main_data/mods",
-                "dist_sub_path": "mods",
-            },
-            {
-                "content_path": "contents/client_data/main_data",
-                "dist_sub_path": "",
-            },
-        ]
-
-        downloader = ModDownloader(
-            self.config.repo_url, self.config.minecraft_directory
-        )
-
-        if not downloader.download_files_multiple_dirs(
-            self._callback_dict,
-            map_dirs,
-        ):
-            logging.error("Failed to download of custom launcher main files.")
-        else:
-            logging.info("Download of custom launcher main files finished.")
-            self._callback_dict["setStatus"]("Launching minecraft...")
-
-
-class InstallShadersThread(InstallThread):
-    """
-    Thread for installing shaders and shaderpacks.
-
-    This class extends the InstallThread to create a dedicated thread for
-    installing shaders  and shaderpacks. It manages the installation of
-    shaders and shaderpacks and provides progress updates to the UI.
-
-    Methods:
-        run(): The main method for running the installation process for shaders
-            and shaderpacks.
-    """
-
-    def main_worker(self) -> None:
-        # pylint: disable = C0301
-        map_dirs = [
-            {
-                "content_path": "contents/client_data/additional_data/shaders_data/shaderpacks",
-                "dist_sub_path": "shaderpacks",
-            },
-            {
-                "content_path": "contents/client_data/additional_data/shaders_data/mods",
-                "dist_sub_path": "mods",
-            },
-        ]
-        if not self.config:
-            raise MinecraftLauncherConfigNotSet()
-        downloader = ModDownloader(
-            self.config.repo_url, self.config.minecraft_directory
-        )
-
-        if not downloader.download_files_multiple_dirs(
-            self._callback_dict,
-            map_dirs,
-        ):
-            logging.error(
-                "Failed to download of custom launcher shader files."
-            )
-        else:
-            logging.info("Download of custom launcher shader files finished.")
-            self._callback_dict["setStatus"]("Launching minecraft...")
+        if not status:
+            self.runtime_error = True
+        status = downloader.delete_unknown_mods()
+        if not status:
+            self.runtime_error = True
+        self._callback_dict["setStatus"]("Launching minecraft...")
 
 
 class MinecraftExecutorThread(QThread):
@@ -380,6 +344,17 @@ class MinecraftExecutorThread(QThread):
         # options["port"] = self.minecraft_server_port
         return options
 
+    def set_minecraft_onstalled_flag(self) -> None:
+        """
+        Set minecraft installed flag for this current profile.
+
+        Returns:
+            None
+        """
+        with shelve.open(self.config.launcher_data) as launcher_data:
+            field = self.config.config_name + "_is_installed"
+            launcher_data[field] = True
+
     def run(self):
         """
         Execute the Minecraft game with the specified nickname.
@@ -402,6 +377,7 @@ class MinecraftExecutorThread(QThread):
                 cwd=self.config.minecraft_directory,
             ) as minecraft_process:
                 minecraft_process.wait()  # Wait for the subprocess to complete
+            self.set_minecraft_onstalled_flag()
         except Exception as error:
             self.runtime_error = error
             logging.debug(
@@ -451,13 +427,13 @@ def get_java_major_version() -> int:
             )
             return java_version
     except Exception as error:
-        logging.error(f"failed to get java version: {error}")
+        logging.error(f"failed to get java version: {error}.")
         logging.debug(traceback.format_exc())
         raise JavaGetVersionError() from error
 
     # If the function reaches this point
     # it means Java was found but its version is unknown
-    raise JavaGetVersionError("Java found in system, but version is unknown")
+    raise JavaGetVersionError("Java found in system, but version is unknown.")
 
 
 def init_logging_basic_config(log_dir: str) -> None:

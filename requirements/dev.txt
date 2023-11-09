@@ -19,18 +19,25 @@ colorama==0.4.6
     # via
     #   click
     #   pylint
+    #   pytest
 dill==0.3.7
     # via pylint
 idna==3.4
     # via requests
+iniconfig==2.0.0
+    # via pytest
 isort==5.12.0
     # via pylint
 mccabe==0.7.0
     # via pylint
 minecraft-launcher-lib==6.3
     # via -r requirements/dev.in
+packaging==23.2
+    # via pytest
 platformdirs==3.11.0
     # via pylint
+pluggy==1.3.0
+    # via pytest
 pylint==3.0.2
     # via -r requirements/dev.in
 pypiwin32==223
@@ -48,6 +55,8 @@ pyqt6-qt6==6.4.3
 pyqt6-sip==13.6.0
     # via pyqt6
 pyqt6-tools==6.4.2.3.3
+    # via -r requirements/dev.in
+pytest==7.4.3
     # via -r requirements/dev.in
 python-dotenv==1.0.0
     # via pyqt6-tools

@@ -12,10 +12,12 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow:
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1368, 696)
+        MainWindow.setEnabled(True)
+        MainWindow.resize(1366, 696)
         MainWindow.setMinimumSize(QtCore.QSize(1366, 696))
-        MainWindow.setMaximumSize(QtCore.QSize(2578, 1231))
+        MainWindow.setMaximumSize(QtCore.QSize(2578, 1184))
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
+        self.centralwidget.setMaximumSize(QtCore.QSize(1366, 696))
         self.centralwidget.setStyleSheet(
             "\n"
             "    QWidget#myWidget {\n"
@@ -32,6 +34,16 @@ class Ui_MainWindow:
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        spacerItem = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
+        self.horizontalLayout.addItem(spacerItem)
         self.lineEdit_nickname = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit_nickname.setMinimumSize(QtCore.QSize(300, 0))
         self.lineEdit_nickname.setMaximumSize(QtCore.QSize(300, 16777215))
@@ -62,44 +74,11 @@ class Ui_MainWindow:
             ""
         )
         self.lineEdit_nickname.setObjectName("lineEdit_nickname")
-        self.horizontalLayout_2.addWidget(self.lineEdit_nickname)
-        self.pushButton_minecraft_dir = QtWidgets.QPushButton(
-            parent=self.centralwidget
-        )
-        self.pushButton_minecraft_dir.setMinimumSize(QtCore.QSize(200, 0))
-        self.pushButton_minecraft_dir.setMaximumSize(
-            QtCore.QSize(200, 16777215)
-        )
-        self.pushButton_minecraft_dir.setStyleSheet(
-            "QPushButton {\n"
-            "  background-color: #3A92F7;\n"
-            "  border: none;\n"
-            "  border-radius: 5px;\n"
-            "  padding: 12px 24px;\n"
-            "  color: #FFFFFF;\n"
-            "  font-weight: bold;\n"
-            "  text-align: center;\n"
-            "  text-decoration: none;\n"
-            "  font-size: 16px;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "  background-color: #303EF7;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "QPushButton:pressed {\n"
-            "  background-color: #1000F7;\n"
-            "  border: 1px solid #00274D;\n"
-            "}\n"
-            ""
-        )
-        self.pushButton_minecraft_dir.setObjectName("pushButton_minecraft_dir")
-        self.horizontalLayout_2.addWidget(self.pushButton_minecraft_dir)
+        self.horizontalLayout.addWidget(self.lineEdit_nickname)
         self.comboBox_server_type = QtWidgets.QComboBox(
             parent=self.centralwidget
         )
-        self.comboBox_server_type.setMinimumSize(QtCore.QSize(200, 0))
+        self.comboBox_server_type.setMinimumSize(QtCore.QSize(0, 0))
         self.comboBox_server_type.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
             ".QComboBox {\n"
@@ -109,6 +88,7 @@ class Ui_MainWindow:
             "  padding: 10px;\n"
             "  font-size: 16px;\n"
             "  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
+            "\n"
             "}\n"
             "\n"
             ".QComboBox:focus {\n"
@@ -123,65 +103,45 @@ class Ui_MainWindow:
             "\n"
             ".QComboBox:hover {\n"
             "  border-color: #999;\n"
-            "}"
+            "}\n"
+            "\n"
+            "QComboBox:editable {\n"
+            "    background: white;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "\n"
+            "QComboBox:on { /* shift the text when the popup opens */\n"
+            "    padding-top: 3px;\n"
+            "    padding-left: 4px;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QComboBox:on { /* shift the text when the popup opens */\n"
+            "    padding-top: 3px;\n"
+            "    padding-left: 4px;\n"
+            "}\n"
+            "\n"
+            "QComboBox:drop-down {\n"
+            "    subcontrol-origin: padding;\n"
+            "    subcontrol-position: top right;\n"
+            "    width: 15px;\n"
+            "\n"
+            "    border-left-width: 1px;\n"
+            "    border-left-color: darkgray;\n"
+            "    border-left-style: solid; /* just a single line */\n"
+            "    border-top-right-radius: 3px; /* same radius as the QComboBox */\n"
+            "    border-bottom-right-radius: 3px;\n"
+            " border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
+            "}\n"
+            "\n"
+            "\n"
+            ""
         )
         self.comboBox_server_type.setObjectName("comboBox_server_type")
         self.comboBox_server_type.addItem("")
         self.comboBox_server_type.addItem("")
-        self.horizontalLayout_2.addWidget(self.comboBox_server_type)
-        spacerItem = QtWidgets.QSpacerItem(
-            40,
-            20,
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Minimum,
-        )
-        self.horizontalLayout_2.addItem(spacerItem)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.progressBar = QtWidgets.QProgressBar(parent=self.centralwidget)
-        font = QtGui.QFont()
-        font.setUnderline(False)
-        self.progressBar.setFont(font)
-        self.progressBar.setAutoFillBackground(False)
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setTextVisible(True)
-        self.progressBar.setInvertedAppearance(False)
-        self.progressBar.setFormat("")
-        self.progressBar.setObjectName("progressBar")
-        self.verticalLayout.addWidget(self.progressBar)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.pushButton_install_shaders = QtWidgets.QPushButton(
-            parent=self.centralwidget
-        )
-        self.pushButton_install_shaders.setMinimumSize(QtCore.QSize(300, 80))
-        self.pushButton_install_shaders.setStyleSheet(
-            "QPushButton {\n"
-            "  background-color: #3A92F7;\n"
-            "  border: none;\n"
-            "  border-radius: 5px;\n"
-            "  padding: 12px 24px;\n"
-            "  color: #FFFFFF;\n"
-            "  font-weight: bold;\n"
-            "  text-align: center;\n"
-            "  text-decoration: none;\n"
-            "  font-size: 16px;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "  background-color: #303EF7;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "QPushButton:pressed {\n"
-            "  background-color: #1000F7;\n"
-            "  border: 1px solid #00274D;\n"
-            "}\n"
-            ""
-        )
-        self.pushButton_install_shaders.setObjectName(
-            "pushButton_install_shaders"
-        )
-        self.horizontalLayout.addWidget(self.pushButton_install_shaders)
+        self.horizontalLayout.addWidget(self.comboBox_server_type)
         self.pushButton_install_and_launch = QtWidgets.QPushButton(
             parent=self.centralwidget
         )
@@ -192,7 +152,7 @@ class Ui_MainWindow:
             "QPushButton {\n"
             "  background-color: #3A92F7;\n"
             "  border: none;\n"
-            "  border-radius: 5px;\n"
+            "  border-radius: 30px;\n"
             "  padding: 12px 24px;\n"
             "  color: #FFFFFF;\n"
             "  font-weight: bold;\n"
@@ -215,9 +175,113 @@ class Ui_MainWindow:
         self.pushButton_install_and_launch.setObjectName(
             "pushButton_install_and_launch"
         )
-        self.horizontalLayout.addWidget(self.pushButton_install_and_launch)
+        self.horizontalLayout.addWidget(
+            self.pushButton_install_and_launch,
+            0,
+            QtCore.Qt.AlignmentFlag.AlignHCenter
+            | QtCore.Qt.AlignmentFlag.AlignTop,
+        )
+        self.checkBox_is_install_shaders = QtWidgets.QCheckBox(
+            parent=self.centralwidget
+        )
+        self.checkBox_is_install_shaders.setMinimumSize(QtCore.QSize(0, 0))
+        self.checkBox_is_install_shaders.setMaximumSize(
+            QtCore.QSize(250, 16777215)
+        )
+        self.checkBox_is_install_shaders.setStyleSheet(
+            "/* Custom Style QCheckBox */\n"
+            "QCheckBox {\n"
+            "  spacing: 5px;\n"
+            "  font-size: 16px;\n"
+            "\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator {\n"
+            "  width: 20px;\n"
+            "  height: 20px;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:unchecked {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked {\n"
+            "  border: 2px solid #4287f5;\n"
+            "  background-color: #4287f5;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:hover {\n"
+            "  border: 2px solid #999;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked:hover {\n"
+            "  background-color: #3264ad;\n"
+            "}"
+        )
+        self.checkBox_is_install_shaders.setObjectName(
+            "checkBox_is_install_shaders"
+        )
+        self.horizontalLayout.addWidget(self.checkBox_is_install_shaders)
+        self.pushButton_minecraft_dir_disable_long_tern_save = (
+            QtWidgets.QPushButton(parent=self.centralwidget)
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(
+            QtCore.QSize(200, 0)
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(
+            QtCore.QSize(200, 16777215)
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #3A92F7;\n"
+            "  border: none;\n"
+            "  border-radius: 5px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #303EF7;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #1000F7;\n"
+            "  border: 1px solid #00274D;\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(
+            "pushButton_minecraft_dir_disable_long_tern_save"
+        )
+        self.horizontalLayout.addWidget(
+            self.pushButton_minecraft_dir_disable_long_tern_save
+        )
+        spacerItem1 = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
+        self.horizontalLayout.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.progressBar = QtWidgets.QProgressBar(parent=self.centralwidget)
+        font = QtGui.QFont()
+        font.setUnderline(False)
+        self.progressBar.setFont(font)
+        self.progressBar.setAutoFillBackground(False)
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setTextVisible(True)
+        self.progressBar.setInvertedAppearance(False)
+        self.progressBar.setFormat("")
+        self.progressBar.setObjectName("progressBar")
+        self.verticalLayout_2.addWidget(self.progressBar)
         self.label_background = QtWidgets.QLabel(parent=self.centralwidget)
         self.label_background.setText("")
         self.label_background.setPixmap(
@@ -240,18 +304,18 @@ class Ui_MainWindow:
         self.lineEdit_nickname.setPlaceholderText(
             _translate("MainWindow", "Ник игрока")
         )
-        self.pushButton_minecraft_dir.setText(
-            _translate("MainWindow", "Папка с игрой")
-        )
         self.comboBox_server_type.setItemText(
             0, _translate("MainWindow", "TFC Halloween")
         )
         self.comboBox_server_type.setItemText(
-            1, _translate("MainWindow", "TFC Halloween test")
-        )
-        self.pushButton_install_shaders.setText(
-            _translate("MainWindow", "Установить шейдеры")
+            1, _translate("MainWindow", "TFC Halloween TEST")
         )
         self.pushButton_install_and_launch.setText(
             _translate("MainWindow", "Запустить TFC-Halloween")
+        )
+        self.checkBox_is_install_shaders.setText(
+            _translate("MainWindow", "Установить шейдеры")
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setText(
+            _translate("MainWindow", "Папка с игрой")
         )

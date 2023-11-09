@@ -5,13 +5,16 @@ This module defines classes and methods for configuring the Minecraft
 launcher and managing server configurations.
 
 """
+import json
 import logging
 import os
 from dataclasses import dataclass
+from typing import Callable, Dict, Optional
 
 import minecraft_launcher_lib as mine_lib
 
 from .utillity.custom_exceptions import UndefinedMinecraftLauncherConfig
+from .utillity.file_downloader import FileDownloader
 
 
 # pylint: disable = R0903
@@ -26,12 +29,28 @@ class LauncherConfig:
         logging_dir (str): The directory where log files are stored.
         servers_directory (str): The directory where server
             configurations are stored.
+        data_dir (str): The directory for only launcher files, like logs or
+            input_data in intpus.
+        launcher_data (str): Path to file with launcher data. There could
+            stores information about installed servers, for an example.
+        ui_data_path (str): Here launcher stores data from frontend inputs.
+
     """
 
     launcher_name: str = "tfc_halloween"
     minecraft_root_directory: str = mine_lib.utils.get_minecraft_directory()
     minecraft_root_directory += f"_{launcher_name}"
-    logging_dir: str = os.path.join(minecraft_root_directory, "logs")
+
+    data_dir: str = "halloween_data"
+    ui_data_path: str = os.path.join(
+        minecraft_root_directory,
+        data_dir,
+        "ui_inputs_data\\input_data",
+    )
+    launcher_data: str = os.path.join(
+        minecraft_root_directory, data_dir, "launcher_data.bin"
+    )
+    logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
     servers_directory: str = "servers"
 
 
@@ -54,6 +73,10 @@ class MinecraftLauncherConfig(LauncherConfig):
         repo_url (str): The URL for the GitHub repository where
             mods are stored.
         java_install_url (str): The URL for Java installation.
+        map_json_url (str): Url for downloading map file. It stores
+            config for installing all modpacks.
+        map_json_data Optional[Dict]: main info about all modpacks files.
+            Should be installed before all functions calls.
 
     """
 
@@ -65,8 +88,15 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_server_ip: str
     minecraft_server_port: str
     minecraft_java_version: int
-    repo_url: str
     java_install_url: str
+    map_json_url: str
+    map_json_data: Optional[Dict] = None
+
+    def parse_map_json_data(self):
+        """Download map.json file from backend repo."""
+        self.map_json_data = json.loads(
+            FileDownloader.download_file(self.map_json_url)
+        )[self.config_name]
 
 
 def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
@@ -89,10 +119,11 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25565",
         minecraft_java_version=17,
-        repo_url="https://api.github.com/repos/izharus/tfc_hallowen_modpack",
         # pylint: disable = C0301
         java_install_url="https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html",
+        map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )
+    terra_firma_craft_config.parse_map_json_data()
     return terra_firma_craft_config
 
 
@@ -120,14 +151,15 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25570",
         minecraft_java_version=17,
-        repo_url="https://api.github.com/repos/izharus/tfc_hallowen_modpack",
         # pylint: disable = C0301
         java_install_url="https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html",
+        map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )
+    terra_firma_craft_config.parse_map_json_data()
     return terra_firma_craft_config
 
 
-def get_config(config_name: str):
+def get_config(config_name: str) -> Callable[[], MinecraftLauncherConfig]:
     """
     Get the launcher configuration based on the specified name.
 
@@ -135,7 +167,7 @@ def get_config(config_name: str):
         config_name (str): The name of the configuration to retrieve.
 
     Returns:
-        MinecraftLauncherConfig: The specified launcher configuration.
+        MinecraftLauncherConfig: The specified launcher configuration function.
 
     Raises:
         UndefinedMinecraftLauncherConfig: If the specified
@@ -150,6 +182,6 @@ def get_config(config_name: str):
 
 
 SUPPORTED_CONFIGS = {
-    "terrafirmacraft": get_terra_firma_craft_config(),
-    "terrafirmacraft_test": get_terra_firma_craft_test_config(),
+    "TFC Halloween": get_terra_firma_craft_config,
+    "TFC Halloween TEST": get_terra_firma_craft_test_config,
 }

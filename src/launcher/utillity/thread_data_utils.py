@@ -298,7 +298,7 @@ class ThreadUiInputData(ThreadData):
 
         for ui_name, combobox_ui in self.dict_ui_data["comboBox"].items():
             if ui_name not in self.dict_input_data:
-                self.dict_input_data[ui_name] = combobox_ui.currentIndex()
+                self.dict_input_data[ui_name] = combobox_ui.currentText()
 
     def update_ui_with_input_data(self) -> None:
         """
@@ -325,8 +325,11 @@ class ThreadUiInputData(ThreadData):
         for ui_name, textedit_ui in self.dict_ui_data["textEdit"].items():
             textedit_ui.setText(self.dict_input_data[ui_name])
 
+        # нужно по тексту выбрать элемент в комбобоксе
         for ui_name, combobox_ui in self.dict_ui_data["comboBox"].items():
-            combobox_ui.setCurrentIndex(self.dict_input_data[ui_name])
+            combobox_ui.setCurrentIndex(
+                combobox_ui.findText(self.dict_input_data[ui_name])
+            )
 
     def update_input_data_from_ui(self, app_name: str = "default") -> None:
         """
@@ -354,7 +357,7 @@ class ThreadUiInputData(ThreadData):
             self.dict_input_data[ui_name] = textinput_ui.toPlainText()
 
         for ui_name, combobox_ui in self.dict_ui_data["comboBox"].items():
-            self.dict_input_data[ui_name] = combobox_ui.currentIndex()
+            self.dict_input_data[ui_name] = combobox_ui.currentText()
 
         self.put_data_to_file(self.dict_input_data, app_name)
 
