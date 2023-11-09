@@ -327,9 +327,13 @@ class ThreadUiInputData(ThreadData):
 
         # нужно по тексту выбрать элемент в комбобоксе
         for ui_name, combobox_ui in self.dict_ui_data["comboBox"].items():
-            combobox_ui.setCurrentIndex(
-                combobox_ui.findText(self.dict_input_data[ui_name])
-            )
+            try:
+                combobox_ui.setCurrentIndex(
+                    combobox_ui.findText(self.dict_input_data[ui_name])
+                )
+            # If text in file was changed
+            except Exception:
+                pass
 
     def update_input_data_from_ui(self, app_name: str = "default") -> None:
         """
