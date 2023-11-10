@@ -27,22 +27,25 @@ class MessageBoxManager:
         msg_box_title: str,
         msg_box_icon: QtWidgets.QMessageBox.Icon,
         msg_box_info: str = "",
-        msg_box_window_title: Optional[str] = "Ошибка",
+        msg_box_window_title: str = "Ошибка",
         callback: Optional[Callable[[], None]] = None,
     ) -> None:
         """
-        Create a simple message box with the specified parameters and execute
-        an optional callback function after it's closed.
+        Create and display a QMessageBox with customizable parameters.
 
-        Args:
-            msg_box_title (str): The title of the message box.
-            msg_box_icon (QtWidgets.QMessageBox.Icon): The icon for
-                the message box.
-            msg_box_info (str, optional): Additional informative text for
-                the message box.
-            msg_box_window_title: Optional[str] : Title text of msg_box.
-            callback (Optional[Callable[[], None]]): A callback function to be
-                executed after the message box is closed.
+        Parameters:
+        - msg_box_title (str): The title of the QMessageBox.
+        - msg_box_icon (QtWidgets.QMessageBox.Icon): The icon to be
+            displayed in the QMessageBox.
+        - msg_box_info (str, optional): Additional information to be
+            displayed in the QMessageBox.
+        - msg_box_window_title (str, optional): The title of the QMessageBox
+            window.
+        - callback (Optional[Callable[[], None]], optional): A callback
+            function to be executed on button click.
+
+        Returns:
+        None
         """
         msg = QtWidgets.QMessageBox()
         msg.setWindowTitle(msg_box_window_title)
@@ -50,8 +53,21 @@ class MessageBoxManager:
         msg.setWindowIcon(QtGui.QIcon(self.icon_file_path))
         msg.setText(msg_box_title)
         msg.setInformativeText(msg_box_info)
+
+        if callback:
+            # Add custom buttons
+            ok_button = msg.addButton(
+                "OK",
+                QtWidgets.QMessageBox.ButtonRole.AcceptRole,
+            )
+            msg.addButton(
+                "Cancel",
+                QtWidgets.QMessageBox.ButtonRole.RejectRole,
+            )
+
         msg.exec()
-        if callback is not None:
+
+        if msg.clickedButton() == ok_button and callback is not None:
             callback()
 
     def info(
