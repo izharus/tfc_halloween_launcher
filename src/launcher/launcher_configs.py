@@ -6,12 +6,13 @@ launcher and managing server configurations.
 
 """
 import json
-import logging
 import os
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
 
 import minecraft_launcher_lib as mine_lib
+from log_wizard import DefaultConfig
+from log_wizard import log as get_logger
 
 from .utillity.file_downloader import FileDownloader
 
@@ -53,6 +54,10 @@ class LauncherConfig:
     logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
     servers_directory: str = "servers"
     java_install_url: str = "https://java-for-minecraft.com/ru/"
+
+
+DefaultConfig(log_dir=LauncherConfig.logging_dir)
+log = get_logger()
 
 
 # pylint: disable= R0902
@@ -172,8 +177,8 @@ def get_config(config_name: str) -> Callable[[], MinecraftLauncherConfig]:
         return SUPPORTED_CONFIGS[config_name]
     except KeyError:
         default_config = list(SUPPORTED_CONFIGS.values())[0]
-        logging.error(f"Unknown config name: {config_name}")
-        logging.error(f"Setting default config: {default_config}")
+        log.error(f"Unknown config name: {config_name}")
+        log.error(f"Setting default config: {default_config}")
         return default_config
 
 

@@ -1,10 +1,13 @@
 """Module for validating data tools."""
 
-import logging
 import subprocess
 import traceback
 
+from log_wizard import log as get_logger
+
 from .design.utillity import MessageBoxManager
+
+log = get_logger()
 
 
 class Validator:
@@ -52,9 +55,9 @@ class Validator:
             )
             return True
         except Exception as error:
-            logging.error(
+            log.error(
                 f"Failed to get java version: {error}."
                 "Java maybe not installed, or not added to the PATH."
             )
-            logging.debug(traceback.format_exc())
+            log.debug(traceback.format_exc())
             return False

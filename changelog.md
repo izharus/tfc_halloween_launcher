@@ -17,3 +17,7 @@
 - Fixed critical errors that led to an unexpected stop of the program if Java hadn't been installed in the system, or if it was not added to the PATH variable, or for any other errors during installation.
 - Fixed critical errors that led to an unexpected stop of the program if any error occurred while installing Minecraft.
 - Removed automatic reference to the user's browser if Java is not found on the user's system. The Java installation link is now pasted into the error message box.
+- Java indication has been simplified, so now you don't especially need to install Java 17.
+
+### Note: Windows 7 Support
+- Please note that launcher do not supports for Windows 7. Windows 7 is an outdated operating system, and making compatibility could require extensive time and resources. Even major platforms like Steam will cease support for Windows 7 in January 2024. I recommend upgrading to a more recent Windows version for an improved and secure experience.

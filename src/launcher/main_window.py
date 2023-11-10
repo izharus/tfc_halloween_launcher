@@ -16,13 +16,13 @@ icon, and provides safety timers for updating input data from the UI.
 """
 # pylint: disable=unnecessary-lambda
 
-import logging
 import os
 import sys
 
 import win32con
 import win32console
 import win32gui
+from log_wizard import log as get_logger
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPixmap
@@ -31,16 +31,11 @@ from .data_validation import Validator
 from .design.design import Ui_MainWindow
 from .design.utillity import MessageBoxManager, open_directory
 from .launcher_configs import LauncherConfig, get_config
-from .launcher_installer import (
-    InstallThread,
-    MinecraftExecutorThread,
-    MinecraftLauncherConfig,
-    init_logging_basic_config,
-)
+from .launcher_installer import InstallThread, MinecraftExecutorThread
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
 
-init_logging_basic_config(MinecraftLauncherConfig.logging_dir)
+log = get_logger()
 
 
 def hide_console() -> None:
@@ -59,8 +54,8 @@ class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
     # pylint: disable = R0902
-
     def __init__(self) -> None:
+        log.debug("Window class __init__ entered.")
         super().__init__()
         self._ui_instance = Ui_MainWindow()
 
@@ -185,7 +180,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.hide()
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
-            logging.error(msg_title)
+            log.error(msg_title)
             self.msg_box.warn(
                 msg_title,
                 "За подрбностями обращайтесь к логу.",
@@ -222,7 +217,7 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-        logging.debug("closeEvent entry")
+        log.debug("closeEvent entry")
         self.input_data.update_input_data_from_ui()
         self.is_working = False
         event.accept()

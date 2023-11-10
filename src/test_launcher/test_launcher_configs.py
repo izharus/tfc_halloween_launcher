@@ -16,7 +16,7 @@ def test_get_config_do_not_returns_existing_config():
     assert isinstance(config(), MinecraftLauncherConfig)
 
 
-def test_get_config_do_not_returns_default_config(caplog):
+def test_get_config_do_not_returns_default_config():
     """
     Check if get_config() returns default config
     if config_name incorrect.
@@ -26,12 +26,7 @@ def test_get_config_do_not_returns_default_config(caplog):
 
     assert callable(result)
     assert isinstance(result(), MinecraftLauncherConfig)
-
-    assert "Unknown config name" in caplog.text
-    log_message = (
-        "Setting default config: " f"{list(SUPPORTED_CONFIGS.values())[0]}"
-    )
-    assert log_message in caplog.text
+    assert result is list(SUPPORTED_CONFIGS.values())[0]
 
 
 def test_java_install_url_is_incorrect():

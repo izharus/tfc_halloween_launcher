@@ -3,3 +3,4 @@ PyQt6-tools
 pylint
 pypiwin32 # show/hode console
 pytest
+log_wizard

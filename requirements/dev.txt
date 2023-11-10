@@ -28,6 +28,8 @@ iniconfig==2.0.0
     # via pytest
 isort==5.12.0
     # via pylint
+log-wizard==1.2.0
+    # via -r requirements/dev.in
 mccabe==0.7.0
     # via pylint
 minecraft-launcher-lib==6.3

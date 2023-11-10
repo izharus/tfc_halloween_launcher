@@ -37,9 +37,6 @@ Note: This module requires the PyQt6 library to be installed.
 """
 
 import json
-
-# from log_wizard import log as main_log
-import logging
 import os
 import threading
 import time
@@ -47,7 +44,10 @@ import typing
 from contextlib import contextmanager
 from typing import Any, Dict, Union
 
+from log_wizard import log as get_logger
 from PyQt6 import QtCore, QtWidgets
+
+log = get_logger()
 
 
 class ThreadData:
@@ -103,7 +103,7 @@ class ThreadData:
                 with open(self.str_path, "w", encoding="utf-8") as file_write:
                     json.dump(self.dict_thread_data, file_write)
             except Exception as error:
-                logging.error(f"put_data_to_file() failed: {error}")
+                log.error(f"put_data_to_file() failed: {error}")
                 return False
         return True
 
@@ -121,7 +121,7 @@ class ThreadData:
         try:
             return self.dict_thread_data[app_name]
         except Exception:
-            logging.info(f"Creating input_data for new app: {app_name}")
+            log.info(f"Creating input_data for new app: {app_name}")
             return {}
 
 
@@ -672,7 +672,7 @@ class LastVeryGoodCounter:
             None
         """
         if time.time() - self.time_of_last_verygood > self.time_to_stop:
-            logging.error(
+            log.error(
                 f"{proc_id} СТОП, VeryGood не было более "
                 + str(self.time_to_stop / 60)
                 + " минут"

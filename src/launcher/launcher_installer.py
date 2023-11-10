@@ -14,9 +14,6 @@ Classes:
     - MinecraftExecutorThread: A threaded executor for launching th
         Minecraft game.
 
-Functions:
-    - init_logging_basic_config(log_dir: str) -> None: Initialize basic
-        logging configuration.
 
 Each class and function within this module serves a specific purpose in
 the Minecraft launcher installation process. They handle various aspects
@@ -28,8 +25,6 @@ launching a customized Minecraft environment.
 """
 
 # pylint: disable=unnecessary-lambda
-import datetime
-import logging
 import os
 import shelve
 import subprocess
@@ -37,11 +32,11 @@ import traceback
 from typing import Callable, Dict, List, Optional
 
 import minecraft_launcher_lib as mine_lib
+from log_wizard import log as get_logger
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from .launcher_configs import MinecraftLauncherConfig
-from .utillity.custom_decorators import log_operation
 from .utillity.custom_exceptions import (
     CalculateHashFailed,
     FilesSaveError,
@@ -49,6 +44,8 @@ from .utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
+
+log = get_logger()
 
 
 class ModsInstaller(QThread, FileDownloader):
@@ -65,7 +62,6 @@ class ModsInstaller(QThread, FileDownloader):
         self.minecraft_directory = minecraft_directory
         self.mods_directory = os.path.join(minecraft_directory, mods_directory)
 
-    @log_operation
     def delete_unknown_mods(self):
         """
         Deletes all files in directory 'mods' which do not exists in
@@ -86,20 +82,17 @@ class ModsInstaller(QThread, FileDownloader):
                     undifinied_file_path = os.path.join(
                         self.mods_directory, file
                     )
-                    logging.info(
-                        f"Deleting unknown file: {undifinied_file_path}"
-                    )
+                    log.info(f"Deleting unknown file: {undifinied_file_path}")
                     try:
                         os.remove(undifinied_file_path)
                     except Exception as error:
-                        logging.error(
+                        log.error(
                             "Error filed deleting the file:"
                             f"{undifinied_file_path}, {error}"
                         )
                         return False
         return True
 
-    @log_operation
     def check_and_download(
         self,
         callback: Optional[Dict[str, Callable]] = None,
@@ -128,14 +121,12 @@ class ModsInstaller(QThread, FileDownloader):
                 try:
                     file_hash = self.calculate_hash(file_path)
                 except CalculateHashFailed:
-                    logging.error(
-                        f"Failed to calculate hash for: {file_name}."
-                    )
+                    log.error(f"Failed to calculate hash for: {file_name}.")
                     return False
                 if file_hash == file_info["hash"]:
-                    logging.info(f"File hash correct: {file_name}")
+                    log.info(f"File hash correct: {file_name}")
                     continue
-                logging.info(f"File hash incorrect: {file_name}")
+                log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
             try:
@@ -143,7 +134,7 @@ class ModsInstaller(QThread, FileDownloader):
                     file_path, self.download_file(file_info["api_url"])
                 )
             except (FilesSaveError, RequestDownloadError):
-                logging.error(f"Failed to download file: {file_name}.")
+                log.error(f"Failed to download file: {file_name}.")
                 return False
         return True
 
@@ -251,7 +242,7 @@ class InstallThread(QThread):
         try:
             self.main_worker()
         except Exception as error:
-            logging.error(
+            log.error(
                 "Unexpected error in InstallThread thread:\n"
                 f"{traceback.format_exc()}"
             )
@@ -292,7 +283,7 @@ class InstallThread(QThread):
             if "client_data_shaders" in self.config.map_json_data:
                 map_dirs += self.config.map_json_data["client_data_shaders"]
             else:
-                logging.error(
+                log.error(
                     "Shaders couldn't be installed for "
                     f"{self.config.config_name}"
                 )
@@ -388,52 +379,7 @@ class MinecraftExecutorThread(QThread):
                 minecraft_process.wait()  # Wait for the subprocess to complete
         except Exception as error:
             self.runtime_error = error
-            logging.debug(
+            log.debug(
                 "Unexpected error wile executing minecraft:\n"
                 f"{traceback.format_exc()}"
             )
-
-
-def init_logging_basic_config(log_dir: str) -> None:
-    """
-    Initialize basic logging configuration.
-
-    This function sets up basic logging configuration for logging messages to
-    a log file. It creates a log directory, generates a log file name based on
-    the current month and year, and configures the log file path, format, and
-    logging level.
-
-    Args:
-        log_dir (str): The directory where the log file will be stored.
-
-    Returns:
-        None
-
-    Parameters:
-        - log_dir (str): The directory path for storing log files.
-
-    The log file will include timestamps, log levels, and log messages in the
-    specified format.
-
-    Example:
-    ```
-    init_logging_basic_config("/path/to/log_directory")
-    ```
-
-    """
-    os.makedirs(log_dir, exist_ok=True)
-
-    # Get the current month and year
-    current_month = datetime.datetime.now().strftime("%m")
-    current_year = datetime.datetime.now().strftime("%Y")
-
-    # Create the log file name using the current month and year
-    log_file_name = f"{current_month}.{current_year}.log"
-    # Create the full path to the log file
-    log_file_path = os.path.join(log_dir, log_file_name)
-    logging.basicConfig(
-        filename=log_file_path,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%d.%m.%Y %H:%M:%S",
-        level=logging.DEBUG,
-    )
