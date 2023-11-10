@@ -185,7 +185,10 @@ class Window(QtWidgets.QMainWindow):
             log.error(msg_title)
             self.msg_box.warn(
                 msg_title,
-                "За подрбностями обращайтесь к логу.",
+                "При нажатии 'Ок' откроется папка с логом. ",
+                callback=lambda: webbrowser.open(
+                    LauncherConfig.logging_dir,
+                ),
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
@@ -193,7 +196,6 @@ class Window(QtWidgets.QMainWindow):
 
         nickname = self.input_data.extract_element("lineEdit_nickname")
         self._executor = MinecraftExecutorThread(nickname, self.config)
-        self._executor.finished.connect(lambda: self.show())
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()
 
@@ -203,8 +205,12 @@ class Window(QtWidgets.QMainWindow):
         if self._executor.runtime_error:
             self.msg_box.warn(
                 "Запуск игры завершлися с ошибкой",
-                "За подрбностями обращайтесь к логу.",
+                "При нажатии 'Ок' откроется папка с логом. ",
+                callback=lambda: webbrowser.open(
+                    LauncherConfig.logging_dir,
+                ),
             )
+        self.show()
 
     # pylint: disable = C0103
     def closeEvent(self, event) -> None:
