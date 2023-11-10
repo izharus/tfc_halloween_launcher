@@ -1,5 +1,5 @@
 """Utillity module for creating and managing UI elements."""
-from typing import Optional
+from typing import Callable, Optional
 
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QUrl
@@ -21,12 +21,14 @@ class MessageBoxManager:
     def __init__(self, icon_file_path: str):
         self.icon_file_path = icon_file_path
 
+    # pylint: disable = R0913
     def create_msg_box(
         self,
         msg_box_title: str,
         msg_box_icon: QtWidgets.QMessageBox.Icon,
         msg_box_info: str = "",
         msg_box_window_title: Optional[str] = "Ошибка",
+        callback: Optional[Callable[[], None]] = None,
     ) -> None:
         """
         Create a simple message box with the specified parameters and execute
@@ -39,7 +41,8 @@ class MessageBoxManager:
             msg_box_info (str, optional): Additional informative text for
                 the message box.
             msg_box_window_title: Optional[str] : Title text of msg_box.
-
+            callback (Optional[Callable[[], None]]): A callback function to be
+                executed after the message box is closed.
         """
         msg = QtWidgets.QMessageBox()
         msg.setWindowTitle(msg_box_window_title)
@@ -48,11 +51,14 @@ class MessageBoxManager:
         msg.setText(msg_box_title)
         msg.setInformativeText(msg_box_info)
         msg.exec()
+        if callback is not None:
+            callback()
 
     def info(
         self,
         msg_box_title: str,
         msg_box_info: str = "",
+        callback: Optional[Callable[[], None]] = None,
     ) -> None:
         """Create an information message box"""
         self.create_msg_box(
@@ -60,12 +66,14 @@ class MessageBoxManager:
             msg_box_icon=QtWidgets.QMessageBox.Icon.Information,
             msg_box_info=msg_box_info,
             msg_box_window_title="Уведомление",
+            callback=callback,
         )
 
     def warn(
         self,
         msg_box_title: str,
         msg_box_info: str = "",
+        callback: Optional[Callable[[], None]] = None,
     ) -> None:
         """Create a warning message box."""
         self.create_msg_box(
@@ -73,6 +81,7 @@ class MessageBoxManager:
             msg_box_icon=QtWidgets.QMessageBox.Icon.Warning,
             msg_box_info=msg_box_info,
             msg_box_window_title="Ошибка",
+            callback=callback,
         )
 
 
