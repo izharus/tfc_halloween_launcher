@@ -96,7 +96,7 @@ class Window(QtWidgets.QMainWindow):
             self._install_minecraft_multi_thread
         )
 
-        self.setWindowTitle("TFC-Halloween")
+        self.setWindowTitle("TFC-Halloween 1.0.0")
 
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
