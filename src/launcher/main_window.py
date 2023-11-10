@@ -18,6 +18,8 @@ icon, and provides safety timers for updating input data from the UI.
 
 import os
 import sys
+import traceback
+import webbrowser
 
 import win32con
 import win32console
@@ -221,6 +223,32 @@ class Window(QtWidgets.QMainWindow):
         self.input_data.update_input_data_from_ui()
         self.is_working = False
         event.accept()
+
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    """
+    Custom exception handler to catch all exceptions.
+    """
+    log.critical("Exception occurred:")
+    log.critical(exc_type)
+    log.critical(exc_value)
+    log.critical(traceback.format_tb(exc_traceback))
+    msg_box = MessageBoxManager("")
+
+    msg_box.warn(
+        "Критическая ошибка!",
+        (
+            "Отправьте последний файл 'log.debug' разработчику. "
+            "При нажатии 'Ок' откроется папка с логом. "
+        ),
+        callback=lambda: webbrowser.open(LauncherConfig.logging_dir),
+    )
+    sys.exit(1)
+    # Handle the exception or log it as needed
+
+
+# Set the custom exception handler
+sys.excepthook = handle_exception
 
 
 def main():
