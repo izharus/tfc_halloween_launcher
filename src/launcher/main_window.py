@@ -149,7 +149,14 @@ class Window(QtWidgets.QMainWindow):
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
             return
-        if not self._validator.is_java_version_supported(self.config):
+        if not self._validator.is_java_installed():
+            java_install_url = self.config.java_install_url
+            install_java_link = f'<a href="{java_install_url}">\
+    Я хочу установить Java сейчас!</a> '
+            self.msg_box.warn(
+                "Не удалось найти Java в система.",
+                msg_box_info=install_java_link,
+            )
             return
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)

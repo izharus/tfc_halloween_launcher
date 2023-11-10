@@ -31,7 +31,6 @@ launching a customized Minecraft environment.
 import datetime
 import logging
 import os
-import re
 import shelve
 import subprocess
 import traceback
@@ -46,7 +45,6 @@ from .utillity.custom_decorators import log_operation
 from .utillity.custom_exceptions import (
     CalculateHashFailed,
     FilesSaveError,
-    JavaGetVersionError,
     MinecraftLauncherConfigNotSet,
     RequestDownloadError,
 )
@@ -394,56 +392,6 @@ class MinecraftExecutorThread(QThread):
                 "Unexpected error wile executing minecraft:\n"
                 f"{traceback.format_exc()}"
             )
-
-
-@log_operation
-def get_java_major_version() -> int:
-    """
-    Get the major version of Java installed on the system.
-
-    This function runs the 'java -version' command to check the Java version
-    and extracts the major version number.
-
-    Returns:
-        int: The major Java version
-
-    Note:
-        The function returns the major version number of the installed Java,
-        for example, 8 for Java 8.
-
-        The 'java -version' command typically provides a detailed output,
-        but this function extracts the major version from the first line.
-
-    Raises:
-        JavaGetVersionError: If an error occurs during the version
-            retrieval process, a custom exception is raised to indicate
-            the issue.
-
-    Example of expected 'java -version' command output (first line):
-    java version "17.0.9" 2023-10-17 LTS
-    """
-    try:
-        # Run the 'java -version' command to check the Java version
-        output = subprocess.check_output(
-            ["java", "-version"],
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-        )
-        first_line = output.split("\n", maxsplit=1)[0]
-        version_match = re.search(r"(\d+\.\d+\.\d+)", first_line)
-        if version_match:
-            java_version = int(
-                version_match.group(1).split(".", maxsplit=1)[0]
-            )
-            return java_version
-    except Exception as error:
-        logging.error(f"failed to get java version: {error}.")
-        logging.debug(traceback.format_exc())
-        raise JavaGetVersionError() from error
-
-    # If the function reaches this point
-    # it means Java was found but its version is unknown
-    raise JavaGetVersionError("Java found in system, but version is unknown.")
 
 
 def init_logging_basic_config(log_dir: str) -> None:

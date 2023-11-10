@@ -1,8 +1,10 @@
 """Module for validating data tools."""
 
+import logging
+import subprocess
+import traceback
+
 from .design.utillity import MessageBoxManager
-from .launcher_installer import MinecraftLauncherConfig, get_java_major_version
-from .utillity.custom_exceptions import JavaGetVersionError
 
 
 class Validator:
@@ -30,36 +32,29 @@ class Validator:
             return False
         return True
 
-    def is_java_version_supported(
-        self, config: MinecraftLauncherConfig
-    ) -> bool:
+    @staticmethod
+    def is_java_installed() -> bool:
         """
-        Check if Java version correct.
-
-        Args:
-            config (MinecraftLauncherConfig): current config.
+        Check if Java is installed on the system.
 
         Returns:
-            bool: if Java version supported, False otherwise.
+            bool: True if Java is installed, False otherwise.
         """
-        java_install_url = config.java_install_url
-        install_java_link = f'<a href="{java_install_url}">\
-Я хочу установить Java сейчас!</a> '
-        required_version = config.minecraft_java_version
         try:
-            version = get_java_major_version()
-        except JavaGetVersionError:
-            self.msg_box.warn(
-                "Не удалось найти Java в система.",
-                msg_box_info=install_java_link,
+            # Run the 'java -version' command to check the Java version
+
+            # This function return output from console
+            # If needed, we can parse current Java version from the console
+            subprocess.check_output(
+                ["java", "-version"],
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
             )
-            return False
-        if version < required_version:
-            self.msg_box.warn(
-                f"Java {required_version} или выше не установлена в системе.",
-                msg_box_info=f"Версия java найдена: '{version}'. "
-                "Проверьте чтобы java была добавлена в PATH. "
-                f"{install_java_link}",
+            return True
+        except Exception as error:
+            logging.error(
+                f"Failed to get java version: {error}."
+                "Java maybe not installed, or not added to the PATH."
             )
+            logging.debug(traceback.format_exc())
             return False
-        return True
