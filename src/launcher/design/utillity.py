@@ -1,5 +1,5 @@
 """Utillity module for creating and managing UI elements."""
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QUrl
@@ -28,7 +28,7 @@ class MessageBoxManager:
         msg_box_icon: QtWidgets.QMessageBox.Icon,
         msg_box_info: str = "",
         msg_box_window_title: str = "Ошибка",
-        callback: Optional[Callable[[], None]] = None,
+        callback: Optional[Callable[[], Any]] = None,
     ) -> None:
         """
         Create and display a QMessageBox with customizable parameters.
@@ -74,7 +74,7 @@ class MessageBoxManager:
         self,
         msg_box_title: str,
         msg_box_info: str = "",
-        callback: Optional[Callable[[], None]] = None,
+        callback: Optional[Callable[[], Any]] = None,
     ) -> None:
         """Create an information message box"""
         self.create_msg_box(
@@ -89,7 +89,7 @@ class MessageBoxManager:
         self,
         msg_box_title: str,
         msg_box_info: str = "",
-        callback: Optional[Callable[[], None]] = None,
+        callback: Optional[Callable[[], Any]] = None,
     ) -> None:
         """Create a warning message box."""
         self.create_msg_box(
