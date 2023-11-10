@@ -229,6 +229,24 @@ class InstallThread(QThread):
                 return launcher_data.get(field, False)
         raise MinecraftLauncherConfigNotSet()
 
+    def set_minecraft_installed_flag(
+        self,
+        launcher_data_path: str,
+        launcher_config_name: str,
+    ) -> None:
+        """
+        Set minecraft installed flag for this current profile.
+
+        Args:
+            launcher_data_path: path to launcher data file.
+            launcher_config_name: current launcher config name.
+        Returns:
+            None
+        """
+        with shelve.open(launcher_data_path) as launcher_data:
+            field = launcher_config_name + "_is_installed"
+            launcher_data[field] = True
+
     def run(self) -> None:
         """Call main_worker an handle any exceptions."""
         self.runtime_error = None
@@ -259,13 +277,17 @@ class InstallThread(QThread):
 
         if not self.is_minecraft_installed(
             self.config.launcher_data,
-            self.config.launcher_name,
+            self.config.config_name,
         ):
             mine_lib.forge.install_forge_version(
                 self.config.forge_version,
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
+        self.set_minecraft_installed_flag(
+            self.config.launcher_data,
+            self.config.config_name,
+        )
         map_dirs = self.config.map_json_data["main_data"]
         map_dirs += self.config.map_json_data["client_data"]
         if self.is_install_shaders:
@@ -344,17 +366,6 @@ class MinecraftExecutorThread(QThread):
         # options["port"] = self.minecraft_server_port
         return options
 
-    def set_minecraft_onstalled_flag(self) -> None:
-        """
-        Set minecraft installed flag for this current profile.
-
-        Returns:
-            None
-        """
-        with shelve.open(self.config.launcher_data) as launcher_data:
-            field = self.config.config_name + "_is_installed"
-            launcher_data[field] = True
-
     def run(self):
         """
         Execute the Minecraft game with the specified nickname.
@@ -377,7 +388,6 @@ class MinecraftExecutorThread(QThread):
                 cwd=self.config.minecraft_directory,
             ) as minecraft_process:
                 minecraft_process.wait()  # Wait for the subprocess to complete
-            self.set_minecraft_onstalled_flag()
         except Exception as error:
             self.runtime_error = error
             logging.debug(
