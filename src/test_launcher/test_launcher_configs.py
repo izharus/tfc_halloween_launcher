@@ -1,6 +1,7 @@
 """Tests for src/launcher_config.py"""
 from src.launcher.launcher_configs import (
     SUPPORTED_CONFIGS,
+    LauncherConfig,
     MinecraftLauncherConfig,
     get_config,
 )
@@ -31,6 +32,15 @@ def test_get_config_do_not_returns_default_config(caplog):
         "Setting default config: " f"{list(SUPPORTED_CONFIGS.values())[0]}"
     )
     assert log_message in caplog.text
+
+
+def test_java_install_url_is_incorrect():
+    """Java install url is universal and should not be changed."""
+    java_install_url = "https://java-for-minecraft.com/ru/"
+    assert LauncherConfig.java_install_url == java_install_url
+
+    for config in SUPPORTED_CONFIGS.values():
+        assert config().java_install_url == java_install_url
 
 
 # Add more test cases as needed

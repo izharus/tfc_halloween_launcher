@@ -33,6 +33,7 @@ class LauncherConfig:
         launcher_data (str): Path to file with launcher data. There could
             stores information about installed servers, for an example.
         ui_data_path (str): Here launcher stores data from frontend inputs.
+        java_install_url (str): The URL for Java installation.
 
     """
 
@@ -51,6 +52,7 @@ class LauncherConfig:
     )
     logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
     servers_directory: str = "servers"
+    java_install_url: str = "https://java-for-minecraft.com/ru/"
 
 
 # pylint: disable= R0902
@@ -71,7 +73,6 @@ class MinecraftLauncherConfig(LauncherConfig):
         minecraft_java_version (str): The Java version to use.
         repo_url (str): The URL for the GitHub repository where
             mods are stored.
-        java_install_url (str): The URL for Java installation.
         map_json_url (str): Url for downloading map file. It stores
             config for installing all modpacks.
         map_json_data Optional[Dict]: main info about all modpacks files.
@@ -87,7 +88,6 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_server_ip: str
     minecraft_server_port: str
     minecraft_java_version: int
-    java_install_url: str
     map_json_url: str
     map_json_data: Optional[Dict] = None
 
@@ -119,7 +119,6 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
         minecraft_server_port="25565",
         minecraft_java_version=17,
         # pylint: disable = C0301
-        java_install_url="https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html",
         map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )
     terra_firma_craft_config.parse_map_json_data()
@@ -151,7 +150,6 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
         minecraft_server_port="25570",
         minecraft_java_version=17,
         # pylint: disable = C0301
-        java_install_url="https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html",
         map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )
     terra_firma_craft_config.parse_map_json_data()

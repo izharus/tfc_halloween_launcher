@@ -10,6 +10,7 @@
 - Added a feature to skip installation if Minecraft for the current active configuration is already installed.
 - Updated the design of the item for installing shaders. Shaders will automatically install/delete based on checkbox status (checked/unchecked).
 - Improved the informativeness of log messages.
+- Updated Java installation url, now it supports multiple versions of Windows.
 - Other small interface improvements.
 
 ### Bug Fixes
