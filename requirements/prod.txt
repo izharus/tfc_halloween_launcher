@@ -12,6 +12,8 @@ charset-normalizer==3.3.2
     # via requests
 idna==3.4
     # via requests
+log-wizard==1.2.0
+    # via -r requirements/prod.in
 minecraft-launcher-lib==6.3
     # via -r requirements/prod.in
 packaging==23.2
