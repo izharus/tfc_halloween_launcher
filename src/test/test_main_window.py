@@ -1,4 +1,5 @@
 """Tests for mainw qt Window class."""
+# pylint:disable = E0401
 import sys
 
 from PyQt6 import QtWidgets

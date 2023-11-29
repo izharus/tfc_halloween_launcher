@@ -1,4 +1,5 @@
 """Tests for src/launcher_config.py"""
+# pylint:disable = E0401
 from src.launcher.launcher_configs import (
     SUPPORTED_CONFIGS,
     LauncherConfig,
