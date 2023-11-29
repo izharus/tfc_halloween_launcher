@@ -4,3 +4,5 @@ pylint
 pypiwin32 # show/hode console
 pytest
 log_wizard
+pytest-mock
+requests_mock

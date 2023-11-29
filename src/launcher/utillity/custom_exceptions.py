@@ -32,3 +32,52 @@ class CalculateHashFailed(RuntimeError):
 
     def __init__(self, message="Calculate_hash function failed.") -> None:
         super().__init__(message)
+
+
+class AuthorizationServiceUnavailable(RuntimeError):
+    """Raises if authorization service unavailable."""
+
+    def __init__(self, message="Authorization service unavailable.") -> None:
+        super().__init__(message)
+
+
+class AuthDataNotSet(RuntimeError):
+    """
+    Raised if the username and password are not set for AuthorizationThread.
+    """
+
+    def __init__(self, message="Auth data not set. Use set_auth_data()."):
+        super().__init__(message)
+
+
+class UserAuthenticationError(Exception):
+    """Custom exception for user authentication failures."""
+
+    def __init__(self, message="Invalid username or password.") -> None:
+        super().__init__(message)
+
+
+class IternalAuthenticationError(RuntimeError):
+    """
+    Custom exception raised for errors related to authentication operations.
+    """
+
+    def __init__(
+        self,
+        message="An error occurred during authentication operation",
+        error_code="500",
+    ) -> None:
+        super().__init__(f"{message}: {error_code}.")
+        self.error_code = error_code
+
+
+class IvalidAuthenticationResponseError(RuntimeError):
+    """
+    Custom exception for invalid authentication responses.
+    """
+
+    def __init__(
+        self,
+        message="Invalid authentication response.",
+    ) -> None:
+        super().__init__(f"{message}")
