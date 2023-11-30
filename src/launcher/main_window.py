@@ -31,8 +31,12 @@ from PyQt6.QtGui import QIcon, QPixmap
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
-from .design.utillity import MessageBoxManager, open_directory
-from .launcher_configs import LauncherConfig, get_config
+from .design.utillity import MainButton, MessageBoxManager, open_directory
+from .launcher_configs import (
+    LauncherConfig,
+    MinecraftLauncherConfig,
+    get_config,
+)
 from .launcher_installer import InstallThread, MinecraftExecutorThread
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
@@ -73,11 +77,24 @@ class Window(QtWidgets.QMainWindow):
         self.msg_box = MessageBoxManager(self.icon_file_path)
         self._install_thread = InstallThread()
 
+        self.main_button = MainButton(
+            self._ui_instance.pushButton_install_and_launch,
+        )
+
+        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
+            self.update_config
+        )
+        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
+            self.update_main_button_text
+        )
+
         self.input_data = self.get_input_data()
-        self.config = get_config(
-            self.input_data.extract_element("comboBox_server_type")
-        )()
-        self.config.get_stored_data()
+
+        self.config: MinecraftLauncherConfig
+
+        # init self.config here:
+        self.update_config()
+        self.update_main_button_text()
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
 
@@ -118,7 +135,33 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.label_background.setPixmap(
             QPixmap(background_image_path)
         )
+
         hide_console()
+
+    def update_config(self):
+        """
+        Update configuration based on UI input.
+
+        Fetches the selected server type, updates input data,
+        creates a new configuration, retrieves stored data, and
+        sets the configuration for the installation thread.
+        """
+        self.input_data.update_input_data_from_ui()
+        self.config = get_config(
+            self.input_data.extract_element("comboBox_server_type")
+        )()
+        self.config.get_stored_data()
+        self._install_thread.set_config(self.config)
+
+    def update_main_button_text(self):
+        """
+        Updates the text of the main button based on whether
+        Minecraft is installed or not.
+        """
+        if self.config.is_minecraft_installed():
+            self.main_button.set_launch_text()
+        else:
+            self.main_button.set_install_title()
 
     def get_input_data(self):
         """
@@ -158,10 +201,6 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
 
-        self.config = get_config(
-            self.input_data.extract_element("comboBox_server_type")
-        )()
-        self._install_thread.set_config(self.config)
         is_install_shaders = self.input_data.extract_element(
             "checkBox_is_install_shaders"
         )

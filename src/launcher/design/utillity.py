@@ -4,6 +4,9 @@ from typing import Any, Callable, Optional
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtWidgets import QPushButton
+
+from .styles import MainButtonData
 
 
 class MessageBoxManager:
@@ -99,6 +102,44 @@ class MessageBoxManager:
             msg_box_window_title="Ошибка",
             callback=callback,
         )
+
+
+# pylint: disable=R0903
+class ButtonBase:
+    """
+    Base class for managing the title of a QPushButton instance.
+    """
+
+    def __init__(self, button_instance: QPushButton) -> None:
+        self._instance = button_instance
+
+    def set_title(self, text: str) -> None:
+        """
+        Set the title of the associated QPushButton.
+        """
+        self._instance.setText(text)
+
+
+class MainButton(MainButtonData):
+    """
+    Subclass of MainButtonData for managing titles of specific buttons.
+    """
+
+    def __init__(self, object_instance):
+        MainButtonData.__init__(object_instance)
+        self._instance = object_instance
+
+    def set_install_title(self):
+        """
+        Set the title of the associated button to the install text.
+        """
+        self._instance.setText(self.install_text)
+
+    def set_launch_text(self):
+        """
+        Set the title of the associated button to the launch text.
+        """
+        self._instance.setText(self.launch_text)
 
 
 def open_directory(path_to_directory: str):
