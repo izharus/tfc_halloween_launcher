@@ -258,9 +258,22 @@ class Window(QtWidgets.QMainWindow):
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
         self.hide()
-
+        auth_data = self._authorization_thread.get_last_auth_data()
+        if not auth_data:
+            self.msg_box.warn(
+                "Критическая ошибка",
+                "Tокены авторизации не инициализированы.",
+            )
+            return
         nickname = self.input_data.extract_element("lineEdit_nickname")
-        self._executor = MinecraftExecutorThread(nickname, self.config)
+        uuid = auth_data["uuid"]
+        access_token = auth_data["accessToken"]
+        self._executor = MinecraftExecutorThread(
+            nickname,
+            uuid,
+            access_token,
+            self.config,
+        )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()
 

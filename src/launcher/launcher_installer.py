@@ -268,6 +268,8 @@ class MinecraftExecutorThread(QThread):
 
     Attributes:
         nickname (str): The nickname to be used in the Minecraft game.
+        uuid (str): The UUID of the user.
+        access_token (str): User access token.
 
     Methods:
         is_nicnname_incorrect(nickname: str) -> bool: Check if the provided
@@ -278,10 +280,18 @@ class MinecraftExecutorThread(QThread):
 
     """
 
-    def __init__(self, nickname: str, config: MinecraftLauncherConfig):
+    def __init__(
+        self,
+        nickname: str,
+        uuid: str,
+        access_token: str,
+        config: MinecraftLauncherConfig,
+    ):
         QThread.__init__(self)
         self.nickname = nickname
+        self.uuid = uuid
         self.config = config
+        self.access_token = access_token
         self.runtime_error: Optional[Exception] = None
 
     def create_launcher_options(self) -> MinecraftOptions:
@@ -303,6 +313,8 @@ class MinecraftExecutorThread(QThread):
         """
         options = mine_lib.utils.generate_test_options()
         options["username"] = self.nickname
+        options["uuid"] = self.uuid
+        options["token"] = self.access_token
         # options["server"] = self.minecraft_server_ip
         # options["port"] = self.minecraft_server_port
         return options
