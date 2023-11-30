@@ -44,6 +44,8 @@ class Ui_MainWindow:
             QtWidgets.QSizePolicy.Policy.Minimum,
         )
         self.horizontalLayout.addItem(spacerItem)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.lineEdit_nickname = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit_nickname.setMinimumSize(QtCore.QSize(300, 0))
         self.lineEdit_nickname.setMaximumSize(QtCore.QSize(300, 16777215))
@@ -74,7 +76,37 @@ class Ui_MainWindow:
             ""
         )
         self.lineEdit_nickname.setObjectName("lineEdit_nickname")
-        self.horizontalLayout.addWidget(self.lineEdit_nickname)
+        self.verticalLayout_3.addWidget(self.lineEdit_nickname)
+        self.lineEdit_password = QtWidgets.QLineEdit(parent=self.centralwidget)
+        self.lineEdit_password.setStyleSheet(
+            "/* Modern Style QLineEdit */\n"
+            ".QLineEdit {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "  color: #333;\n"
+            "  padding: 10px;\n"
+            "  font-size: 16px;\n"
+            "  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
+            "}\n"
+            "\n"
+            ".QLineEdit:focus {\n"
+            "  outline: none;\n"
+            "  border-color: #4287f5;\n"
+            "  background-color: #fff;\n"
+            "}\n"
+            "\n"
+            ".QLineEdit::placeholder {\n"
+            "  color: #999;\n"
+            "}\n"
+            "\n"
+            ".QLineEdit:hover {\n"
+            "  border-color: #999;\n"
+            "}\n"
+            ""
+        )
+        self.lineEdit_password.setObjectName("lineEdit_password")
+        self.verticalLayout_3.addWidget(self.lineEdit_password)
+        self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.comboBox_server_type = QtWidgets.QComboBox(
             parent=self.centralwidget
         )
@@ -303,6 +335,9 @@ class Ui_MainWindow:
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.lineEdit_nickname.setPlaceholderText(
             _translate("MainWindow", "Ник игрока")
+        )
+        self.lineEdit_password.setPlaceholderText(
+            _translate("MainWindow", "Пароль")
         )
         self.comboBox_server_type.setItemText(
             0, _translate("MainWindow", "TFC Halloween")

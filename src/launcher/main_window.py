@@ -32,6 +32,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
 from .design.utillity import MainButton, MessageBoxManager, open_directory
+from .launcher_authorization import AuthorizationThread
 from .launcher_configs import (
     LauncherConfig,
     MinecraftLauncherConfig,
@@ -80,15 +81,13 @@ class Window(QtWidgets.QMainWindow):
         self.main_button = MainButton(
             self._ui_instance.pushButton_install_and_launch,
         )
-
+        self.input_data = self.get_input_data()
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
             self.update_config
         )
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
             self.update_main_button_text
         )
-
-        self.input_data = self.get_input_data()
 
         self.config: MinecraftLauncherConfig
 
@@ -97,7 +96,9 @@ class Window(QtWidgets.QMainWindow):
         self.update_main_button_text()
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
-
+        self._authorization_thread = AuthorizationThread(
+            self.config.minecraft_launcher_ip_addr
+        )
         self._install_thread.progress_max.connect(
             lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
         )
@@ -110,7 +111,10 @@ class Window(QtWidgets.QMainWindow):
         self._install_thread.finished.connect(self._install_thread_finished)
 
         self._ui_instance.pushButton_install_and_launch.clicked.connect(
-            self._install_minecraft_multi_thread
+            self._make_authorization
+        )
+        self._authorization_thread.finished.connect(
+            self._make_authorization_finished
         )
 
         self.setWindowTitle("TFC-Halloween 1.0.0")
@@ -174,6 +178,27 @@ class Window(QtWidgets.QMainWindow):
         ui_data_file_path = LauncherConfig.ui_data_path
         return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
+    def _make_authorization(self) -> None:
+        login = self.input_data.extract_element("lineEdit_nickname")
+        password = self.input_data.extract_element("lineEdit_password")
+        if not login or not password:
+            self.msg_box.warn(
+                "Не заполнен логин или пароль",
+            )
+            return
+        self._authorization_thread.set_auth_data(login, password)
+        self._authorization_thread.start()
+
+    def _make_authorization_finished(self) -> None:
+        if not self._authorization_thread.runtime_error:
+            self._install_minecraft_multi_thread()
+        else:
+            self.msg_box.warn(
+                "Ошибка по время авторизации.",
+                str(self._authorization_thread.runtime_error),
+            )
+            log.error(self._authorization_thread.runtime_error)
+
     def _install_minecraft_multi_thread(self) -> None:
         """
         Initiates the multi-threaded installation of Minecraft.
@@ -185,6 +210,7 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
+
         self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):

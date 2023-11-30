@@ -66,21 +66,23 @@
          </spacer>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_nickname">
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>300</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">/* Modern Style QLineEdit */
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_nickname">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">/* Modern Style QLineEdit */
 .QLineEdit {
   border: 2px solid #ccc;
   background-color: #f9f9f9;
@@ -104,11 +106,46 @@
   border-color: #999;
 }
 </string>
-          </property>
-          <property name="placeholderText">
-           <string>Ник игрока</string>
-          </property>
-         </widget>
+            </property>
+            <property name="placeholderText">
+             <string>Ник игрока</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_password">
+            <property name="styleSheet">
+             <string notr="true">/* Modern Style QLineEdit */
+.QLineEdit {
+  border: 2px solid #ccc;
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 15px; /* Adjust the value to control the corner smoothness */
+}
+
+.QLineEdit:focus {
+  outline: none;
+  border-color: #4287f5;
+  background-color: #fff;
+}
+
+.QLineEdit::placeholder {
+  color: #999;
+}
+
+.QLineEdit:hover {
+  border-color: #999;
+}
+</string>
+            </property>
+            <property name="placeholderText">
+             <string>Пароль</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QComboBox" name="comboBox_server_type">
