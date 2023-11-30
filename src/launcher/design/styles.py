@@ -9,5 +9,5 @@ class MainButtonData:
     installation, and launch buttons.
     """
 
-    install_text: str = "Установить"
+    install_text: str = "Установить и войти"
     launch_text: str = "Войти"
