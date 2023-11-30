@@ -39,7 +39,8 @@ class LauncherConfig:
         java_install_url (str): The URL for Java installation.
         launcher_stored_data (Dict): A dict with saved configuration
             variables from file.
-
+        minecraft_launcher_ip_addr (str): api url from web_server for uuid and
+            access_token
     """
 
     launcher_name: str = "tfc_halloween"
@@ -58,6 +59,7 @@ class LauncherConfig:
     logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
     servers_directory: str = "servers"
     java_install_url: str = "https://java-for-minecraft.com/ru/"
+    minecraft_launcher_ip_addr: str = "http://77.239.232.50:23846/launcher"
     launcher_stored_data: Dict = {}
 
 
@@ -89,8 +91,6 @@ class MinecraftLauncherConfig(LauncherConfig):
             config for installing all modpacks.
         map_json_data Optional[Dict]: main info about all modpacks files.
             Should be installed before all functions calls.
-        minecraft_launcher_ip_addr (str): api url from web_server for uuid and
-            access_token
 
     """
 
@@ -103,7 +103,6 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_server_port: str
     minecraft_java_version: int
     map_json_url: str
-    minecraft_launcher_ip_addr: str
     map_json_data: Optional[Dict] = None
 
     def parse_map_json_data(self):
@@ -173,7 +172,6 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25565",
         minecraft_java_version=17,
-        minecraft_launcher_ip_addr="http://77.239.232.50:23846/launcher",
         # pylint: disable = C0301
         map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )
@@ -205,7 +203,6 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25570",
         minecraft_java_version=17,
-        minecraft_launcher_ip_addr="http://77.239.232.50:23846/launcher",
         # pylint: disable = C0301
         map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
     )

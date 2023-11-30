@@ -20,7 +20,6 @@ import requests
 from log_wizard import log as get_logger
 from PyQt6.QtCore import QThread
 
-from .launcher_configs import MinecraftLauncherConfig
 from .utillity.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
@@ -40,16 +39,18 @@ class AuthorizationThread(QThread):
     user authentication using the provided username and password.
     """
 
-    def __init__(self, config: MinecraftLauncherConfig) -> None:
+    def __init__(
+        self,
+        minecraft_launcher_ip_addr: str,
+    ) -> None:
         """
         Initialize the AuthorizationThread instance.
 
         Args:
-            config (MinecraftLauncherConfig): Configuration object
-                for the launcher.
+            minecraft_launcher_ip_addr (str): Api url for authorization.
         """
         QThread.__init__(self)
-        self.config = config
+        self.minecraft_launcher_ip_addr = minecraft_launcher_ip_addr
         self.is_working = False
         self.runtime_error: Optional[Exception] = None
 
@@ -152,7 +153,7 @@ class AuthorizationThread(QThread):
         """
         try:
             response = requests.post(
-                self.config.minecraft_launcher_ip_addr,
+                self.minecraft_launcher_ip_addr,
                 json={
                     "username": username,
                     "password": password,

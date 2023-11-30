@@ -112,7 +112,9 @@ def test_get_authenticate_response_success(mocker):
             json={"status": "success", "data": {"key": "value"}},
             status_code=200,
         )
-        auth_class = launcher_authorization.AuthorizationThread(config)
+        auth_class = launcher_authorization.AuthorizationThread(
+            config.minecraft_launcher_ip_addr
+        )
         auth_class.set_auth_data("test_user", "test_password")
 
         # pylint: disable=W0212
@@ -139,7 +141,9 @@ def test_get_authenticate_response_unauthorized(mocker):
         # Mock the requests.post method for unauthorized (status code 401)
         m.post(config.minecraft_launcher_ip_addr, status_code=401)
 
-        auth_class = launcher_authorization.AuthorizationThread(config)
+        auth_class = launcher_authorization.AuthorizationThread(
+            config.minecraft_launcher_ip_addr
+        )
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
@@ -164,7 +168,9 @@ def test_get_authenticate_response_internal_error(mocker):
         # Mock the requests.post method for internal server error (status code 500)
         m.post(config.minecraft_launcher_ip_addr, status_code=500)
 
-        auth_class = launcher_authorization.AuthorizationThread(config)
+        auth_class = launcher_authorization.AuthorizationThread(
+            config.minecraft_launcher_ip_addr
+        )
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
@@ -187,7 +193,9 @@ def test_get_authenticate_response_unexpected_error(mocker):
         # Mock the requests.post method for an unexpected status code
         m.post(config.minecraft_launcher_ip_addr, status_code=403)
 
-        auth_class = launcher_authorization.AuthorizationThread(config)
+        auth_class = launcher_authorization.AuthorizationThread(
+            config.minecraft_launcher_ip_addr
+        )
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
@@ -273,7 +281,9 @@ def test_update_last_auth_data(mocker):
     )
     config = launcher_configs.get_config("TFC Halloween TEST")()
 
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(
+        config.minecraft_launcher_ip_addr
+    )
     response_json = {"status": "OK"}
     mock_response = mocker.Mock(spec=requests.Response)
     mocker.patch.object(mock_response, "json", return_value=response_json)
