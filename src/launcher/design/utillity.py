@@ -70,7 +70,7 @@ class MessageBoxManager:
 
         msg.exec()
 
-        if msg.clickedButton() == ok_button and callback is not None:
+        if callback is not None and msg.clickedButton() == ok_button:
             callback()
 
     def info(
