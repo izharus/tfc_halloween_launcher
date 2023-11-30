@@ -26,7 +26,6 @@ launching a customized Minecraft environment.
 
 # pylint: disable=unnecessary-lambda
 import os
-import shelve
 import subprocess
 import traceback
 from typing import Callable, Dict, List, Optional
@@ -195,47 +194,6 @@ class InstallThread(QThread):
         """
         self.config = config
 
-    def is_minecraft_installed(
-        self,
-        launcher_data_path: str,
-        launcher_config_name: str,
-    ) -> bool:
-        """
-        Check in mineraft has already installed for current
-        config profile.
-
-        Args:
-            launcher_data_path: path to launcher data file.
-            launcher_config_name: current launcher config name.
-        Returns:
-            bool : True if minecraft installed, False otherwise.
-        Raises:
-            MinecraftLauncherConfigNotSet: if self.config no configured.
-        """
-        if self.config:
-            with shelve.open(launcher_data_path) as launcher_data:
-                field = launcher_config_name + "_is_installed"
-                return launcher_data.get(field, False)
-        raise MinecraftLauncherConfigNotSet()
-
-    def set_minecraft_installed_flag(
-        self,
-        launcher_data_path: str,
-        launcher_config_name: str,
-    ) -> None:
-        """
-        Set minecraft installed flag for this current profile.
-
-        Args:
-            launcher_data_path: path to launcher data file.
-            launcher_config_name: current launcher config name.
-        Returns:
-            None
-        """
-        with shelve.open(launcher_data_path) as launcher_data:
-            field = launcher_config_name + "_is_installed"
-            launcher_data[field] = True
-
     def run(self) -> None:
         """Call main_worker an handle any exceptions."""
         self.runtime_error = None
@@ -264,7 +222,7 @@ class InstallThread(QThread):
         if not self.config:
             raise MinecraftLauncherConfigNotSet()
 
-        if not self.is_minecraft_installed(
+        if not self.config.is_minecraft_installed(
             self.config.launcher_data,
             self.config.config_name,
         ):
@@ -273,7 +231,7 @@ class InstallThread(QThread):
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        self.set_minecraft_installed_flag(
+        self.config.set_minecraft_installed_flag(
             self.config.launcher_data,
             self.config.config_name,
         )

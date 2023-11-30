@@ -7,6 +7,7 @@ launcher and managing server configurations.
 """
 import json
 import os
+import shelve
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
 
@@ -104,6 +105,45 @@ class MinecraftLauncherConfig(LauncherConfig):
         self.map_json_data = json.loads(
             FileDownloader.download_file(self.map_json_url)
         )[self.config_name]
+
+    def is_minecraft_installed(
+        self,
+        launcher_data_path: str,
+        launcher_config_name: str,
+    ) -> bool:
+        """
+        Check in mineraft has already installed for current
+        config profile.
+
+        Args:
+            launcher_data_path: path to launcher data file.
+            launcher_config_name: current launcher config name.
+        Returns:
+            bool : True if minecraft installed, False otherwise.
+        Raises:
+            MinecraftLauncherConfigNotSet: if self.config no configured.
+        """
+        with shelve.open(launcher_data_path) as launcher_data:
+            field = launcher_config_name + "_is_installed"
+            return launcher_data.get(field, False)
+
+    def set_minecraft_installed_flag(
+        self,
+        launcher_data_path: str,
+        launcher_config_name: str,
+    ) -> None:
+        """
+        Set minecraft installed flag for this current profile.
+
+        Args:
+            launcher_data_path: path to launcher data file.
+            launcher_config_name: current launcher config name.
+        Returns:
+            None
+        """
+        with shelve.open(launcher_data_path) as launcher_data:
+            field = launcher_config_name + "_is_installed"
+            launcher_data[field] = True
 
 
 def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
