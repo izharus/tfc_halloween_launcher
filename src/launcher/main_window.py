@@ -77,7 +77,7 @@ class Window(QtWidgets.QMainWindow):
         self.config = get_config(
             self.input_data.extract_element("comboBox_server_type")
         )()
-
+        self.config.get_stored_data()
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
 

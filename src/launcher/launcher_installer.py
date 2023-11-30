@@ -222,19 +222,13 @@ class InstallThread(QThread):
         if not self.config:
             raise MinecraftLauncherConfigNotSet()
 
-        if not self.config.is_minecraft_installed(
-            self.config.launcher_data,
-            self.config.config_name,
-        ):
+        if not self.config.is_minecraft_installed():
             mine_lib.forge.install_forge_version(
                 self.config.forge_version,
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        self.config.set_minecraft_installed_flag(
-            self.config.launcher_data,
-            self.config.config_name,
-        )
+        self.config.set_minecraft_installed()
         map_dirs = self.config.map_json_data["main_data"]
         map_dirs += self.config.map_json_data["client_data"]
         if self.is_install_shaders:

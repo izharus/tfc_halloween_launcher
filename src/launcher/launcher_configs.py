@@ -8,6 +8,7 @@ launcher and managing server configurations.
 import json
 import os
 import shelve
+import traceback
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
 
@@ -36,6 +37,8 @@ class LauncherConfig:
             stores information about installed servers, for an example.
         ui_data_path (str): Here launcher stores data from frontend inputs.
         java_install_url (str): The URL for Java installation.
+        launcher_stored_data (Dict): A dict with saved configuration
+            variables from file.
 
     """
 
@@ -55,6 +58,7 @@ class LauncherConfig:
     logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
     servers_directory: str = "servers"
     java_install_url: str = "https://java-for-minecraft.com/ru/"
+    launcher_stored_data: Dict = {}
 
 
 DefaultConfig(log_dir=LauncherConfig.logging_dir)
@@ -68,6 +72,8 @@ class MinecraftLauncherConfig(LauncherConfig):
     Configuration settings for the Minecraft launcher, including
     specific Minecraft server configurations.
 
+    Note:
+        Call get_stored_data() to load stored data from the file.
     Attributes:
         config_name (str): The name of the launcher configuration.
         minecraft_version (str): The version of Minecraft to be used.
@@ -108,42 +114,43 @@ class MinecraftLauncherConfig(LauncherConfig):
 
     def is_minecraft_installed(
         self,
-        launcher_data_path: str,
-        launcher_config_name: str,
     ) -> bool:
         """
-        Check in mineraft has already installed for current
-        config profile.
-
-        Args:
-            launcher_data_path: path to launcher data file.
-            launcher_config_name: current launcher config name.
-        Returns:
-            bool : True if minecraft installed, False otherwise.
-        Raises:
-            MinecraftLauncherConfigNotSet: if self.config no configured.
+        Check in mineraft has already installed for current config profile.
         """
-        with shelve.open(launcher_data_path) as launcher_data:
-            field = launcher_config_name + "_is_installed"
-            return launcher_data.get(field, False)
+        return self.launcher_stored_data.get(
+            f"{self.config_name}_is_installed", False
+        )
 
-    def set_minecraft_installed_flag(
-        self,
-        launcher_data_path: str,
-        launcher_config_name: str,
-    ) -> None:
+    def set_minecraft_installed(self) -> None:
         """
         Set minecraft installed flag for this current profile.
-
-        Args:
-            launcher_data_path: path to launcher data file.
-            launcher_config_name: current launcher config name.
-        Returns:
-            None
         """
-        with shelve.open(launcher_data_path) as launcher_data:
-            field = launcher_config_name + "_is_installed"
-            launcher_data[field] = True
+        field = f"{self.config_name}_is_installed"
+        self.launcher_stored_data[field] = True
+        self._update_stored_data()
+
+    def get_stored_data(self) -> None:
+        """
+        Get stored data from the file.
+        """
+        try:
+            with shelve.open(self.launcher_data) as launcher_data:
+                self.launcher_stored_data = launcher_data["stored_data"]
+        except Exception as error:
+            log.error(f"Failed to get stored_data: {error}")
+            log.debug(traceback.format_exc)
+
+    def _update_stored_data(self) -> None:
+        """
+        Update stored data in the file.
+        """
+        try:
+            with shelve.open(self.launcher_data) as launcher_data:
+                launcher_data["stored_data"] = self.launcher_stored_data
+        except Exception as error:
+            log.error(f"Failed to update stored_data: {error}")
+            log.debug(traceback.format_exc)
 
 
 def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
