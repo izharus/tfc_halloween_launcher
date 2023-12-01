@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
 
 from .styles import MainButtonData
 
@@ -102,6 +102,37 @@ class MessageBoxManager:
             msg_box_window_title="Ошибка",
             callback=callback,
         )
+
+
+class NotificationWidget(QWidget):
+    """
+    Custom widget for displaying notifications with optional animations.
+    """
+
+    def __init__(self, qlabel: QLabel) -> None:
+        """Initialize the NotificationWidget."""
+        super().__init__()
+        self.qlabel = qlabel
+        self.qlabel.hide()
+        self.timer: int = 0
+
+    def show_and_close(self, message: str, duration_ms=6000):
+        """
+        Display the notification with the given message for the specified
+        duration.
+        """
+        self.qlabel.setText(message)
+        self.qlabel.show()
+        self.timer = self.startTimer(duration_ms)
+
+    # pylint: disable=C0103
+    def timerEvent(self, event):
+        """
+        Handle the timer event to hide the notification when the
+        timer expires.
+        """
+        self.killTimer(event.timerId())
+        self.qlabel.hide()
 
 
 # pylint: disable=R0903
