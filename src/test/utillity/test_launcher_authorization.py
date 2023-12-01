@@ -1,5 +1,6 @@
 """Tests for src/launcher/launcher_authorization.py"""
 # pylint:disable = E0401
+import os
 import secrets
 
 import pytest
@@ -293,3 +294,162 @@ def test_update_last_auth_data(mocker):
 
     auth_class._update_last_auth_data(mock_response)
     assert auth_class._last_auth_data == mock_response.json()
+
+
+def test_successful_skin_upload(tmpdir):
+    """Test successful Minecraft skin upload."""
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+    with requests_mock.Mocker() as m:
+        # Mock the requests.post method for success (status code 200)
+        m.post(
+            api_url,
+            status_code=200,
+        )
+
+        # Create an instance of SkinUploaderThread
+        skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+
+        # Set data for skin upload
+        skin_thread.set_data(
+            username="test_user",
+            password="test_password",
+            selected_skin_path=f"{script_directory}/test_skin.png",
+            skins_cache_directory=temp_cache_dir,
+        )
+
+        # Run the thread
+        skin_thread.start()
+        # Wait for the thread to finish
+        skin_thread.wait(1000)
+        # Check if runtime_error is None
+        assert skin_thread.runtime_error is None
+
+
+def test_skin_upload_with_invalid_skin_path(tmpdir):
+    """Test skin upload with an invalid skin path."""
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+
+    # Create an instance of SkinUploaderThread
+    skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+    with requests_mock.Mocker() as m:
+        # Mock the requests.post method for success (status code 200)
+        m.post(
+            api_url,
+            status_code=401,
+        )
+        # Set data for skin upload
+        skin_thread.set_data(
+            username="test_user",
+            password="test_password",
+            selected_skin_path="invalid_path",
+            skins_cache_directory=temp_cache_dir,
+        )
+
+        # Run the thread
+        skin_thread.start()
+        # Wait for the thread to finish
+        skin_thread.wait(1000)
+        # Check if runtime_error is None
+        assert isinstance(
+            skin_thread.runtime_error,
+            launcher_authorization.Base64ParsingError,
+        )
+
+
+def test_skin_upload_with_invalid_auth_data(tmpdir):
+    """Test skin upload with an invalid auth data."""
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Create an instance of SkinUploaderThread
+    skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+    with requests_mock.Mocker() as m:
+        # Mock the requests.post method for success (status code 200)
+        m.post(
+            api_url,
+            status_code=401,
+        )
+        # Set data for skin upload
+        skin_thread.set_data(
+            username="test_user",
+            password="test_password",
+            selected_skin_path=f"{script_directory}/test_skin.png",
+            skins_cache_directory=temp_cache_dir,
+        )
+
+        # Run the thread
+        skin_thread.start()
+        # Wait for the thread to finish
+        skin_thread.wait(1000)
+        # Check if runtime_error is None
+        assert isinstance(
+            skin_thread.runtime_error,
+            launcher_authorization.UserAuthenticationError,
+        )
+
+
+def test_skin_upload_with_invalid_api_response_code(tmpdir):
+    """Test skin upload with an invalid API response status code."""
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Create an instance of SkinUploaderThread
+    skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+    with requests_mock.Mocker() as m:
+        # Mock the requests.post method for success (status code 200)
+        m.post(
+            api_url,
+            status_code=501,
+        )
+        # Set data for skin upload
+        skin_thread.set_data(
+            username="test_user",
+            password="test_password",
+            selected_skin_path=f"{script_directory}/test_skin.png",
+            skins_cache_directory=temp_cache_dir,
+        )
+
+        # Run the thread
+        skin_thread.start()
+        # Wait for the thread to finish
+        skin_thread.wait(1000)
+        # Check if runtime_error is None
+        assert isinstance(
+            skin_thread.runtime_error,
+            launcher_authorization.IternalAuthenticationError,
+        )
+
+
+def test_skin_upload_with_unavailable_authorization_service(tmpdir):
+    """One string Doc string"""
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Create an instance of SkinUploaderThread
+    skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+    with requests_mock.Mocker() as m:
+        # Mock the requests.post method for success (status code 200)
+        m.post(api_url, exc=requests.exceptions.ConnectTimeout)
+        # Set data for skin upload
+        skin_thread.set_data(
+            username="test_user",
+            password="test_password",
+            selected_skin_path=f"{script_directory}/test_skin.png",
+            skins_cache_directory=temp_cache_dir,
+        )
+
+        # Run the thread
+        skin_thread.start()
+        # Wait for the thread to finish
+        skin_thread.wait(1000)
+        # Check if runtime_error is None
+        assert isinstance(
+            skin_thread.runtime_error,
+            launcher_authorization.AuthorizationServiceUnavailable,
+        )

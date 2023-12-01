@@ -13,6 +13,8 @@ Classes:
 Note: This module assumes the existence of certain classes and functions
       imported from other modules such as `MinecraftLauncherConfig`.
 """
+import base64
+import shutil
 import traceback
 from typing import Dict, Optional
 
@@ -23,6 +25,7 @@ from PyQt6.QtCore import QThread
 from .utillity.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
+    Base64ParsingError,
     IternalAuthenticationError,
     IvalidAuthenticationResponseError,
     UserAuthenticationError,
@@ -233,3 +236,132 @@ class AuthorizationThread(QThread):
             self.runtime_error = error
 
         self.set_auth_data(None, None)
+
+
+class SkinUploaderThread(QThread):
+    """
+    Doc string
+    """
+
+    def __init__(self, push_skin_api_url: str) -> None:
+        """
+        Doc string
+        """
+        QThread.__init__(self)
+        self._push_skin_api_url = push_skin_api_url
+        self._username: Optional[str] = None
+        self._password: Optional[str] = None
+        self._selected_skin_path: Optional[str] = None
+        self._skins_cache_directory: Optional[str] = None
+        self._is_data_inited: bool = False
+        self.runtime_error: Optional[Exception] = None
+
+    @staticmethod
+    def get_base64_string_from_file(filepath: str) -> str:
+        """
+        Doc string
+        """
+        try:
+            with open(filepath, "rb") as image_file:
+                # Read the binary content of the image file
+                image_binary = image_file.read()
+                return base64.b64encode(image_binary).decode()
+        except Exception as error:
+            log.error(f"Unable to parse base64 string: {error}")
+            log.debug(traceback.format_exc)
+            raise Base64ParsingError() from error
+
+    def set_data(
+        self,
+        username: str,
+        password: str,
+        selected_skin_path: str,
+        skins_cache_directory: str,
+    ) -> None:
+        """
+        doc string
+        """
+
+        self._username = username
+        self._password = password
+        self._selected_skin_path = selected_skin_path
+        self._skins_cache_directory = skins_cache_directory
+        self._is_data_inited = True
+
+    def _delete_skins_cache(self, skins_cache_directory: str) -> None:
+        try:
+            shutil.rmtree(skins_cache_directory)
+        except Exception as error:
+            log.error(
+                "_delete_skins_cache failed to delete skins cache dir: "
+                f"{error}."
+            )
+
+    def _push_skin(
+        self,
+        base64_img: str,
+    ) -> None:
+        """
+        doc string
+        """
+        try:
+            response = requests.post(
+                self._push_skin_api_url,
+                json={
+                    "username": self._username,
+                    "password": self._password,
+                    "base64_string": base64_img,
+                },
+                timeout=10,
+            )
+        except Exception as error:
+            log.error(f"_authenticate_user failed: {error}")
+            log.debug(traceback.format_exc())
+            raise AuthorizationServiceUnavailable() from error
+        match response.status_code:
+            case 200:
+                log.info(f"_push_skin success: {self._username}.")
+            case 401:
+                log.error(
+                    f"Failed to _push_skin with 401 code: {self._username}"
+                )
+                raise UserAuthenticationError()
+            case 500:
+                log.error(
+                    f"Failed to _push_skin with 500 code: {self._username}"
+                )
+                raise IternalAuthenticationError()
+            case code:
+                log.error(
+                    "Failed to _authenticate_user with unexpected"
+                    f" {code}: {self._username}"
+                )
+                raise IternalAuthenticationError(error_code=code)
+
+    def run(self):
+        """
+        Entry point for QT start() method.
+
+        This method is called when the thread starts running.
+        """
+        self.runtime_error = None
+        if not self._is_data_inited:
+            self.runtime_error = AuthDataNotSet()
+            return
+        try:
+            # Call get_auth_data within the thread
+            base64_string = self.get_base64_string_from_file(
+                self._selected_skin_path
+            )
+            self._push_skin(base64_string)
+            self._delete_skins_cache(self._skins_cache_directory)
+            # if not self.is_response_valid()
+
+        except (
+            AuthorizationServiceUnavailable,
+            UserAuthenticationError,
+            IternalAuthenticationError,
+            Base64ParsingError,
+        ) as error:
+            # Handle the AuthorizationServiceUnavailable exception
+            self.runtime_error = error

@@ -108,3 +108,18 @@ class IvalidAuthenticationResponseError(RuntimeError):
 
     def __str__(self):
         return "Некорректный ответ от сервера #1."
+
+
+class Base64ParsingError(RuntimeError):
+    """
+    Custom exception for errors occurring during the parsing of base64 strings.
+    """
+
+    def __init__(
+        self,
+        message="Unable to parse base64 string.",
+    ) -> None:
+        super().__init__(f"{message}")
+
+    def __str__(self):
+        return "Не удалось прочитать файл."
