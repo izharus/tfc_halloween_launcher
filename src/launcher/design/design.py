@@ -104,13 +104,19 @@ class Ui_MainWindow:
             "}\n"
             ""
         )
+        self.lineEdit_password.setEchoMode(
+            QtWidgets.QLineEdit.EchoMode.Password
+        )
         self.lineEdit_password.setObjectName("lineEdit_password")
         self.verticalLayout_3.addWidget(self.lineEdit_password)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.comboBox_server_type = QtWidgets.QComboBox(
             parent=self.centralwidget
         )
-        self.comboBox_server_type.setMinimumSize(QtCore.QSize(0, 0))
+        self.comboBox_server_type.setMinimumSize(QtCore.QSize(0, 60))
+        self.comboBox_server_type.setMaximumSize(QtCore.QSize(16777215, 60))
         self.comboBox_server_type.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
             ".QComboBox {\n"
@@ -173,7 +179,41 @@ class Ui_MainWindow:
         self.comboBox_server_type.setObjectName("comboBox_server_type")
         self.comboBox_server_type.addItem("")
         self.comboBox_server_type.addItem("")
-        self.horizontalLayout.addWidget(self.comboBox_server_type)
+        self.verticalLayout_4.addWidget(self.comboBox_server_type)
+        self.pushButton_choose_skin = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_choose_skin.setMinimumSize(QtCore.QSize(0, 70))
+        self.pushButton_choose_skin.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.pushButton_choose_skin.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #3A92F7;\n"
+            "  border: none;\n"
+            "  border-radius: 30px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #303EF7;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #1000F7;\n"
+            "  border: 1px solid #00274D;\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_choose_skin.setObjectName("pushButton_choose_skin")
+        self.verticalLayout_4.addWidget(self.pushButton_choose_skin)
+        self.horizontalLayout.addLayout(self.verticalLayout_4)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.pushButton_install_and_launch = QtWidgets.QPushButton(
             parent=self.centralwidget
         )
@@ -207,12 +247,36 @@ class Ui_MainWindow:
         self.pushButton_install_and_launch.setObjectName(
             "pushButton_install_and_launch"
         )
-        self.horizontalLayout.addWidget(
-            self.pushButton_install_and_launch,
-            0,
-            QtCore.Qt.AlignmentFlag.AlignHCenter
-            | QtCore.Qt.AlignmentFlag.AlignTop,
+        self.verticalLayout_5.addWidget(self.pushButton_install_and_launch)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20,
+            40,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+            QtWidgets.QSizePolicy.Policy.Expanding,
         )
+        self.verticalLayout_5.addItem(spacerItem1)
+        self.label_information_text = QtWidgets.QLabel(
+            parent=self.centralwidget
+        )
+        self.label_information_text.setMaximumSize(QtCore.QSize(300, 50))
+        self.label_information_text.setLayoutDirection(
+            QtCore.Qt.LayoutDirection.LeftToRight
+        )
+        self.label_information_text.setStyleSheet(
+            "            background-color: #3498db;\n"
+            "            color: #ecf0f1;\n"
+            "            padding: 15px;\n"
+            "            font-size: 18px;\n"
+            "            border-radius: 20px;"
+        )
+        self.label_information_text.setText("")
+        self.label_information_text.setScaledContents(True)
+        self.label_information_text.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        self.label_information_text.setObjectName("label_information_text")
+        self.verticalLayout_5.addWidget(self.label_information_text)
+        self.horizontalLayout.addLayout(self.verticalLayout_5)
         self.checkBox_is_install_shaders = QtWidgets.QCheckBox(
             parent=self.centralwidget
         )
@@ -294,13 +358,13 @@ class Ui_MainWindow:
         self.horizontalLayout.addWidget(
             self.pushButton_minecraft_dir_disable_long_tern_save
         )
-        spacerItem1 = QtWidgets.QSpacerItem(
+        spacerItem2 = QtWidgets.QSpacerItem(
             40,
             20,
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Minimum,
         )
-        self.horizontalLayout.addItem(spacerItem1)
+        self.horizontalLayout.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.progressBar = QtWidgets.QProgressBar(parent=self.centralwidget)
@@ -320,6 +384,7 @@ class Ui_MainWindow:
             QtGui.QPixmap("../../../data/image/background.jpg")
         )
         self.label_background.setScaledContents(True)
+        self.label_background.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_background.setObjectName("label_background")
         self.verticalLayout_2.addWidget(self.label_background)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -344,6 +409,9 @@ class Ui_MainWindow:
         )
         self.comboBox_server_type.setItemText(
             1, _translate("MainWindow", "TFC Halloween TEST")
+        )
+        self.pushButton_choose_skin.setText(
+            _translate("MainWindow", "Указать файл скина")
         )
         self.pushButton_install_and_launch.setText(
             _translate("MainWindow", "Запустить TFC-Halloween")

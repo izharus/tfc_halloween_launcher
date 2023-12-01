@@ -15,7 +15,6 @@ icon, and provides safety timers for updating input data from the UI.
 
 """
 # pylint: disable=unnecessary-lambda
-
 import os
 import sys
 import traceback
@@ -28,11 +27,17 @@ from log_wizard import log as get_logger
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import QFileDialog
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
-from .design.utillity import MainButton, MessageBoxManager, open_directory
-from .launcher_authorization import AuthorizationThread
+from .design.utillity import (
+    MainButton,
+    MessageBoxManager,
+    NotificationWidget,
+    open_directory,
+)
+from .launcher_authorization import AuthorizationThread, SkinUploaderThread
 from .launcher_configs import (
     LauncherConfig,
     MinecraftLauncherConfig,
@@ -77,10 +82,13 @@ class Window(QtWidgets.QMainWindow):
         self._validator = Validator(self.icon_file_path)
         self.msg_box = MessageBoxManager(self.icon_file_path)
         self._install_thread = InstallThread()
-
+        self.notif_widget = NotificationWidget(
+            self._ui_instance.label_information_text
+        )
         self.main_button = MainButton(
             self._ui_instance.pushButton_install_and_launch,
         )
+
         self.input_data = self.get_input_data()
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
             self.update_config
@@ -94,6 +102,17 @@ class Window(QtWidgets.QMainWindow):
         # init self.config here:
         self.update_config()
         self.update_main_button_text()
+        self._skin_uploader_thread = SkinUploaderThread(
+            self.config.api_url_push_skin
+        )
+        self._ui_instance.pushButton_choose_skin.clicked.connect(
+            lambda: self._choose_skin_and_upload(
+                self.config.minecraft_skin_directory
+            )
+        )
+        self._skin_uploader_thread.finished.connect(
+            self._skin_uploader_thread_finished
+        )
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
         self._authorization_thread = AuthorizationThread(
@@ -189,12 +208,43 @@ class Window(QtWidgets.QMainWindow):
         self._authorization_thread.set_auth_data(login, password)
         self._authorization_thread.start()
 
+    def _choose_skin_and_upload(self, directory: str) -> None:
+        # Open a file dialog and get the selected file path
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        username = self.input_data.extract_element("lineEdit_nickname")
+        password = self.input_data.extract_element("lineEdit_password")
+        skin_file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open File", directory
+        )
+        if not skin_file_path:
+            self.notif_widget.show_and_close("Файл скина не выбран.")
+            return
+        skins_cache_directory = self.config.minecraft_skins_cache_directory
+        self._skin_uploader_thread.set_data(
+            username=username,
+            password=password,
+            selected_skin_path=skin_file_path,
+            skins_cache_directory=skins_cache_directory,
+        )
+        self.notif_widget.show_and_close("Загружаю скин на сервер...")
+        self._skin_uploader_thread.start()
+
+    def _skin_uploader_thread_finished(self):
+        run_time_error = self._skin_uploader_thread.runtime_error
+        if run_time_error:
+            self.notif_widget.show_and_close(str(run_time_error))
+            log.error(str(run_time_error))
+        else:
+            self.notif_widget.show_and_close("Скин загружен!")
+            log.info("Скин загружен!")
+
     def _make_authorization_finished(self) -> None:
         if not self._authorization_thread.runtime_error:
             self._install_minecraft_multi_thread()
         else:
             self.msg_box.warn(
-                "Ошибка по время авторизации.",
+                "Ошибка по время загрузки скина.",
                 str(self._authorization_thread.runtime_error),
             )
             log.error(self._authorization_thread.runtime_error)

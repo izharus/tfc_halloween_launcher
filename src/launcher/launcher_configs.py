@@ -41,6 +41,7 @@ class LauncherConfig:
             variables from file.
         minecraft_launcher_ip_addr (str): api url from web_server for uuid and
             access_token
+        api_url_push_skin (str): api url for pushing user skin.
     """
 
     launcher_name: str = "tfc_halloween"
@@ -60,6 +61,7 @@ class LauncherConfig:
     servers_directory: str = "servers"
     java_install_url: str = "https://java-for-minecraft.com/ru/"
     minecraft_launcher_ip_addr: str = "http://77.239.232.50:23846/launcher"
+    api_url_push_skin: str = "http://77.239.232.50:23846/push_skin"
     launcher_stored_data: Dict = {}
 
 
@@ -82,6 +84,9 @@ class MinecraftLauncherConfig(LauncherConfig):
         forge_version (str): The version of Forge to be used.
         minecraft_directory (str): The directory where Minecraft is installed.
         minecraft_profile (str): The Minecraft profile to be used.
+        minecraft_skin_directory (str): The directory with skins.
+        minecraft_skins_cache_directory (str): Directory with minecraft
+            skins cache.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
         minecraft_java_version (str): The Java version to use.
@@ -99,6 +104,8 @@ class MinecraftLauncherConfig(LauncherConfig):
     forge_version: str
     minecraft_directory: str
     minecraft_profile: str
+    minecraft_skin_directory: str
+    minecraft_skins_cache_directory: str
     minecraft_server_ip: str
     minecraft_server_port: str
     minecraft_java_version: int
@@ -168,6 +175,15 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
         minecraft_version="1.18.2",
         forge_version="1.18.2-40.2.9",
         minecraft_directory=minecraft_directory,
+        minecraft_skin_directory=os.path.join(
+            minecraft_directory,
+            "skins",
+        ),
+        minecraft_skins_cache_directory=os.path.join(
+            minecraft_directory,
+            "assets",
+            "skins",
+        ),
         minecraft_profile="1.18.2-forge-40.2.9",
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25565",
@@ -199,6 +215,15 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
         minecraft_version="1.18.2",
         forge_version="1.18.2-40.2.9",
         minecraft_directory=minecraft_directory,
+        minecraft_skin_directory=os.path.join(
+            minecraft_directory,
+            "skins",
+        ),
+        minecraft_skins_cache_directory=os.path.join(
+            minecraft_directory,
+            "assets",
+            "skins",
+        ),
         minecraft_profile="1.18.2-forge-40.2.9",
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25570",

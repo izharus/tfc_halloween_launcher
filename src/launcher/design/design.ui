@@ -140,6 +140,9 @@
 }
 </string>
             </property>
+            <property name="echoMode">
+             <enum>QLineEdit::Password</enum>
+            </property>
             <property name="placeholderText">
              <string>Пароль</string>
             </property>
@@ -148,15 +151,23 @@
          </layout>
         </item>
         <item>
-         <widget class="QComboBox" name="comboBox_server_type">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">/* Modern Style QLineEdit */
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QComboBox" name="comboBox_server_type">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">/* Modern Style QLineEdit */
 .QComboBox {
   border: 2px solid #ccc;
   background-color: #f9f9f9;
@@ -213,29 +224,35 @@ QComboBox:drop-down {
 
 
 </string>
-          </property>
-          <item>
-           <property name="text">
-            <string>TFC Halloween</string>
-           </property>
+            </property>
+            <item>
+             <property name="text">
+              <string>TFC Halloween</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>TFC Halloween TEST</string>
+             </property>
+            </item>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>TFC Halloween TEST</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item alignment="Qt::AlignHCenter|Qt::AlignTop">
-         <widget class="QPushButton" name="pushButton_install_and_launch">
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>80</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+           <widget class="QPushButton" name="pushButton_choose_skin">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>70</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>70</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
   background-color: #3A92F7;
   border: none;
   border-radius: 30px;
@@ -257,11 +274,96 @@ QPushButton:pressed {
   border: 1px solid #00274D;
 }
 </string>
-          </property>
-          <property name="text">
-           <string>Запустить TFC-Halloween</string>
-          </property>
-         </widget>
+            </property>
+            <property name="text">
+             <string>Указать файл скина</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QPushButton" name="pushButton_install_and_launch">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>80</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Запустить TFC-Halloween</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_information_text">
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>50</height>
+             </size>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">            background-color: #3498db;
+            color: #ecf0f1;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 20px;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_is_install_shaders">
@@ -407,6 +509,9 @@ QPushButton:pressed {
       </property>
       <property name="scaledContents">
        <bool>true</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
