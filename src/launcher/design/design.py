@@ -180,16 +180,20 @@ class Ui_MainWindow:
         self.comboBox_server_type.addItem("")
         self.comboBox_server_type.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_server_type)
-        self.pushButton_choose_skin = QtWidgets.QPushButton(
-            parent=self.centralwidget
+        self.pushButton_minecraft_dir_disable_long_tern_save = (
+            QtWidgets.QPushButton(parent=self.centralwidget)
         )
-        self.pushButton_choose_skin.setMinimumSize(QtCore.QSize(0, 70))
-        self.pushButton_choose_skin.setMaximumSize(QtCore.QSize(16777215, 70))
-        self.pushButton_choose_skin.setStyleSheet(
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(
+            QtCore.QSize(200, 0)
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(
+            QtCore.QSize(200, 16777215)
+        )
+        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(
             "QPushButton {\n"
             "  background-color: #3A92F7;\n"
             "  border: none;\n"
-            "  border-radius: 30px;\n"
+            "  border-radius: 5px;\n"
             "  padding: 12px 24px;\n"
             "  color: #FFFFFF;\n"
             "  font-weight: bold;\n"
@@ -209,8 +213,12 @@ class Ui_MainWindow:
             "}\n"
             ""
         )
-        self.pushButton_choose_skin.setObjectName("pushButton_choose_skin")
-        self.verticalLayout_4.addWidget(self.pushButton_choose_skin)
+        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(
+            "pushButton_minecraft_dir_disable_long_tern_save"
+        )
+        self.verticalLayout_4.addWidget(
+            self.pushButton_minecraft_dir_disable_long_tern_save
+        )
         self.horizontalLayout.addLayout(self.verticalLayout_4)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -277,6 +285,189 @@ class Ui_MainWindow:
         self.label_information_text.setObjectName("label_information_text")
         self.verticalLayout_5.addWidget(self.label_information_text)
         self.horizontalLayout.addLayout(self.verticalLayout_5)
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.pushButton_choose_cape = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_choose_cape.setMinimumSize(QtCore.QSize(0, 70))
+        self.pushButton_choose_cape.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #3A92F7;\n"
+            "  border: none;\n"
+            "  border-radius: 30px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #303EF7;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #1000F7;\n"
+            "  border: 1px solid #00274D;\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_choose_cape.setObjectName("pushButton_choose_cape")
+        self.gridLayout.addWidget(self.pushButton_choose_cape, 3, 1, 1, 1)
+        self.groupBox = QtWidgets.QGroupBox(parent=self.centralwidget)
+        self.groupBox.setStyleSheet(
+            "/* Custom Style QGroupBox */\n"
+            "QGroupBox {\n"
+            "  font-size: 16px;\n"
+            "  border: 2px solid #4287f5; /* Border color for the group box */\n"
+            "  border-radius: 8px; /* Border radius for rounded corners */\n"
+            "  margin-top: 10px; /* Adjust margin as needed */\n"
+            "}\n"
+            "\n"
+            "QGroupBox::title {\n"
+            "  subcontrol-origin: margin;\n"
+            "  subcontrol-position: top center;\n"
+            "  padding: 0 5px; /* Padding for the title text */\n"
+            "}\n"
+            "\n"
+            "/* Apply the style for the child QRadioButton inside the QGroupBox */\n"
+            "QGroupBox QRadioButton::indicator {\n"
+            "  width: 20px;\n"
+            "  height: 20px;\n"
+            "  border-radius: 10px; /* Make the indicator circular */\n"
+            "}\n"
+            "\n"
+            "QGroupBox QRadioButton::indicator:unchecked {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "}\n"
+            "\n"
+            "QGroupBox QRadioButton::indicator:checked {\n"
+            "  border: 2px solid #4287f5;\n"
+            "  background-color: #4287f5;\n"
+            "}\n"
+            "\n"
+            "QGroupBox QRadioButton::indicator:hover {\n"
+            "  border: 2px solid #999;\n"
+            "}\n"
+            "\n"
+            "QGroupBox QRadioButton::indicator:checked:hover {\n"
+            "  background-color: #3264ad;\n"
+            "}\n"
+            ""
+        )
+        self.groupBox.setObjectName("groupBox")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.radioButton_male = QtWidgets.QRadioButton(parent=self.groupBox)
+        self.radioButton_male.setStyleSheet(
+            "/* Custom Style QCheckBox and QRadioButton */\n"
+            "QCheckBox, QRadioButton {\n"
+            "  spacing: 5px;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator, QRadioButton::indicator {\n"
+            "  width: 20px;\n"
+            "  height: 20px;\n"
+            "  border-radius: 10px; /* Set border-radius to half of width/height for a circular shape */\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:unchecked, QRadioButton::indicator:unchecked {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked, QRadioButton::indicator:checked {\n"
+            "  border: 2px solid #4287f5;\n"
+            "  background-color: #4287f5;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:hover, QRadioButton::indicator:hover {\n"
+            "  border: 2px solid #999;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {\n"
+            "  background-color: #3264ad;\n"
+            "}\n"
+            ""
+        )
+        self.radioButton_male.setChecked(True)
+        self.radioButton_male.setObjectName("radioButton_male")
+        self.verticalLayout_6.addWidget(self.radioButton_male)
+        self.radioButton_female = QtWidgets.QRadioButton(parent=self.groupBox)
+        self.radioButton_female.setStyleSheet(
+            "/* Custom Style QCheckBox and QRadioButton */\n"
+            "QCheckBox, QRadioButton {\n"
+            "  spacing: 5px;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator, QRadioButton::indicator {\n"
+            "  width: 20px;\n"
+            "  height: 20px;\n"
+            "  border-radius: 10px; /* Set border-radius to half of width/height for a circular shape */\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:unchecked, QRadioButton::indicator:unchecked {\n"
+            "  border: 2px solid #ccc;\n"
+            "  background-color: #f9f9f9;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked, QRadioButton::indicator:checked {\n"
+            "  border: 2px solid #4287f5;\n"
+            "  background-color: #4287f5;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:hover, QRadioButton::indicator:hover {\n"
+            "  border: 2px solid #999;\n"
+            "}\n"
+            "\n"
+            "QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {\n"
+            "  background-color: #3264ad;\n"
+            "}\n"
+            ""
+        )
+        self.radioButton_female.setObjectName("radioButton_female")
+        self.verticalLayout_6.addWidget(self.radioButton_female)
+        self.gridLayout_2.addLayout(self.verticalLayout_6, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
+        self.pushButton_choose_skin = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_choose_skin.setMinimumSize(QtCore.QSize(0, 70))
+        self.pushButton_choose_skin.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.pushButton_choose_skin.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #3A92F7;\n"
+            "  border: none;\n"
+            "  border-radius: 30px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #303EF7;\n"
+            "}\n"
+            "\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #1000F7;\n"
+            "  border: 1px solid #00274D;\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_choose_skin.setObjectName("pushButton_choose_skin")
+        self.gridLayout.addWidget(self.pushButton_choose_skin, 0, 1, 1, 1)
         self.checkBox_is_install_shaders = QtWidgets.QCheckBox(
             parent=self.centralwidget
         )
@@ -318,46 +509,8 @@ class Ui_MainWindow:
         self.checkBox_is_install_shaders.setObjectName(
             "checkBox_is_install_shaders"
         )
-        self.horizontalLayout.addWidget(self.checkBox_is_install_shaders)
-        self.pushButton_minecraft_dir_disable_long_tern_save = (
-            QtWidgets.QPushButton(parent=self.centralwidget)
-        )
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(
-            QtCore.QSize(200, 0)
-        )
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(
-            QtCore.QSize(200, 16777215)
-        )
-        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(
-            "QPushButton {\n"
-            "  background-color: #3A92F7;\n"
-            "  border: none;\n"
-            "  border-radius: 5px;\n"
-            "  padding: 12px 24px;\n"
-            "  color: #FFFFFF;\n"
-            "  font-weight: bold;\n"
-            "  text-align: center;\n"
-            "  text-decoration: none;\n"
-            "  font-size: 16px;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "  background-color: #303EF7;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "QPushButton:pressed {\n"
-            "  background-color: #1000F7;\n"
-            "  border: 1px solid #00274D;\n"
-            "}\n"
-            ""
-        )
-        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(
-            "pushButton_minecraft_dir_disable_long_tern_save"
-        )
-        self.horizontalLayout.addWidget(
-            self.pushButton_minecraft_dir_disable_long_tern_save
-        )
+        self.gridLayout.addWidget(self.checkBox_is_install_shaders, 3, 0, 1, 1)
+        self.horizontalLayout.addLayout(self.gridLayout)
         spacerItem2 = QtWidgets.QSpacerItem(
             40,
             20,
@@ -410,15 +563,21 @@ class Ui_MainWindow:
         self.comboBox_server_type.setItemText(
             1, _translate("MainWindow", "TFC Halloween TEST")
         )
-        self.pushButton_choose_skin.setText(
-            _translate("MainWindow", "Указать файл скина")
+        self.pushButton_minecraft_dir_disable_long_tern_save.setText(
+            _translate("MainWindow", "Папка с игрой")
         )
         self.pushButton_install_and_launch.setText(
             _translate("MainWindow", "Запустить TFC-Halloween")
         )
+        self.pushButton_choose_cape.setText(
+            _translate("MainWindow", "Указать файл плаща")
+        )
+        self.groupBox.setTitle(_translate("MainWindow", "Тип скина"))
+        self.radioButton_male.setText(_translate("MainWindow", "Мужской"))
+        self.radioButton_female.setText(_translate("MainWindow", "Женский"))
+        self.pushButton_choose_skin.setText(
+            _translate("MainWindow", "Указать файл скина")
+        )
         self.checkBox_is_install_shaders.setText(
             _translate("MainWindow", "Установить шейдеры")
-        )
-        self.pushButton_minecraft_dir_disable_long_tern_save.setText(
-            _translate("MainWindow", "Папка с игрой")
         )

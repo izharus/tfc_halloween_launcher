@@ -426,7 +426,10 @@ def test_skin_upload_with_invalid_api_response_code(tmpdir):
 
 
 def test_skin_upload_with_unavailable_authorization_service(tmpdir):
-    """One string Doc string"""
+    """
+    Test the behavior of skin upload when the authorization service
+    is unavailable.
+    """
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
     temp_cache_dir = os.path.join(tmpdir, "skins_cache")
     script_directory = os.path.dirname(os.path.abspath(__file__))

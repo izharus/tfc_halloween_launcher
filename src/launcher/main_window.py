@@ -217,6 +217,7 @@ class Window(QtWidgets.QMainWindow):
         skin_file_path, _ = QFileDialog.getOpenFileName(
             self, "Open File", directory
         )
+        is_skin_slim = self.input_data.extract_element("radioButton_female")
         if not skin_file_path:
             self.notif_widget.show_and_close("Файл скина не выбран.")
             return
@@ -226,6 +227,7 @@ class Window(QtWidgets.QMainWindow):
             password=password,
             selected_skin_path=skin_file_path,
             skins_cache_directory=skins_cache_directory,
+            is_skin_slim=is_skin_slim,
         )
         self.notif_widget.show_and_close("Загружаю скин на сервер...")
         self._skin_uploader_thread.start()

@@ -238,6 +238,7 @@ class AuthorizationThread(QThread):
         self.set_auth_data(None, None)
 
 
+# pylint: disable = R0902
 class SkinUploaderThread(QThread):
     """
     Doc string
@@ -253,6 +254,7 @@ class SkinUploaderThread(QThread):
         self._password: Optional[str] = None
         self._selected_skin_path: Optional[str] = None
         self._skins_cache_directory: Optional[str] = None
+        self._is_skin_slim: bool = False
         self._is_data_inited: bool = False
         self.runtime_error: Optional[Exception] = None
 
@@ -271,12 +273,14 @@ class SkinUploaderThread(QThread):
             log.debug(traceback.format_exc)
             raise Base64ParsingError() from error
 
+    # pylint: disable = R0913
     def set_data(
         self,
         username: str,
         password: str,
         selected_skin_path: str,
         skins_cache_directory: str,
+        is_skin_slim: bool = False,
     ) -> None:
         """
         doc string
@@ -287,6 +291,7 @@ class SkinUploaderThread(QThread):
         self._selected_skin_path = selected_skin_path
         self._skins_cache_directory = skins_cache_directory
         self._is_data_inited = True
+        self._is_skin_slim = is_skin_slim
 
     def _delete_skins_cache(self, skins_cache_directory: str) -> None:
         try:
@@ -311,6 +316,7 @@ class SkinUploaderThread(QThread):
                     "username": self._username,
                     "password": self._password,
                     "base64_string": base64_img,
+                    "is_skin_slim": self._is_skin_slim,
                 },
                 timeout=10,
             )
