@@ -175,6 +175,7 @@ class ThreadUiInputData(ThreadData):
         "comboBox",
         "checkBox",
         "textEdit",
+        "radioButton",
     ]
 
     def __init__(
@@ -200,6 +201,7 @@ class ThreadUiInputData(ThreadData):
             "checkBox": {},
             "textEdit": {},
             "pushButton": {},
+            "radioButton": {},
         }
         self.update_dict_ui_data(ui_instance)
 
@@ -229,6 +231,7 @@ class ThreadUiInputData(ThreadData):
             ("checkBox", QtWidgets.QCheckBox),
             ("textEdit", QtWidgets.QTextEdit),
             ("pushButton", QtWidgets.QPushButton),
+            ("radioButton", QtWidgets.QRadioButton),
         ]
 
         # print("====")
@@ -265,6 +268,7 @@ class ThreadUiInputData(ThreadData):
         """
         return self.dict_input_data.get(element_name)
 
+    # pylint: disable=R0912
     def populate_missing_input_data(self) -> None:
         """
         Check and populate missing input data with default values.
@@ -296,6 +300,10 @@ class ThreadUiInputData(ThreadData):
             if ui_name not in self.dict_input_data:
                 self.dict_input_data[ui_name] = checkbox_ui.isChecked()
 
+        for ui_name, checkbox_ui in self.dict_ui_data["radioButton"].items():
+            if ui_name not in self.dict_input_data:
+                self.dict_input_data[ui_name] = checkbox_ui.isChecked()
+
         for ui_name, combobox_ui in self.dict_ui_data["comboBox"].items():
             if ui_name not in self.dict_input_data:
                 self.dict_input_data[ui_name] = combobox_ui.currentText()
@@ -320,6 +328,9 @@ class ThreadUiInputData(ThreadData):
             lineedit_ui.setText(self.dict_input_data[ui_name])
 
         for ui_name, checkbox_ui in self.dict_ui_data["checkBox"].items():
+            checkbox_ui.setChecked(self.dict_input_data[ui_name])
+
+        for ui_name, checkbox_ui in self.dict_ui_data["radioButton"].items():
             checkbox_ui.setChecked(self.dict_input_data[ui_name])
 
         for ui_name, textedit_ui in self.dict_ui_data["textEdit"].items():
@@ -357,6 +368,9 @@ class ThreadUiInputData(ThreadData):
         for ui_name, checkbox_ui in self.dict_ui_data["checkBox"].items():
             self.dict_input_data[ui_name] = checkbox_ui.isChecked()
 
+        for ui_name, checkbox_ui in self.dict_ui_data["radioButton"].items():
+            self.dict_input_data[ui_name] = checkbox_ui.isChecked()
+
         for ui_name, textinput_ui in self.dict_ui_data["textEdit"].items():
             self.dict_input_data[ui_name] = textinput_ui.toPlainText()
 
@@ -387,6 +401,9 @@ class ThreadUiInputData(ThreadData):
             ui_elem.setReadOnly(bool_stop_edit)
 
         for ui_elem in self.dict_ui_data["checkBox"].values():
+            ui_elem.setEnabled(not bool_stop_edit)
+
+        for ui_elem in self.dict_ui_data["radioButton"].values():
             ui_elem.setEnabled(not bool_stop_edit)
 
         for ui_elem in self.dict_ui_data["textEdit"].values():
