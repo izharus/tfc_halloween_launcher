@@ -241,13 +241,10 @@ class AuthorizationThread(QThread):
 # pylint: disable = R0902
 class SkinUploaderThread(QThread):
     """
-    Doc string
+    A thread class for uploading Minecraft skins.
     """
 
     def __init__(self, push_skin_api_url: str) -> None:
-        """
-        Doc string
-        """
         QThread.__init__(self)
         self._push_skin_api_url = push_skin_api_url
         self._username: Optional[str] = None
@@ -261,7 +258,8 @@ class SkinUploaderThread(QThread):
     @staticmethod
     def get_base64_string_from_file(filepath: str) -> str:
         """
-        Doc string
+        Read the binary content of an image file and return its
+        base64-encoded string.
         """
         try:
             with open(filepath, "rb") as image_file:
@@ -283,7 +281,7 @@ class SkinUploaderThread(QThread):
         is_skin_slim: bool = False,
     ) -> None:
         """
-        doc string
+        Set data for the skin upload.
         """
 
         self._username = username
@@ -293,12 +291,38 @@ class SkinUploaderThread(QThread):
         self._is_data_inited = True
         self._is_skin_slim = is_skin_slim
 
-    def _delete_skins_cache(self, skins_cache_directory: str) -> None:
+    def _make_json_response(self, base64_img: str):
+        """
+        Create a JSON response for the skin upload API.
+
+        Args:
+            base64_img (str): The base64-encoded string of the user's skin.
+
+        Returns:
+            dict: A dictionary representing the JSON response.
+
+        """
+        return {
+            "username": self._username,
+            "password": self._password,
+            "base64_string": base64_img,
+            "is_skin_slim": self._is_skin_slim,
+        }
+
+    def delete_skins_cache(self, skins_cache_directory: str) -> None:
+        """
+        Delete the cached skins directory.
+
+        Args:
+            skins_cache_directory (str): The path to the skins cache
+                directory.
+
+        """
         try:
             shutil.rmtree(skins_cache_directory)
         except Exception as error:
             log.error(
-                "_delete_skins_cache failed to delete skins cache dir: "
+                "delete_skins_cache failed to delete skins cache dir: "
                 f"{error}."
             )
 
@@ -307,17 +331,16 @@ class SkinUploaderThread(QThread):
         base64_img: str,
     ) -> None:
         """
-        doc string
+        Push the user's skin to the Minecraft server.
+
+        Args:
+            base64_img (str): The base64-encoded string of the user's skin.
+
         """
         try:
             response = requests.post(
                 self._push_skin_api_url,
-                json={
-                    "username": self._username,
-                    "password": self._password,
-                    "base64_string": base64_img,
-                    "is_skin_slim": self._is_skin_slim,
-                },
+                json=self._make_json_response(base64_img),
                 timeout=10,
             )
         except Exception as error:
@@ -360,7 +383,7 @@ class SkinUploaderThread(QThread):
                 self._selected_skin_path
             )
             self._push_skin(base64_string)
-            self._delete_skins_cache(self._skins_cache_directory)
+            self.delete_skins_cache(self._skins_cache_directory)
             # if not self.is_response_valid()
 
         except (

@@ -327,6 +327,39 @@ def test_successful_skin_upload(tmpdir):
         assert skin_thread.runtime_error is None
 
 
+def test_make_json_response(tmpdir):
+    """Tests if json creates correctly."""
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
+
+    # Create an instance of SkinUploaderThread
+    skin_thread = launcher_authorization.SkinUploaderThread(api_url)
+
+    # Set data for skin upload
+    skin_thread.set_data(
+        username="test_user",
+        password="test_password",
+        selected_skin_path=f"{script_directory}/test_skin.png",
+        skins_cache_directory=temp_cache_dir,
+        is_skin_slim=True,  # You can set is_skin_slim to True for testing
+    )
+
+    # Call the _make_json_response method
+    # pylint: disable = W0212
+    json_response = skin_thread._make_json_response("test_base64_img")
+
+    # Validate the structure and content of the JSON response
+    expected_json = {
+        "username": "test_user",
+        "password": "test_password",
+        "base64_string": "test_base64_img",
+        "is_skin_slim": True,
+    }
+
+    assert json_response == expected_json
+
+
 def test_skin_upload_with_invalid_skin_path(tmpdir):
     """Test skin upload with an invalid skin path."""
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
