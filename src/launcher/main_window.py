@@ -37,7 +37,11 @@ from .design.utillity import (
     NotificationWidget,
     open_directory,
 )
-from .launcher_authorization import AuthorizationThread, SkinUploaderThread
+from .launcher_authorization import (
+    AuthorizationThread,
+    CapeUploaderThread,
+    SkinUploaderThread,
+)
 from .launcher_configs import (
     LauncherConfig,
     MinecraftLauncherConfig,
@@ -103,8 +107,9 @@ class Window(QtWidgets.QMainWindow):
         self.update_config()
         self.update_main_button_text()
         self._skin_uploader_thread = SkinUploaderThread(
-            self.config.api_url_push_skin
+            self.config.api_url_push_skin,
         )
+
         self._ui_instance.pushButton_choose_skin.clicked.connect(
             lambda: self._choose_skin_and_upload(
                 self.config.minecraft_skin_directory
@@ -112,6 +117,18 @@ class Window(QtWidgets.QMainWindow):
         )
         self._skin_uploader_thread.finished.connect(
             self._skin_uploader_thread_finished
+        )
+
+        self._cape_uploader_thread = CapeUploaderThread(
+            self.config.api_url_push_cape,
+        )
+        self._ui_instance.pushButton_choose_cape.clicked.connect(
+            lambda: self._choose_cape_and_upload(
+                self.config.minecraft_cape_directory
+            )
+        )
+        self._cape_uploader_thread.finished.connect(
+            self._cape_uploader_thread_finished
         )
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
@@ -241,12 +258,43 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close("Скин загружен!")
             log.info("Скин загружен!")
 
+    def _choose_cape_and_upload(self, directory: str) -> None:
+        # Open a file dialog and get the selected file path
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        username = self.input_data.extract_element("lineEdit_nickname")
+        password = self.input_data.extract_element("lineEdit_password")
+        cape_file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open File", directory
+        )
+        if not cape_file_path:
+            self.notif_widget.show_and_close("Файл плаща не выбран.")
+            return
+        skins_cache_directory = self.config.minecraft_skins_cache_directory
+        self._cape_uploader_thread.set_data(
+            username=username,
+            password=password,
+            selected_skin_path=cape_file_path,
+            skins_cache_directory=skins_cache_directory,
+        )
+        self.notif_widget.show_and_close("Загружаю плащ на сервер...")
+        self._cape_uploader_thread.start()
+
+    def _cape_uploader_thread_finished(self):
+        run_time_error = self._cape_uploader_thread.runtime_error
+        if run_time_error:
+            self.notif_widget.show_and_close(str(run_time_error))
+            log.error(str(run_time_error))
+        else:
+            self.notif_widget.show_and_close("Плащ загружен!")
+            log.info("Плащ загружен!")
+
     def _make_authorization_finished(self) -> None:
         if not self._authorization_thread.runtime_error:
             self._install_minecraft_multi_thread()
         else:
             self.msg_box.warn(
-                "Ошибка по время загрузки скина.",
+                "Ошибка авторизации.",
                 str(self._authorization_thread.runtime_error),
             )
             log.error(self._authorization_thread.runtime_error)

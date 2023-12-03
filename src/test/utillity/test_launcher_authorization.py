@@ -353,7 +353,7 @@ def test_make_json_response(tmpdir):
     expected_json = {
         "username": "test_user",
         "password": "test_password",
-        "base64_string": "test_base64_img",
+        "base64_image": "test_base64_img",
         "is_skin_slim": True,
     }
 

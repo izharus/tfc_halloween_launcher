@@ -42,6 +42,7 @@ class LauncherConfig:
         minecraft_launcher_ip_addr (str): api url from web_server for uuid and
             access_token
         api_url_push_skin (str): api url for pushing user skin.
+        api_url_push_cape (str): api url for pushing user cape.
     """
 
     launcher_name: str = "tfc_halloween"
@@ -62,6 +63,7 @@ class LauncherConfig:
     java_install_url: str = "https://java-for-minecraft.com/ru/"
     minecraft_launcher_ip_addr: str = "http://77.239.232.50:23846/launcher"
     api_url_push_skin: str = "http://77.239.232.50:23846/push_skin"
+    api_url_push_cape: str = "http://77.239.232.50:23846/push_cape"
     launcher_stored_data: Dict = {}
 
 
@@ -87,6 +89,7 @@ class MinecraftLauncherConfig(LauncherConfig):
         minecraft_skin_directory (str): The directory with skins.
         minecraft_skins_cache_directory (str): Directory with minecraft
             skins cache.
+        minecraft_cape_directory (str): The directory with capes.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
         minecraft_java_version (str): The Java version to use.
@@ -106,6 +109,7 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_profile: str
     minecraft_skin_directory: str
     minecraft_skins_cache_directory: str
+    minecraft_cape_directory: str
     minecraft_server_ip: str
     minecraft_server_port: str
     minecraft_java_version: int
@@ -184,6 +188,10 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
             "assets",
             "skins",
         ),
+        minecraft_cape_directory=os.path.join(
+            minecraft_directory,
+            "capes",
+        ),
         minecraft_profile="1.18.2-forge-40.2.9",
         minecraft_server_ip="77.239.232.50",
         minecraft_server_port="25565",
@@ -223,6 +231,10 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
             minecraft_directory,
             "assets",
             "skins",
+        ),
+        minecraft_cape_directory=os.path.join(
+            minecraft_directory,
+            "capes",
         ),
         minecraft_profile="1.18.2-forge-40.2.9",
         minecraft_server_ip="77.239.232.50",

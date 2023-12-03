@@ -305,26 +305,9 @@ class SkinUploaderThread(QThread):
         return {
             "username": self._username,
             "password": self._password,
-            "base64_string": base64_img,
+            "base64_image": base64_img,
             "is_skin_slim": self._is_skin_slim,
         }
-
-    def delete_skins_cache(self, skins_cache_directory: str) -> None:
-        """
-        Delete the cached skins directory.
-
-        Args:
-            skins_cache_directory (str): The path to the skins cache
-                directory.
-
-        """
-        try:
-            shutil.rmtree(skins_cache_directory)
-        except Exception as error:
-            log.error(
-                "delete_skins_cache failed to delete skins cache dir: "
-                f"{error}."
-            )
 
     def _push_skin(
         self,
@@ -383,7 +366,6 @@ class SkinUploaderThread(QThread):
                 self._selected_skin_path
             )
             self._push_skin(base64_string)
-            self.delete_skins_cache(self._skins_cache_directory)
             # if not self.is_response_valid()
 
         except (
@@ -394,3 +376,40 @@ class SkinUploaderThread(QThread):
         ) as error:
             # Handle the AuthorizationServiceUnavailable exception
             self.runtime_error = error
+
+
+class CapeUploaderThread(SkinUploaderThread):
+    # pylint: disable = R0913
+    def set_data(
+        self,
+        username: str,
+        password: str,
+        selected_skin_path: str,
+        skins_cache_directory: str,
+    ) -> None:
+        """
+        Set data for the skin upload.
+        """
+
+        self._username = username
+        self._password = password
+        self._selected_skin_path = selected_skin_path
+        self._skins_cache_directory = skins_cache_directory
+        self._is_data_inited = True
+
+    def _make_json_response(self, base64_img: str):
+        """
+        Create a JSON response for the cape upload API.
+
+        Args:
+            base64_img (str): The base64-encoded string of the user's cape.
+
+        Returns:
+            dict: A dictionary representing the JSON response.
+
+        """
+        return {
+            "username": self._username,
+            "password": self._password,
+            "base64_image": base64_img,
+        }
