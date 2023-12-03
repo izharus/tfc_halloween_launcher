@@ -296,11 +296,10 @@ def test_update_last_auth_data(mocker):
     assert auth_class._last_auth_data == mock_response.json()
 
 
-def test_successful_skin_upload(tmpdir):
+def test_successful_skin_upload():
     """Test successful Minecraft skin upload."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for success (status code 200)
         m.post(
@@ -316,7 +315,6 @@ def test_successful_skin_upload(tmpdir):
             username="test_user",
             password="test_password",
             selected_skin_path=f"{script_directory}/test_skin.png",
-            skins_cache_directory=temp_cache_dir,
         )
 
         # Run the thread
@@ -327,11 +325,10 @@ def test_successful_skin_upload(tmpdir):
         assert skin_thread.runtime_error is None
 
 
-def test_make_json_response(tmpdir):
+def test_make_json_response():
     """Tests if json creates correctly."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
 
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
@@ -341,7 +338,6 @@ def test_make_json_response(tmpdir):
         username="test_user",
         password="test_password",
         selected_skin_path=f"{script_directory}/test_skin.png",
-        skins_cache_directory=temp_cache_dir,
         is_skin_slim=True,  # You can set is_skin_slim to True for testing
     )
 
@@ -360,11 +356,9 @@ def test_make_json_response(tmpdir):
     assert json_response == expected_json
 
 
-def test_skin_upload_with_invalid_skin_path(tmpdir):
+def test_skin_upload_with_invalid_skin_path():
     """Test skin upload with an invalid skin path."""
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
-
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
     with requests_mock.Mocker() as m:
@@ -378,7 +372,6 @@ def test_skin_upload_with_invalid_skin_path(tmpdir):
             username="test_user",
             password="test_password",
             selected_skin_path="invalid_path",
-            skins_cache_directory=temp_cache_dir,
         )
 
         # Run the thread
@@ -392,10 +385,9 @@ def test_skin_upload_with_invalid_skin_path(tmpdir):
         )
 
 
-def test_skin_upload_with_invalid_auth_data(tmpdir):
+def test_skin_upload_with_invalid_auth_data():
     """Test skin upload with an invalid auth data."""
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -411,7 +403,6 @@ def test_skin_upload_with_invalid_auth_data(tmpdir):
             username="test_user",
             password="test_password",
             selected_skin_path=f"{script_directory}/test_skin.png",
-            skins_cache_directory=temp_cache_dir,
         )
 
         # Run the thread
@@ -425,10 +416,9 @@ def test_skin_upload_with_invalid_auth_data(tmpdir):
         )
 
 
-def test_skin_upload_with_invalid_api_response_code(tmpdir):
+def test_skin_upload_with_invalid_api_response_code():
     """Test skin upload with an invalid API response status code."""
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -444,7 +434,6 @@ def test_skin_upload_with_invalid_api_response_code(tmpdir):
             username="test_user",
             password="test_password",
             selected_skin_path=f"{script_directory}/test_skin.png",
-            skins_cache_directory=temp_cache_dir,
         )
 
         # Run the thread
@@ -458,13 +447,12 @@ def test_skin_upload_with_invalid_api_response_code(tmpdir):
         )
 
 
-def test_skin_upload_with_unavailable_authorization_service(tmpdir):
+def test_skin_upload_with_unavailable_authorization_service():
     """
     Test the behavior of skin upload when the authorization service
     is unavailable.
     """
     api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
-    temp_cache_dir = os.path.join(tmpdir, "skins_cache")
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -477,7 +465,6 @@ def test_skin_upload_with_unavailable_authorization_service(tmpdir):
             username="test_user",
             password="test_password",
             selected_skin_path=f"{script_directory}/test_skin.png",
-            skins_cache_directory=temp_cache_dir,
         )
 
         # Run the thread

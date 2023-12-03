@@ -14,7 +14,6 @@ Note: This module assumes the existence of certain classes and functions
       imported from other modules such as `MinecraftLauncherConfig`.
 """
 import base64
-import shutil
 import traceback
 from typing import Dict, Optional
 
@@ -250,17 +249,18 @@ class SkinUploaderThread(QThread):
         self._username: Optional[str] = None
         self._password: Optional[str] = None
         self._selected_skin_path: Optional[str] = None
-        self._skins_cache_directory: Optional[str] = None
         self._is_skin_slim: bool = False
         self._is_data_inited: bool = False
         self.runtime_error: Optional[Exception] = None
 
     @staticmethod
-    def get_base64_string_from_file(filepath: str) -> str:
+    def get_base64_string_from_file(filepath: Optional[str]) -> Optional[str]:
         """
         Read the binary content of an image file and return its
         base64-encoded string.
         """
+        if not filepath:
+            return None
         try:
             with open(filepath, "rb") as image_file:
                 # Read the binary content of the image file
@@ -276,8 +276,7 @@ class SkinUploaderThread(QThread):
         self,
         username: str,
         password: str,
-        selected_skin_path: str,
-        skins_cache_directory: str,
+        selected_skin_path: Optional[str] = None,
         is_skin_slim: bool = False,
     ) -> None:
         """
@@ -287,16 +286,16 @@ class SkinUploaderThread(QThread):
         self._username = username
         self._password = password
         self._selected_skin_path = selected_skin_path
-        self._skins_cache_directory = skins_cache_directory
         self._is_data_inited = True
         self._is_skin_slim = is_skin_slim
 
-    def _make_json_response(self, base64_img: str):
+    def _make_json_response(self, base64_img: Optional[str] = None):
         """
         Create a JSON response for the skin upload API.
 
         Args:
-            base64_img (str): The base64-encoded string of the user's skin.
+            base64_img (Optional, str): The base64-encoded string of
+                the user's skin.
 
         Returns:
             dict: A dictionary representing the JSON response.
@@ -311,13 +310,14 @@ class SkinUploaderThread(QThread):
 
     def _push_skin(
         self,
-        base64_img: str,
+        base64_img: Optional[str] = None,
     ) -> None:
         """
         Push the user's skin to the Minecraft server.
 
         Args:
-            base64_img (str): The base64-encoded string of the user's skin.
+            base64_img (Optional, str): The base64-encoded
+                string of the user's skin.
 
         """
         try:
@@ -384,8 +384,7 @@ class CapeUploaderThread(SkinUploaderThread):
         self,
         username: str,
         password: str,
-        selected_skin_path: str,
-        skins_cache_directory: str,
+        selected_skin_path: Optional[str] = None,
     ) -> None:
         """
         Set data for the skin upload.
@@ -394,15 +393,15 @@ class CapeUploaderThread(SkinUploaderThread):
         self._username = username
         self._password = password
         self._selected_skin_path = selected_skin_path
-        self._skins_cache_directory = skins_cache_directory
         self._is_data_inited = True
 
-    def _make_json_response(self, base64_img: str):
+    def _make_json_response(self, base64_img: Optional[str] = None):
         """
         Create a JSON response for the cape upload API.
 
         Args:
-            base64_img (str): The base64-encoded string of the user's cape.
+            base64_img (Optional, str): The base64-encoded
+                string of the user's cape.
 
         Returns:
             dict: A dictionary representing the JSON response.

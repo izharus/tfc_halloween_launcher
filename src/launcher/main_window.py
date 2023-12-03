@@ -238,15 +238,13 @@ class Window(QtWidgets.QMainWindow):
         if not skin_file_path:
             self.notif_widget.show_and_close("Файл скина не выбран.")
             return
-        skins_cache_directory = self.config.minecraft_skins_cache_directory
         self._skin_uploader_thread.set_data(
             username=username,
             password=password,
             selected_skin_path=skin_file_path,
-            skins_cache_directory=skins_cache_directory,
             is_skin_slim=is_skin_slim,
         )
-        self.notif_widget.show_and_close("Загружаю скин на сервер...")
+        self.notif_widget.show_and_close("Загружаю скин...")
         self._skin_uploader_thread.start()
 
     def _skin_uploader_thread_finished(self):
@@ -255,8 +253,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Скин загружен!")
-            log.info("Скин загружен!")
+            self.notif_widget.show_and_close("Операция заверщена!")
+            log.info("Операция заверщена!")
 
     def _choose_cape_and_upload(self, directory: str) -> None:
         # Open a file dialog and get the selected file path
@@ -270,14 +268,12 @@ class Window(QtWidgets.QMainWindow):
         if not cape_file_path:
             self.notif_widget.show_and_close("Файл плаща не выбран.")
             return
-        skins_cache_directory = self.config.minecraft_skins_cache_directory
         self._cape_uploader_thread.set_data(
             username=username,
             password=password,
             selected_skin_path=cape_file_path,
-            skins_cache_directory=skins_cache_directory,
         )
-        self.notif_widget.show_and_close("Загружаю плащ на сервер...")
+        self.notif_widget.show_and_close("Загружаю плащ...")
         self._cape_uploader_thread.start()
 
     def _cape_uploader_thread_finished(self):
@@ -286,8 +282,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Плащ загружен!")
-            log.info("Плащ загружен!")
+            self.notif_widget.show_and_close("Операция заверщена!")
+            log.info("Операция заверщена!")
 
     def _make_authorization_finished(self) -> None:
         if not self._authorization_thread.runtime_error:

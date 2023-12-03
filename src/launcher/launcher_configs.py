@@ -87,8 +87,6 @@ class MinecraftLauncherConfig(LauncherConfig):
         minecraft_directory (str): The directory where Minecraft is installed.
         minecraft_profile (str): The Minecraft profile to be used.
         minecraft_skin_directory (str): The directory with skins.
-        minecraft_skins_cache_directory (str): Directory with minecraft
-            skins cache.
         minecraft_cape_directory (str): The directory with capes.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
@@ -108,7 +106,6 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_directory: str
     minecraft_profile: str
     minecraft_skin_directory: str
-    minecraft_skins_cache_directory: str
     minecraft_cape_directory: str
     minecraft_server_ip: str
     minecraft_server_port: str
@@ -183,11 +180,6 @@ def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
             minecraft_directory,
             "skins",
         ),
-        minecraft_skins_cache_directory=os.path.join(
-            minecraft_directory,
-            "assets",
-            "skins",
-        ),
         minecraft_cape_directory=os.path.join(
             minecraft_directory,
             "capes",
@@ -225,11 +217,6 @@ def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
         minecraft_directory=minecraft_directory,
         minecraft_skin_directory=os.path.join(
             minecraft_directory,
-            "skins",
-        ),
-        minecraft_skins_cache_directory=os.path.join(
-            minecraft_directory,
-            "assets",
             "skins",
         ),
         minecraft_cape_directory=os.path.join(
