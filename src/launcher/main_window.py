@@ -19,6 +19,7 @@ import os
 import sys
 import traceback
 import webbrowser
+from typing import Union
 
 import win32con
 import win32console
@@ -110,6 +111,16 @@ class Window(QtWidgets.QMainWindow):
             self.config.api_url_push_skin,
         )
 
+        self._ui_instance.pushButton_delete_skin.clicked.connect(
+            lambda: self._delete_user_texture(
+                self._skin_uploader_thread,
+            )
+        )
+        self._ui_instance.pushButton_delete_cape.clicked.connect(
+            lambda: self._delete_user_texture(
+                self._cape_uploader_thread,
+            )
+        )
         self._ui_instance.pushButton_choose_skin.clicked.connect(
             lambda: self._choose_skin_and_upload(
                 self.config.minecraft_skin_directory
@@ -246,6 +257,19 @@ class Window(QtWidgets.QMainWindow):
         )
         self.notif_widget.show_and_close("Загружаю скин...")
         self._skin_uploader_thread.start()
+
+    def _delete_user_texture(
+        self, worker_thread: Union[SkinUploaderThread, CapeUploaderThread]
+    ) -> None:
+        username = self.input_data.extract_element("lineEdit_nickname")
+        password = self.input_data.extract_element("lineEdit_password")
+
+        worker_thread.set_data(
+            username=username,
+            password=password,
+        )
+        self.notif_widget.show_and_close("Удаляю текстуры...")
+        worker_thread.start()
 
     def _skin_uploader_thread_finished(self):
         run_time_error = self._skin_uploader_thread.runtime_error

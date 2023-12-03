@@ -71,7 +71,7 @@
            <widget class="QLineEdit" name="lineEdit_nickname">
             <property name="minimumSize">
              <size>
-              <width>300</width>
+              <width>250</width>
               <height>0</height>
              </size>
             </property>
@@ -114,6 +114,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit_password">
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="styleSheet">
              <string notr="true">/* Modern Style QLineEdit */
 .QLineEdit {
@@ -371,7 +377,7 @@ QPushButton:pressed {
            <widget class="QPushButton" name="pushButton_choose_cape">
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>200</width>
               <height>70</height>
              </size>
             </property>
@@ -400,7 +406,7 @@ QPushButton:pressed {
 </string>
             </property>
             <property name="text">
-             <string>Указать файл плаща</string>
+             <string>Выбрать плащ</string>
             </property>
            </widget>
           </item>
@@ -543,7 +549,7 @@ QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {
            <widget class="QPushButton" name="pushButton_choose_skin">
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>200</width>
               <height>70</height>
              </size>
             </property>
@@ -578,7 +584,7 @@ QPushButton:pressed {
 </string>
             </property>
             <property name="text">
-             <string>Указать файл скина</string>
+             <string>Выбрать скин</string>
             </property>
            </widget>
           </item>
@@ -629,6 +635,66 @@ QCheckBox::indicator:checked:hover {
             </property>
             <property name="text">
              <string>Установить шейдеры</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="pushButton_delete_skin">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+  background-color: #FF0000; /* Red color */
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #CC0000; /* Darker red on hover */
+}
+
+QPushButton:pressed {
+  background-color: #990000; /* Even darker red when pressed */
+  border: 1px solid #660000; /* Dark border when pressed */
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Удалить скин</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QPushButton" name="pushButton_delete_cape">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+  background-color: #FF0000; /* Red color */
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #CC0000; /* Darker red on hover */
+}
+
+QPushButton:pressed {
+  background-color: #990000; /* Even darker red when pressed */
+  border: 1px solid #660000; /* Dark border when pressed */
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Удалить плащ</string>
             </property>
            </widget>
           </item>

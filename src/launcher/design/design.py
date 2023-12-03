@@ -47,7 +47,7 @@ class Ui_MainWindow:
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.lineEdit_nickname = QtWidgets.QLineEdit(parent=self.centralwidget)
-        self.lineEdit_nickname.setMinimumSize(QtCore.QSize(300, 0))
+        self.lineEdit_nickname.setMinimumSize(QtCore.QSize(250, 0))
         self.lineEdit_nickname.setMaximumSize(QtCore.QSize(300, 16777215))
         self.lineEdit_nickname.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
@@ -78,6 +78,7 @@ class Ui_MainWindow:
         self.lineEdit_nickname.setObjectName("lineEdit_nickname")
         self.verticalLayout_3.addWidget(self.lineEdit_nickname)
         self.lineEdit_password = QtWidgets.QLineEdit(parent=self.centralwidget)
+        self.lineEdit_password.setMinimumSize(QtCore.QSize(250, 0))
         self.lineEdit_password.setStyleSheet(
             "/* Modern Style QLineEdit */\n"
             ".QLineEdit {\n"
@@ -290,7 +291,7 @@ class Ui_MainWindow:
         self.pushButton_choose_cape = QtWidgets.QPushButton(
             parent=self.centralwidget
         )
-        self.pushButton_choose_cape.setMinimumSize(QtCore.QSize(0, 70))
+        self.pushButton_choose_cape.setMinimumSize(QtCore.QSize(200, 70))
         self.pushButton_choose_cape.setStyleSheet(
             "QPushButton {\n"
             "  background-color: #3A92F7;\n"
@@ -440,7 +441,7 @@ class Ui_MainWindow:
         self.pushButton_choose_skin = QtWidgets.QPushButton(
             parent=self.centralwidget
         )
-        self.pushButton_choose_skin.setMinimumSize(QtCore.QSize(0, 70))
+        self.pushButton_choose_skin.setMinimumSize(QtCore.QSize(200, 70))
         self.pushButton_choose_skin.setMaximumSize(QtCore.QSize(16777215, 70))
         self.pushButton_choose_skin.setStyleSheet(
             "QPushButton {\n"
@@ -510,6 +511,62 @@ class Ui_MainWindow:
             "checkBox_is_install_shaders"
         )
         self.gridLayout.addWidget(self.checkBox_is_install_shaders, 3, 0, 1, 1)
+        self.pushButton_delete_skin = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_delete_skin.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #FF0000; /* Red color */\n"
+            "  border: none;\n"
+            "  border-radius: 30px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #CC0000; /* Darker red on hover */\n"
+            "}\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #990000; /* Even darker red when pressed */\n"
+            "  border: 1px solid #660000; /* Dark border when pressed */\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_delete_skin.setObjectName("pushButton_delete_skin")
+        self.gridLayout.addWidget(self.pushButton_delete_skin, 0, 2, 1, 1)
+        self.pushButton_delete_cape = QtWidgets.QPushButton(
+            parent=self.centralwidget
+        )
+        self.pushButton_delete_cape.setStyleSheet(
+            "QPushButton {\n"
+            "  background-color: #FF0000; /* Red color */\n"
+            "  border: none;\n"
+            "  border-radius: 30px;\n"
+            "  padding: 12px 24px;\n"
+            "  color: #FFFFFF;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  text-decoration: none;\n"
+            "  font-size: 16px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "  background-color: #CC0000; /* Darker red on hover */\n"
+            "}\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "  background-color: #990000; /* Even darker red when pressed */\n"
+            "  border: 1px solid #660000; /* Dark border when pressed */\n"
+            "}\n"
+            ""
+        )
+        self.pushButton_delete_cape.setObjectName("pushButton_delete_cape")
+        self.gridLayout.addWidget(self.pushButton_delete_cape, 3, 2, 1, 1)
         self.horizontalLayout.addLayout(self.gridLayout)
         spacerItem2 = QtWidgets.QSpacerItem(
             40,
@@ -570,14 +627,20 @@ class Ui_MainWindow:
             _translate("MainWindow", "Запустить TFC-Halloween")
         )
         self.pushButton_choose_cape.setText(
-            _translate("MainWindow", "Указать файл плаща")
+            _translate("MainWindow", "Выбрать плащ")
         )
         self.groupBox.setTitle(_translate("MainWindow", "Тип скина"))
         self.radioButton_male.setText(_translate("MainWindow", "Мужской"))
         self.radioButton_female.setText(_translate("MainWindow", "Женский"))
         self.pushButton_choose_skin.setText(
-            _translate("MainWindow", "Указать файл скина")
+            _translate("MainWindow", "Выбрать скин")
         )
         self.checkBox_is_install_shaders.setText(
             _translate("MainWindow", "Установить шейдеры")
+        )
+        self.pushButton_delete_skin.setText(
+            _translate("MainWindow", "Удалить скин")
+        )
+        self.pushButton_delete_cape.setText(
+            _translate("MainWindow", "Удалить плащ")
         )
