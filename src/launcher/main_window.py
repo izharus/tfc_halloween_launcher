@@ -110,7 +110,9 @@ class Window(QtWidgets.QMainWindow):
         self._skin_uploader_thread = SkinUploaderThread(
             self.config.api_url_push_skin,
         )
-
+        self._cape_uploader_thread = CapeUploaderThread(
+            self.config.api_url_push_cape,
+        )
         self._ui_instance.pushButton_delete_skin.clicked.connect(
             lambda: self._delete_user_texture(
                 self._skin_uploader_thread,
@@ -130,9 +132,6 @@ class Window(QtWidgets.QMainWindow):
             self._skin_uploader_thread_finished
         )
 
-        self._cape_uploader_thread = CapeUploaderThread(
-            self.config.api_url_push_cape,
-        )
         self._ui_instance.pushButton_choose_cape.clicked.connect(
             lambda: self._choose_cape_and_upload(
                 self.config.minecraft_cape_directory
@@ -164,7 +163,7 @@ class Window(QtWidgets.QMainWindow):
             self._make_authorization_finished
         )
 
-        self.setWindowTitle("TFC-Halloween 2.0.0 RC-2")
+        self.setWindowTitle("TFC-Halloween 2.0.0")
 
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(

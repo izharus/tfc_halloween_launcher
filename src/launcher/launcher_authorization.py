@@ -379,20 +379,39 @@ class SkinUploaderThread(QThread):
 
 
 class CapeUploaderThread(SkinUploaderThread):
-    # pylint: disable = R0913
+    """
+    A thread class for uploading Minecraft capes. Extends
+    the functionality of the SkinUploaderThread class to
+    handle cape-specific operations.
+    """
+
     def set_data(
         self,
         username: str,
         password: str,
         selected_skin_path: Optional[str] = None,
+        is_skin_slim: bool = False,
     ) -> None:
         """
-        Set data for the skin upload.
+        Set data for the cape upload.
+
+        Args:
+            username (str): The username associated with the cape.
+            password (str): The password for authentication.
+            selected_skin_path (Optional[str]): The file path to the
+                selected cape skin.
+            is_skin_slim (bool, optional): Flag indicating whether
+                the cape skin is slim. It dont uses in the current class, only
+                in super() class.
+
+        Returns:
+            None
         """
 
         self._username = username
         self._password = password
         self._selected_skin_path = selected_skin_path
+        self._is_skin_slim = is_skin_slim
         self._is_data_inited = True
 
     def _make_json_response(self, base64_img: Optional[str] = None):
