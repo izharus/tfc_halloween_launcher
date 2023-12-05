@@ -1,7 +1,6 @@
 # Changelog
 
-## Version 1.0.0 (5.11.2023)
-## Version 1.0.0 (5.11.2023)
+## Version 1.0.0 (10.11.2023)
 
 ### Features
 - Added support for multiple servers with different modpacks (we needed a second server for tests only). In the future, we can start a third server, e.g., for version 1.7.10.
@@ -21,3 +20,14 @@
 
 ### Note: Windows 7 Support
 - Please note that launcher do not supports for Windows 7. Windows 7 is an outdated operating system, and making compatibility could require extensive time and resources. Even major platforms like Steam will cease support for Windows 7 in January 2024. I recommend upgrading to a more recent Windows version for an improved and secure experience.
+
+
+## Version 2.0.0 (05.12.2023)
+
+### Features
+- Added authorization feature in the launcher.
+- Introduced the opportunity to add user skins (slim and non-slim) and capes. Only non-HD skins are available, but HD capes are available.
+- Added a feature to indicate whether the current profile is installed or not.
+### Bug Fixes
+- Refactored the configuration structure to eliminate some bugs. During the first launch, the launcher will check the hash of game files.
+- Multiple minor refinements...
