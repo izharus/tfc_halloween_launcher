@@ -435,7 +435,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     log.critical("Exception occurred:")
     log.critical(exc_type)
     log.critical(exc_value)
-    log.critical(traceback.format_tb(exc_traceback))
+    log.critical(" ".join(traceback.format_tb(exc_traceback)))
     msg_box = MessageBoxManager("")
 
     msg_box.warn(
