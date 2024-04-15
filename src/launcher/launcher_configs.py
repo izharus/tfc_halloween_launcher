@@ -10,12 +10,16 @@ import os
 import shelve
 import traceback
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import minecraft_launcher_lib as mine_lib
 from log_wizard import DefaultConfig
 from log_wizard import log as get_logger
 
+from .utillity.custom_exceptions import (
+    ConfigProcessingError,
+    RequestDownloadError,
+)
 from .utillity.file_downloader import FileDownloader
 
 
@@ -69,6 +73,90 @@ class LauncherConfig:
 
 DefaultConfig(log_dir=LauncherConfig.logging_dir)
 log = get_logger()
+
+
+class ConfigLoader:
+    """A class for loading and handling configuration data."""
+
+    def __init__(self, config_data: Dict) -> None:
+        """
+        Initialize ConfigLoader with provided configuration data.
+
+        Parameters:
+            config_data (Dict): A dictionary containing configuration data.
+        """
+        self._config_data = config_data
+
+    def __eq__(self, other):
+        if isinstance(other, ConfigLoader):
+            return self._config_data == other._config_data
+        return False
+
+    @classmethod
+    def download_from_url(cls, download_url: str) -> "ConfigLoader":
+        """
+        Download configuration data from a specified URL.
+
+        Parameters:
+            download_url (str): The URL from which to download
+                the configuration data.
+
+        Returns:
+            ConfigLoader: A ConfigLoader instance.
+
+        Raises:
+            RequestDownloadError: If the download request for the config
+                fails.
+            ConfigProcessingError: If an error occurs while processing
+                the configuration data.
+        """
+        try:
+            bytes_file_data = FileDownloader.download_file(download_url)
+        except RequestDownloadError:
+            log.error("Failed to load a config file.")
+            raise
+        try:
+            config = json.loads(bytes_file_data)
+        except Exception as error:
+            log.error(f"Failed to load json from config file: {error}")
+            log.debug(traceback.format_exc())
+            raise ConfigProcessingError from error
+        if not isinstance(config, dict):
+            log.error("Incorrect config format.")
+            raise ConfigProcessingError
+        return cls(config)
+
+    @property
+    def config_list(self) -> List[str]:
+        """
+        Get a list of all supported configurations.
+
+        Returns:
+            List[str]: A list of strings representing supported
+                configuration names.
+        """
+        return [key for key in self._config_data]
+
+    def get_config(self, config_name: str) -> "MinecraftLauncherConfig":
+        """
+        Get the configuration data for a specified configuration name.
+
+        Parameters:
+            config_name (str): The name of the configuration to retrieve.
+
+        Returns:
+            MinecraftLauncherConfig: An instance of MinecraftLauncherConfig
+                containing the configuration data.
+
+        Raises:
+            ConfigProcessingError: If the specified configuration name is
+                not found in the loaded data.
+        """
+        if config_name not in self._config_data:
+            raise ConfigProcessingError(
+                f"config name: '{config_name}' was not found"
+            )
+        return MinecraftLauncherConfig(self._config_data[config_name])
 
 
 # pylint: disable= R0902

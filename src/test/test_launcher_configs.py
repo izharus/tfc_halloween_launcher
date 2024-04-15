@@ -1,14 +1,110 @@
 """Tests for src/launcher_config.py"""
 # pylint:disable = E0401
 # pylint: disable=W0212
+import json
 import os
+from unittest.mock import MagicMock
 
+import pytest
 from src.launcher.launcher_configs import (
-    SUPPORTED_CONFIGS,
+    ConfigLoader,
     LauncherConfig,
     MinecraftLauncherConfig,
-    get_config,
 )
+from src.launcher.utillity.custom_exceptions import (
+    ConfigProcessingError,
+    RequestDownloadError,
+)
+from src.launcher.utillity.file_downloader import FileDownloader
+
+
+class TestConfigLoader:
+    """Unit tests for ConfigLoader."""
+
+    @pytest.fixture
+    def mock_config_data(self):
+        """Mock a config data."""
+        return {
+            "config1": {"param1": "value1"},
+            "config2": {"param2": "value2"},
+        }
+
+    def test_download_from_url_success(
+        self,
+        mocker,
+        mock_config_data,
+    ):
+        """Test download_from_url method with correct json data."""
+        mock_download_file = MagicMock()
+        mock_download_file.return_value = json.dumps(mock_config_data)
+        with mocker.patch.object(
+            FileDownloader,
+            "download_file",
+            mock_download_file,
+        ):
+            loader = ConfigLoader.download_from_url("test_url")
+        assert loader.config_list == list(mock_config_data.keys())
+
+    def test_download_from_url_request_error(self, mocker):
+        """Test download_from_url method when download request fails."""
+        with pytest.raises(RequestDownloadError):
+            mocker.patch.object(
+                FileDownloader,
+                "download_file",
+                side_effect=RequestDownloadError,
+            )
+            ConfigLoader.download_from_url("test_url")
+
+    def test_download_from_url_config_invalid_json_data(self, mocker):
+        """Test download_from_url method when json data is invalid."""
+        with pytest.raises(ConfigProcessingError):
+            mocker.patch.object(
+                FileDownloader,
+                "download_file",
+                return_value="invalid_json_data",
+            )
+            ConfigLoader.download_from_url("test_url")
+
+    def test_download_from_url_incorrect_json_type(self, mocker):
+        """
+        Test download_from_url method when json config type is invalid.
+        Expected dict data, but received a list.
+        """
+        with pytest.raises(ConfigProcessingError):
+            mocker.patch.object(
+                FileDownloader,
+                "download_file",
+                return_value='["invalid_format", "config_data"]',
+            )
+            ConfigLoader.download_from_url("test_url")
+
+    def test_config_list(self, mock_config_data):
+        """
+        Test config_list method to ensure it returns a list of supported
+        configuration names.
+        """
+        loader = ConfigLoader(mock_config_data)
+        assert loader.config_list == ["config1", "config2"]
+
+    def test_get_config(self, mock_config_data):
+        """
+        Test get_config method to ensure it returns the configuration
+        data for a specified configuration name.
+        """
+        loader = ConfigLoader(mock_config_data)
+        config_name = "config1"
+        config = loader.get_config(config_name)
+        assert config == MinecraftLauncherConfig(mock_config_data[config_name])
+
+    def test_get_config_missing_name(self, mock_config_data):
+        """
+        Test get_config method when the specified configuration name
+        is not found in the loaded data.
+        """
+        loader = ConfigLoader(mock_config_data)
+        missing_config_name = "missing_config"
+        with pytest.raises(ConfigProcessingError):
+            loader.get_config(missing_config_name)
 
 
 def test_get_config_do_not_returns_existing_config():
