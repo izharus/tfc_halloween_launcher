@@ -1,24 +1,213 @@
-"""Tests for mainw qt Window class."""
-# pylint:disable = E0401
-import sys
+"""Tests for main qt Window class."""
+from unittest.mock import MagicMock
 
-from PyQt6 import QtWidgets
-from src.launcher.launcher_configs import SUPPORTED_CONFIGS, get_config
+import pytest
+from src.launcher.design.utillity import MessageBoxManager
+from src.launcher.launcher_configs import OFFLINE_MAP_JSON, ConfigLoader
 from src.launcher.main_window import Window
+from src.launcher.utillity.custom_exceptions import (
+    ConfigProcessingError,
+    RequestDownloadError,
+)
+
+# pylint: disable=W0613,W0212
+
+SERVER_NAME_1 = "server name 1"
+SERVER_NAME_2 = "server name 2"
 
 
-def test_combobox_server_type_and_supported_configs_do_not_match():
-    """SUPPORTED_CONFIGS should fully matches with text in ui element."""
-    with QtWidgets.QApplication(sys.argv):
+@pytest.fixture
+def mock_config_data():
+    """Mock a config data."""
+    return {
+        SERVER_NAME_1: {"config": {"config_name": "config_name_1"}},
+        SERVER_NAME_2: {"config": {"config_name": "config_name_2"}},
+    }
+
+
+@pytest.fixture
+def mock_download_from_url(mocker, mock_config_data):
+    """Mock ConfigLoader.download_from_url method."""
+    with mocker.patch.object(
+        ConfigLoader,
+        "download_from_url",
+        return_value=ConfigLoader(mock_config_data),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_window(mocker, qtbot):
+    """
+    Create an window instance without notification message boxes.
+    """
+    with mocker.patch.object(
+        MessageBoxManager,
+        "create_msg_box",
+        MagicMock(),
+    ), mocker.patch.object(
+        MessageBoxManager, "warn", side_effect=MagicMock()
+    ), mocker.patch.object(
+        MessageBoxManager,
+        "info",
+        side_effect=MagicMock(),
+    ):
         window = Window()
-        for config_name in SUPPORTED_CONFIGS:
-            assert window.input_data.extract_element(config_name) is not False
+        qtbot.addWidget(window)
+        yield window
 
-        # pylint: disable = W0212
-        q_combobox = window._ui_instance.comboBox_server_type
 
-        all_items = [q_combobox.itemText(i) for i in range(q_combobox.count())]
-        assert len(all_items) == 2
+def test_get_config_loader_success(
+    mock_download_from_url, mock_config_data, mock_window
+):
+    """TODO: Docstring"""
+    window = mock_window
 
-        for q_combobox in all_items:
-            get_config(q_combobox)
+    assert window.config_loader._config_data == mock_config_data
+
+
+def test_get_config_loader_download_failed(
+    mock_window,
+    mocker,
+):
+    """Test that the config loader handles download failure gracefully."""
+    window = mock_window
+    with mocker.patch.object(
+        ConfigLoader,
+        "download_from_url",
+        side_effect=RequestDownloadError,
+    ):
+        window.config_loader = window.get_config_loader()
+
+    assert window.config_loader._config_data == OFFLINE_MAP_JSON
+
+
+def test_get_config_loader_config_error(
+    mock_window,
+    mocker,
+):
+    """
+    Test that the config loader handles exception
+    ConfigProcessingError gracefully.
+    """
+    window = mock_window
+    with mocker.patch.object(
+        ConfigLoader,
+        "download_from_url",
+        side_effect=ConfigProcessingError,
+    ):
+        window.config_loader = window.get_config_loader()
+    assert window.config_loader._config_data == OFFLINE_MAP_JSON
+    window.msg_box.warn.assert_called_once()
+
+
+def test_update_server_type_combobox_with_config(
+    mock_config_data, mock_window
+):
+    """
+    Test _update_server_type_combobox with valid config data.
+    """
+    window = mock_window
+
+    config_loader = ConfigLoader(mock_config_data)
+    window._update_server_type_combobox(config_loader)
+
+    config_names = config_loader.config_list
+
+    combo_box_items = [
+        window._ui_instance.comboBox_server_type.itemText(i)
+        for i in range(window._ui_instance.comboBox_server_type.count())
+    ]
+
+    assert set(config_names) == set(combo_box_items)
+
+
+def test_update_server_type_combobox_with_empty_config(mock_window):
+    """
+    Test _update_server_type_combobox with empty config data.
+    """
+
+    window = mock_window
+
+    window._update_server_type_combobox(ConfigLoader({}))
+
+    assert window._ui_instance.comboBox_server_type.count() == 0
+
+
+def test_update_server_type_combobox_with_different_config(
+    mock_config_data, mock_window
+):
+    """
+    Test _update_server_type_combobox with different config data.
+    """
+
+    window = mock_window
+    config_loader = ConfigLoader(mock_config_data)
+    window._update_server_type_combobox(config_loader)
+
+    initial_combo_box_items = [
+        window._ui_instance.comboBox_server_type.itemText(i)
+        for i in range(window._ui_instance.comboBox_server_type.count())
+    ]
+
+    new_config_data = {"config3": {"config": {"config_name": "Config 3"}}}
+    new_config_loader = ConfigLoader(new_config_data)
+    window._update_server_type_combobox(new_config_loader)
+
+    new_combo_box_items = [
+        window._ui_instance.comboBox_server_type.itemText(i)
+        for i in range(window._ui_instance.comboBox_server_type.count())
+    ]
+
+    assert set(new_combo_box_items) != set(initial_combo_box_items)
+
+
+def test_update_config_with_valid_config(
+    mock_download_from_url,
+    mock_window,
+    mock_config_data,
+):
+    """
+    Test update_config method with valid configuration data.
+    """
+    window = mock_window
+
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    status = window.update_config()
+
+    assert status
+    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
+
+
+def test_update_config_success(
+    mock_download_from_url,
+    mock_window,
+):
+    """
+    Test update_config method with successful configuration update.
+    """
+    window = mock_window
+
+    status = window.update_config()
+
+    assert status is True
+    window.msg_box.create_msg_box.assert_not_called()
+
+
+def test_update_config_outdate_config(
+    mock_download_from_url, mock_window, mocker
+):
+    """
+    Test update_config method when the configuration is outdated.
+    """
+    window = mock_window
+    new_config_data = {"config3": {"config": {"config_name": "Config 3"}}}
+    with mocker.patch.object(
+        ConfigLoader,
+        "download_from_url",
+        return_value=ConfigLoader(new_config_data),
+    ):
+        status = window.update_config()
+
+    assert status is False
+    window.msg_box.warn.assert_called_once()

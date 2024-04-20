@@ -2,6 +2,7 @@
 # pylint:disable = E0401
 import os
 import secrets
+from unittest.mock import MagicMock
 
 import pytest
 import requests
@@ -17,8 +18,7 @@ from src.launcher.utillity.custom_exceptions import (
 
 def test_authorization_thread_inition():
     """Check if AuthorizationThread could be initialized correctly."""
-    config = launcher_configs.get_config("TFC Halloween TEST")
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     assert auth_class
 
 
@@ -27,8 +27,7 @@ def test_start_authorization_thread_without_setting_auth_data():
     Test AuthorizationThread behavior when started without setting
     authentication data.
     """
-    config = launcher_configs.get_config("TFC Halloween TEST")
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
 
     # Start the thread
     auth_class.start()  # i need to wait until auth_class finished
@@ -52,9 +51,8 @@ def test_authorization_thread_check_if_auth_data_resets(mocker):
         "src.launcher.launcher_authorization.AuthorizationThread._authenticate_user",
         return_value=None,
     )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
 
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     auth_class.set_auth_data("test_user", "test_password")
 
     # Start the thread
@@ -62,7 +60,7 @@ def test_authorization_thread_check_if_auth_data_resets(mocker):
     # Wait for the thread to finish
     auth_class.wait(1000)
 
-    # Firse call should be successful
+    # First call should be successful
     assert auth_class.runtime_error is None
 
     # Start the thread
@@ -84,8 +82,7 @@ def test_authorization_thread_authorization_service_unavailable(mocker):
         side_effect=requests.exceptions.ConnectTimeout,
     )
 
-    config = launcher_configs.get_config("TFC Halloween TEST")()
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     auth_class.set_auth_data("test_user", "test_password")
     auth_class.start()
     auth_class.wait(1000)
@@ -98,14 +95,10 @@ def test_authorization_thread_authorization_service_unavailable(mocker):
     )
 
 
-def test_get_authenticate_response_success(mocker):
+def test_get_authenticate_response_success():
     """Test _get_authenticate_response for a successful authentication."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for success (status code 200)
         m.post(
@@ -126,17 +119,13 @@ def test_get_authenticate_response_success(mocker):
         assert result.json() == {"status": "success", "data": {"key": "value"}}
 
 
-def test_get_authenticate_response_unauthorized(mocker):
+def test_get_authenticate_response_unauthorized():
     """
     Test _get_authenticate_response for an unauthorized authentication
     (status code 401).
     """
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for unauthorized (status code 401)
@@ -153,17 +142,13 @@ def test_get_authenticate_response_unauthorized(mocker):
             auth_class._get_authenticate_response("test_user", "test_password")
 
 
-def test_get_authenticate_response_internal_error(mocker):
+def test_get_authenticate_response_internal_error():
     """
     Test _get_authenticate_response for an internal server error
     (status code 500).
     """
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for internal server error (status code 500)
@@ -183,12 +168,8 @@ def test_get_authenticate_response_internal_error(mocker):
 def test_get_authenticate_response_unexpected_error(mocker):
     """Test _get_authenticate_response for an unexpected error
     (other status code)."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for an unexpected status code
@@ -275,13 +256,8 @@ def test_is_response_valid_with_json_parsing_error(mocker):
 
 def test_update_last_auth_data(mocker):
     """Test _update_last_auth_data for a successful update."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
-
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
     auth_class = launcher_authorization.AuthorizationThread(
         config.minecraft_launcher_ip_addr
     )

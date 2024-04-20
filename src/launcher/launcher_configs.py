@@ -9,8 +9,7 @@ import json
 import os
 import shelve
 import traceback
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List
 
 import minecraft_launcher_lib as mine_lib
 from log_wizard import DefaultConfig
@@ -21,6 +20,14 @@ from .utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
+
+MAP_JSON_URL = (
+    "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json"
+)
+
+OFFLINE_MAP_JSON = {
+    "ОБНОВИТЬ": {},
+}
 
 
 # pylint: disable = R0903
@@ -159,8 +166,6 @@ class ConfigLoader:
         return MinecraftLauncherConfig(self._config_data[config_name])
 
 
-# pylint: disable= R0902
-@dataclass
 class MinecraftLauncherConfig(LauncherConfig):
     """
     Configuration settings for the Minecraft launcher, including
@@ -169,49 +174,88 @@ class MinecraftLauncherConfig(LauncherConfig):
     Note:
         Call get_stored_data() to load stored data from the file.
     Attributes:
-        config_name (str): The name of the launcher configuration.
-        minecraft_version (str): The version of Minecraft to be used.
-        forge_version (str): The version of Forge to be used.
+
+
         minecraft_directory (str): The directory where Minecraft is installed.
-        minecraft_profile (str): The Minecraft profile to be used.
         minecraft_skin_directory (str): The directory with skins.
         minecraft_cape_directory (str): The directory with capes.
-        minecraft_server_ip (str): The IP address of the Minecraft server.
-        minecraft_server_port (str): The port of the Minecraft server.
         minecraft_java_version (str): The Java version to use.
         repo_url (str): The URL for the GitHub repository where
             mods are stored.
-        map_json_url (str): Url for downloading map file. It stores
-            config for installing all modpacks.
-        map_json_data Optional[Dict]: main info about all modpacks files.
-            Should be installed before all functions calls.
+
 
     """
 
-    config_name: str
-    minecraft_version: str
-    forge_version: str
-    minecraft_directory: str
-    minecraft_profile: str
     minecraft_skin_directory: str
     minecraft_cape_directory: str
-    minecraft_server_ip: str
-    minecraft_server_port: str
-    minecraft_java_version: int
-    map_json_url: str
-    map_json_data: Optional[Dict] = None
 
-    def parse_map_json_data(self):
-        """Download map.json file from backend repo."""
-        self.map_json_data = json.loads(
-            FileDownloader.download_file(self.map_json_url)
-        )[self.config_name]
+    def __init__(self, map_json_data):
+        self.map_json_data = map_json_data
+        self._get_stored_data()
+        self.minecraft_directory = os.path.join(
+            self.minecraft_root_directory,
+            self.servers_directory,
+            self.config_name,
+        )
+        self.minecraft_skin_directory = os.path.join(
+            self.minecraft_root_directory,
+            "skins",
+        )
+        self.minecraft_cape_directory = os.path.join(
+            self.minecraft_root_directory,
+            "capes",
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, MinecraftLauncherConfig):
+            return self.map_json_data == other.map_json_data
+        return False
+
+    def _get_config_value(self, key: str, default: Any = "") -> Any:
+        """
+        Helper method to get a value from the 'config' sub-dictionary
+        in 'map_json_data'.
+        """
+        if self.map_json_data and "config" in self.map_json_data:
+            return self.map_json_data["config"].get(key, default)
+        log.error("Failed to parse param from config: {key}")
+        return default
+
+    @property
+    def config_name(self) -> str:
+        """The name of the launcher configuration."""
+        return self._get_config_value("config_name")
+
+    @property
+    def minecraft_version(self) -> str:
+        """minecraft_version (str): The version of Minecraft to be used."""
+        return self._get_config_value("minecraft_version")
+
+    @property
+    def forge_version(self) -> str:
+        """forge_version (str): The version of Forge to be used."""
+        return self._get_config_value("forge_version")
+
+    @property
+    def minecraft_profile(self):
+        """The Minecraft profile to be used."""
+        return self._get_config_value("minecraft_profile")
+
+    @property
+    def minecraft_server_ip(self) -> str:
+        """The IP address of the Minecraft server."""
+        return self._get_config_value("minecraft_server_ip")
+
+    @property
+    def minecraft_server_port(self) -> str:
+        """The port of the Minecraft server."""
+        return self._get_config_value("minecraft_server_port")
 
     def is_minecraft_installed(
         self,
     ) -> bool:
         """
-        Check in mineraft has already installed for current config profile.
+        Check in minecraft has already installed for current config profile.
         """
         return self.launcher_stored_data.get(
             f"{self.config_name}_is_installed", False
@@ -225,7 +269,7 @@ class MinecraftLauncherConfig(LauncherConfig):
         self.launcher_stored_data[field] = True
         self._update_stored_data()
 
-    def get_stored_data(self) -> None:
+    def _get_stored_data(self) -> None:
         """
         Get stored data from the file.
         """
@@ -246,104 +290,3 @@ class MinecraftLauncherConfig(LauncherConfig):
         except Exception as error:
             log.error(f"Failed to update stored_data: {error}")
             log.debug(traceback.format_exc)
-
-
-def get_terra_firma_craft_config() -> MinecraftLauncherConfig:
-    """
-    Get the configuration for the Terra Firma Craft Minecraft server.
-
-    Returns:
-        MinecraftLauncherConfig: The configuration for the Terra
-            Firma Craft server.
-
-    """
-    config_name = "terrafirmacraft"
-    minecraft_directory = MinecraftLauncherConfig.minecraft_root_directory
-    terra_firma_craft_config = MinecraftLauncherConfig(
-        config_name=config_name,
-        minecraft_version="1.18.2",
-        forge_version="1.18.2-40.2.9",
-        minecraft_directory=minecraft_directory,
-        minecraft_skin_directory=os.path.join(
-            minecraft_directory,
-            "skins",
-        ),
-        minecraft_cape_directory=os.path.join(
-            minecraft_directory,
-            "capes",
-        ),
-        minecraft_profile="1.18.2-forge-40.2.9",
-        minecraft_server_ip="77.239.232.50",
-        minecraft_server_port="25565",
-        minecraft_java_version=17,
-        # pylint: disable = C0301
-        map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
-    )
-    terra_firma_craft_config.parse_map_json_data()
-    return terra_firma_craft_config
-
-
-def get_terra_firma_craft_test_config() -> MinecraftLauncherConfig:
-    """
-    Get the configuration for the Terra Firma Craft Test Minecraft server.
-
-    Returns:
-        MinecraftLauncherConfig: The configuration for the Terra
-            Firma Craft Test server.
-
-    """
-    config_name = "terrafirmacraft_test"
-    minecraft_directory = os.path.join(
-        MinecraftLauncherConfig.minecraft_root_directory,
-        MinecraftLauncherConfig.servers_directory,
-        config_name,
-    )
-    terra_firma_craft_config = MinecraftLauncherConfig(
-        config_name="terrafirmacraft_test",
-        minecraft_version="1.18.2",
-        forge_version="1.18.2-40.2.9",
-        minecraft_directory=minecraft_directory,
-        minecraft_skin_directory=os.path.join(
-            minecraft_directory,
-            "skins",
-        ),
-        minecraft_cape_directory=os.path.join(
-            minecraft_directory,
-            "capes",
-        ),
-        minecraft_profile="1.18.2-forge-40.2.9",
-        minecraft_server_ip="77.239.232.50",
-        minecraft_server_port="25570",
-        minecraft_java_version=17,
-        # pylint: disable = C0301
-        map_json_url="https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json",
-    )
-    terra_firma_craft_config.parse_map_json_data()
-    return terra_firma_craft_config
-
-
-def get_config(config_name: str) -> Callable[[], MinecraftLauncherConfig]:
-    """
-    Get the launcher configuration based on the specified name.
-
-    Args:
-        config_name (str): The name of the configuration to retrieve.
-
-    Returns:
-        MinecraftLauncherConfig: The specified launcher configuration function.
-
-
-    """
-    try:
-        return SUPPORTED_CONFIGS[config_name]
-    except KeyError:
-        default_config = list(SUPPORTED_CONFIGS.values())[0]
-        log.error(f"Unknown config name: {config_name}")
-        log.error(f"Setting default config: {default_config}")
-        return default_config
-
-
-SUPPORTED_CONFIGS = {
-    "TFC Halloween": get_terra_firma_craft_config,
-    "TFC Halloween TEST": get_terra_firma_craft_test_config,
-}

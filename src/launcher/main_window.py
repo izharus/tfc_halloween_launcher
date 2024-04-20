@@ -44,11 +44,17 @@ from .launcher_authorization import (
     SkinUploaderThread,
 )
 from .launcher_configs import (
+    MAP_JSON_URL,
+    OFFLINE_MAP_JSON,
+    ConfigLoader,
     LauncherConfig,
     MinecraftLauncherConfig,
-    get_config,
 )
 from .launcher_installer import InstallThread, MinecraftExecutorThread
+from .utillity.custom_exceptions import (
+    ConfigProcessingError,
+    RequestDownloadError,
+)
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
 
@@ -95,18 +101,20 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self.input_data = self.get_input_data()
-        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
+
+        self.config_loader = self.get_config_loader()
+        self.config: MinecraftLauncherConfig
+        # init self.config and config_loader here:
+        self.update_config()
+        self.update_main_button_text()
+        self._ui_instance.comboBox_server_type.activated.connect(
             self.update_config
         )
+
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
             self.update_main_button_text
         )
 
-        self.config: MinecraftLauncherConfig
-
-        # init self.config here:
-        self.update_config()
-        self.update_main_button_text()
         self._skin_uploader_thread = SkinUploaderThread(
             self.config.api_url_push_skin,
         )
@@ -188,20 +196,85 @@ class Window(QtWidgets.QMainWindow):
 
         hide_console()
 
-    def update_config(self):
+    def get_config_loader(self) -> ConfigLoader:
+        """Create the configuration loader."""
+        try:
+            return ConfigLoader.download_from_url(MAP_JSON_URL)
+        except (RequestDownloadError, ConfigProcessingError) as error:
+            msg_title = "Не удалось загрузить конфиг обновления."
+            log.error(f"Failed to download a map config: {error}")
+            self.msg_box.warn(
+                msg_title,
+                "При нажатии 'Ок' откроется папка с логом. ",
+                callback=lambda: webbrowser.open(
+                    LauncherConfig.logging_dir,
+                ),
+            )
+            return ConfigLoader(OFFLINE_MAP_JSON)
+
+    def _update_server_type_combobox(
+        self,
+        config_loader: ConfigLoader,
+    ) -> None:
+        """
+        Update server type combobox in ui interface
+        with the information from map.json.
+        """
+        current_text = self._ui_instance.comboBox_server_type.currentText()
+        self._ui_instance.comboBox_server_type.clear()
+        for config_name in config_loader.config_list:
+            self._ui_instance.comboBox_server_type.addItem(config_name)
+        if current_text in config_loader.config_list:
+            self._ui_instance.comboBox_server_type.setCurrentText(current_text)
+        else:
+            self._ui_instance.comboBox_server_type.setCurrentIndex(0)
+
+    def update_config(self) -> bool:
         """
         Update configuration based on UI input.
 
-        Fetches the selected server type, updates input data,
-        creates a new configuration, retrieves stored data, and
-        sets the configuration for the installation thread.
+        This method retrieves the selected server type from the UI,
+        fetches the corresponding configuration data from the configuration
+        loader, handles any errors that may occur during the process,
+        and sets the configuration for the installation thread.
+
+        Returns:
+            bool: True if the configuration update process completes
+                successfully, False otherwise.
+
+        Notes:
+            This method assumes the existence of the following attributes:
+                - self.config_loader: An instance of ConfigLoader used
+                    to retrieve configuration data.
+                - self.input_data: An object containing input data from the UI.
+                - self._install_thread: An instance of the installation thread.
+        Raises:
+            ConfigProcessingError: If an error occurs while processing
+                the configuration.
+
         """
+        # Download latest configuration
+        new_config_loader = self.get_config_loader()
+        if new_config_loader != self.config_loader:
+            self.config_loader = new_config_loader
+            log.error("Config was updated.")
+            msg_title = "Конфигурация серверов обновилась."
+            self.msg_box.warn(
+                msg_title,
+                "Выберите сервер еще раз.",
+            )
+            return False
+        # Update latest configuration in ui interface
+        self._update_server_type_combobox(self.config_loader)
         self.input_data.update_input_data_from_ui()
-        self.config = get_config(
-            self.input_data.extract_element("comboBox_server_type")
-        )()
-        self.config.get_stored_data()
+        # Save user server choice
+        server_type = self.input_data.extract_element("comboBox_server_type")
+        self.config = self.config_loader.get_config(
+            server_type,
+        )
+
         self._install_thread.set_config(self.config)
+        return True
 
     def update_main_button_text(self):
         """
@@ -329,7 +402,8 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-
+        if not self.update_config():
+            return
         self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
