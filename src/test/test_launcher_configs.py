@@ -107,6 +107,32 @@ class TestConfigLoader:
 class TestMinecraftLauncherConfig:
     """Unit tests for MinecraftLauncherConfig."""
 
+    def test_set_minecraft_installed_set_true(
+            self, tmp_path, mock_config_data):
+        """Test setting Minecraft installed flag to True."""
+        loader = ConfigLoader(mock_config_data)
+        config = loader.get_config(
+            loader.config_list[0],
+        )
+        config.launcher_data = os.path.join(tmp_path, "launcher_data.bin")
+
+        config.set_minecraft_installed()
+        field = f"{config.config_name}_is_installed"
+        assert config.launcher_stored_data[field] is True
+
+    def test_set_minecraft_installed_set_true_and_false(
+            self, tmp_path, mock_config_data):
+        """Test setting Minecraft installed flag to True and False."""
+        loader = ConfigLoader(mock_config_data)
+        config = loader.get_config(
+            loader.config_list[0],
+        )
+        config.launcher_data = os.path.join(tmp_path, "launcher_data.bin")
+
+        config.set_minecraft_installed()
+        config.set_minecraft_installed(False)
+        field = f"{config.config_name}_is_installed"
+        assert config.launcher_stored_data[field] is False
     def test_is_minecraft_installed(self, tmp_path, mock_config_data):
         """
         Test the is_minecraft_installed method of MinecraftLauncherConfig.

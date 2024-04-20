@@ -261,12 +261,12 @@ class MinecraftLauncherConfig(LauncherConfig):
             f"{self.config_name}_is_installed", False
         )
 
-    def set_minecraft_installed(self) -> None:
+    def set_minecraft_installed(self, is_installed: bool = True) -> None:
         """
         Set minecraft installed flag for this current profile.
         """
         field = f"{self.config_name}_is_installed"
-        self.launcher_stored_data[field] = True
+        self.launcher_stored_data[field] = is_installed
         self._update_stored_data()
 
     def _get_stored_data(self) -> None:
