@@ -151,7 +151,8 @@ def test_get_authenticate_response_internal_error():
     config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
-        # Mock the requests.post method for internal server error (status code 500)
+        # Mock the requests.post method for internal server
+        # error (status code 500)
         m.post(config.minecraft_launcher_ip_addr, status_code=500)
 
         auth_class = launcher_authorization.AuthorizationThread(
@@ -165,7 +166,7 @@ def test_get_authenticate_response_internal_error():
             auth_class._get_authenticate_response("test_user", "test_password")
 
 
-def test_get_authenticate_response_unexpected_error(mocker):
+def test_get_authenticate_response_unexpected_error():
     """Test _get_authenticate_response for an unexpected error
     (other status code)."""
     config = MagicMock()
@@ -275,7 +276,7 @@ def test_update_last_auth_data(mocker):
 def test_successful_skin_upload():
     """Test successful Minecraft skin upload."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for success (status code 200)
         m.post(
@@ -304,7 +305,7 @@ def test_successful_skin_upload():
 def test_make_json_response():
     """Tests if json creates correctly."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
 
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
@@ -334,7 +335,7 @@ def test_make_json_response():
 
 def test_skin_upload_with_invalid_skin_path():
     """Test skin upload with an invalid skin path."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
     with requests_mock.Mocker() as m:
@@ -363,7 +364,7 @@ def test_skin_upload_with_invalid_skin_path():
 
 def test_skin_upload_with_invalid_auth_data():
     """Test skin upload with an invalid auth data."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -394,7 +395,7 @@ def test_skin_upload_with_invalid_auth_data():
 
 def test_skin_upload_with_invalid_api_response_code():
     """Test skin upload with an invalid API response status code."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -428,7 +429,7 @@ def test_skin_upload_with_unavailable_authorization_service():
     Test the behavior of skin upload when the authorization service
     is unavailable.
     """
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread

@@ -1,9 +1,14 @@
 """Tests for main qt Window class."""
 from unittest.mock import MagicMock
 
+import minecraft_launcher_lib as mine_lib
 import pytest
 from src.launcher.design.utillity import MessageBoxManager
-from src.launcher.launcher_configs import OFFLINE_MAP_JSON, ConfigLoader
+from src.launcher.launcher_configs import (
+    OFFLINE_MAP_JSON,
+    ConfigLoader,
+    LauncherConfig,
+)
 from src.launcher.main_window import Window
 from src.launcher.utillity.custom_exceptions import (
     ConfigProcessingError,
@@ -11,6 +16,7 @@ from src.launcher.utillity.custom_exceptions import (
 )
 
 # pylint: disable=W0613,W0212
+
 
 SERVER_NAME_1 = "server name 1"
 SERVER_NAME_2 = "server name 2"
@@ -31,15 +37,20 @@ def mock_download_from_url(mocker, mock_config_data):
     with mocker.patch.object(
         ConfigLoader,
         "download_from_url",
-        return_value=ConfigLoader(mock_config_data),
+        return_value=ConfigLoader(mock_config_data, LauncherConfig()),
     ):
         yield
 
 
 @pytest.fixture
-def mock_window(mocker, qtbot):
+def mock_window(
+    mocker,
+    qtbot,
+    tmpdir,
+):
     """
     Create an window instance without notification message boxes.
+    Set minecraft root dir to the temp dir.
     """
     with mocker.patch.object(
         MessageBoxManager,
@@ -51,6 +62,8 @@ def mock_window(mocker, qtbot):
         MessageBoxManager,
         "info",
         side_effect=MagicMock(),
+    ), mocker.patch.object(
+        mine_lib.utils, "get_minecraft_directory", return_value=str(tmpdir)
     ):
         window = Window()
         qtbot.addWidget(window)
@@ -109,7 +122,7 @@ def test_update_server_type_combobox_with_config(
     """
     window = mock_window
 
-    config_loader = ConfigLoader(mock_config_data)
+    config_loader = ConfigLoader(mock_config_data, LauncherConfig())
     window._update_server_type_combobox(config_loader)
 
     config_names = config_loader.config_list
@@ -129,7 +142,7 @@ def test_update_server_type_combobox_with_empty_config(mock_window):
 
     window = mock_window
 
-    window._update_server_type_combobox(ConfigLoader({}))
+    window._update_server_type_combobox(ConfigLoader({}, LauncherConfig))
 
     assert window._ui_instance.comboBox_server_type.count() == 0
 
@@ -142,7 +155,7 @@ def test_update_server_type_combobox_with_different_config(
     """
 
     window = mock_window
-    config_loader = ConfigLoader(mock_config_data)
+    config_loader = ConfigLoader(mock_config_data, LauncherConfig())
     window._update_server_type_combobox(config_loader)
 
     initial_combo_box_items = [
@@ -151,7 +164,7 @@ def test_update_server_type_combobox_with_different_config(
     ]
 
     new_config_data = {"config3": {"config": {"config_name": "Config 3"}}}
-    new_config_loader = ConfigLoader(new_config_data)
+    new_config_loader = ConfigLoader(new_config_data, LauncherConfig())
     window._update_server_type_combobox(new_config_loader)
 
     new_combo_box_items = [
@@ -205,7 +218,7 @@ def test_update_config_outdate_config(
     with mocker.patch.object(
         ConfigLoader,
         "download_from_url",
-        return_value=ConfigLoader(new_config_data),
+        return_value=ConfigLoader(new_config_data, LauncherConfig()),
     ):
         status = window.update_config()
 

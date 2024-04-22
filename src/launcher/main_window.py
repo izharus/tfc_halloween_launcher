@@ -81,7 +81,7 @@ class Window(QtWidgets.QMainWindow):
         log.debug("Window class __init__ entered.")
         super().__init__()
         self._ui_instance = Ui_MainWindow()
-
+        self._launcher_config = LauncherConfig()
         self._ui_instance.setupUi(self)
         self.resize(500, 125)  # Adjust 800 to your desired width
 
@@ -116,10 +116,10 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self._skin_uploader_thread = SkinUploaderThread(
-            self.config.api_url_push_skin,
+            self._launcher_config.API_URL_PUSH_SKIN,
         )
         self._cape_uploader_thread = CapeUploaderThread(
-            self.config.api_url_push_cape,
+            self._launcher_config.API_URL_PUSH_CAPE,
         )
         self._ui_instance.pushButton_delete_skin.clicked.connect(
             lambda: self._delete_user_texture(
@@ -151,7 +151,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
         self._authorization_thread = AuthorizationThread(
-            self.config.minecraft_launcher_ip_addr
+            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
         )
         self._install_thread.progress_max.connect(
             lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
@@ -175,7 +175,9 @@ class Window(QtWidgets.QMainWindow):
 
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
-            lambda: open_directory(self.config.minecraft_directory)
+            lambda: open_directory(
+                self._launcher_config.minecraft_root_directory
+            )
         )
         self.is_working = True
         self.safe_inputs_timer = QTimer()
@@ -199,7 +201,9 @@ class Window(QtWidgets.QMainWindow):
     def get_config_loader(self) -> ConfigLoader:
         """Create the configuration loader."""
         try:
-            return ConfigLoader.download_from_url(MAP_JSON_URL)
+            return ConfigLoader.download_from_url(
+                MAP_JSON_URL, self._launcher_config
+            )
         except (RequestDownloadError, ConfigProcessingError) as error:
             msg_title = "Не удалось загрузить конфиг обновления."
             log.error(f"Failed to download a map config: {error}")
@@ -207,10 +211,10 @@ class Window(QtWidgets.QMainWindow):
                 msg_title,
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
-                    LauncherConfig.logging_dir,
+                    self._launcher_config.logging_dir,
                 ),
             )
-            return ConfigLoader(OFFLINE_MAP_JSON)
+            return ConfigLoader(OFFLINE_MAP_JSON, self._launcher_config)
 
     def _update_server_type_combobox(
         self,
@@ -266,13 +270,14 @@ class Window(QtWidgets.QMainWindow):
             return False
         # Update latest configuration in ui interface
         self._update_server_type_combobox(self.config_loader)
+
         self.input_data.update_input_data_from_ui()
         # Save user server choice
         server_type = self.input_data.extract_element("comboBox_server_type")
         self.config = self.config_loader.get_config(
             server_type,
         )
-
+        self.update_main_button_text()
         self._install_thread.set_config(self.config)
         return True
 
@@ -294,7 +299,7 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             ThreadUiInputData : an instance of ThreadUiInputData class
         """
-        ui_data_file_path = LauncherConfig.ui_data_path
+        ui_data_file_path = self._launcher_config.ui_data_path
         return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
     def _make_authorization(self) -> None:
@@ -445,7 +450,7 @@ class Window(QtWidgets.QMainWindow):
                 msg_title,
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
-                    LauncherConfig.logging_dir,
+                    self._launcher_config.logging_dir,
                 ),
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
@@ -478,7 +483,7 @@ class Window(QtWidgets.QMainWindow):
                 "Запуск игры завершлися с ошибкой",
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
-                    LauncherConfig.logging_dir,
+                    self._launcher_config.logging_dir,
                 ),
             )
         self.show()
@@ -518,7 +523,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
             "Отправьте последний файл 'log.debug' разработчику. "
             "При нажатии 'Ок' откроется папка с логом. "
         ),
-        callback=lambda: webbrowser.open(LauncherConfig.logging_dir),
+        callback=lambda: webbrowser.open(LauncherConfig().logging_dir),
     )
     sys.exit(1)
     # Handle the exception or log it as needed

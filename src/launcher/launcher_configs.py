@@ -12,7 +12,6 @@ import traceback
 from typing import Any, Dict, List
 
 import minecraft_launcher_lib as mine_lib
-from log_wizard import DefaultConfig
 from log_wizard import log as get_logger
 
 from .utillity.custom_exceptions import (
@@ -25,74 +24,172 @@ MAP_JSON_URL = (
     "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json"
 )
 
-OFFLINE_MAP_JSON = {
+OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},
 }
 
 
-# pylint: disable = R0903
 class LauncherConfig:
     """
     Configuration settings for the Minecraft launcher.
 
     Attributes:
-        launcher_name (str): The name of the Minecraft launcher.
-        minecraft_root_directory (str): The root directory for
-            Minecraft installations.
-        logging_dir (str): The directory where log files are stored.
-        servers_directory (str): The directory where server
-            configurations are stored.
-        data_dir (str): The directory for only launcher files, like logs or
-            input_data in intpus.
-        launcher_data (str): Path to file with launcher data. There could
-            stores information about installed servers, for an example.
-        ui_data_path (str): Here launcher stores data from frontend inputs.
-        java_install_url (str): The URL for Java installation.
-        launcher_stored_data (Dict): A dict with saved configuration
-            variables from file.
-        minecraft_launcher_ip_addr (str): api url from web_server for uuid and
-            access_token
-        api_url_push_skin (str): api url for pushing user skin.
-        api_url_push_cape (str): api url for pushing user cape.
+        LAUNCHER_NAME (str): The name of the Minecraft launcher.
+        DATA_DIR (str): The directory for storing launcher data.
+        SERVERS_DIR (str): The directory where server configurations
+            are stored.
+        JAVA_INSTALL_URL (str): The URL for Java installation.
+        MINECRAFT_LAUNCHER_IP_ADDR (str): The API URL for accessing UUID
+            and access token.
+        API_URL_PUSH_SKIN (str): The API URL for pushing user skin.
+        API_URL_PUSH_CAPE (str): The API URL for pushing user cape.
     """
 
-    launcher_name: str = "tfc_halloween"
-    minecraft_root_directory: str = mine_lib.utils.get_minecraft_directory()
-    minecraft_root_directory += f"_{launcher_name}"
+    LAUNCHER_NAME = "tfc_halloween"
+    DATA_DIR = "halloween_data"
+    SERVERS_DIR = "servers"
+    JAVA_INSTALL_URL = "https://java-for-minecraft.com/ru/"
+    MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
+    API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
+    API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
 
-    data_dir: str = "halloween_data"
-    ui_data_path: str = os.path.join(
-        minecraft_root_directory,
-        data_dir,
-        "ui_inputs_data\\input_data",
-    )
-    launcher_data: str = os.path.join(
-        minecraft_root_directory, data_dir, "launcher_data.bin"
-    )
-    logging_dir: str = os.path.join(minecraft_root_directory, data_dir, "logs")
-    servers_directory: str = "servers"
-    java_install_url: str = "https://java-for-minecraft.com/ru/"
-    minecraft_launcher_ip_addr: str = "http://77.239.232.50:23846/launcher"
-    api_url_push_skin: str = "http://77.239.232.50:23846/push_skin"
-    api_url_push_cape: str = "http://77.239.232.50:23846/push_cape"
-    launcher_stored_data: Dict = {}
+    def __init__(self):
+        """
+        Initialize directories and load launcher data from file if available.
+        """
+        self._minecraft_root_directory = (
+            mine_lib.utils.get_minecraft_directory() + f"_{self.LAUNCHER_NAME}"
+        )
+        os.makedirs(self._minecraft_root_directory, exist_ok=True)
+        self._ui_data_path = os.path.join(
+            self._minecraft_root_directory,
+            self.DATA_DIR,
+            "ui_inputs_data",
+            "input_data",
+        )
+        os.makedirs(os.path.dirname(self._ui_data_path), exist_ok=True)
+        self._launcher_data_path = os.path.join(
+            self._minecraft_root_directory, self.DATA_DIR, "launcher_data.bin"
+        )
+
+        self._logging_dir = os.path.join(
+            self._minecraft_root_directory, self.DATA_DIR, "logs"
+        )
+        os.makedirs(self._logging_dir, exist_ok=True)
+        self._launcher_data = self._get_launcher_data()
+
+    @property
+    def minecraft_root_directory(self) -> str:
+        """
+        Get the Minecraft root directory.
+        """
+
+        return self._minecraft_root_directory
+
+    @property
+    def ui_data_path(self) -> str:
+        """
+        Get the UI data path.
+        """
+
+        return self._ui_data_path
+
+    @property
+    def launcher_data_path(self) -> str:
+        """Get the path to the launcher data file."""
+
+        return self._launcher_data_path
+
+    @property
+    def logging_dir(self) -> str:
+        """
+        Get the logging directory.
+        """
+
+        return self._logging_dir
+
+    @property
+    def launcher_data(self) -> Dict:
+        """Get the launcher data."""
+        return self._launcher_data
+
+    def set_launcher_data_value(
+        self,
+        data_key: str,
+        data_value: Any,
+    ) -> None:
+        """
+        Set a value in the launcher data.
+
+        Args:
+            data_key: The key of the data to set.
+            data_value: The value to set.
+        """
+        self._launcher_data[data_key] = data_value
+        self._update_launcher_data()
+
+    def get_launcher_data_value(
+        self,
+        data_key: str,
+    ) -> Any:
+        """
+        Get a value from the launcher data.
+
+        Args:
+            data_key: The key of the data to get.
+        """
+        value = self._launcher_data.get(data_key, None)
+        if not value:
+            log.debug(f"Failed to get '{data_key}' from launcher_data.")
+        return value
+
+    def _get_launcher_data(self) -> Dict:
+        """
+        Get launcher data from the file.
+
+        Returns:
+            dict: The launcher data.
+        """
+        try:
+            with shelve.open(self._launcher_data_path) as launcher_data:
+                return dict(launcher_data)
+        except Exception as error:
+            log.error(f"Failed to get launcher_data: {error}")
+            log.debug(traceback.format_exc)
+            return {}
+
+    def _update_launcher_data(self) -> None:
+        """
+        Update launcher data in the file.
+        """
+        try:
+            with shelve.open(self._launcher_data_path) as launcher_data:
+                launcher_data.update(self._launcher_data)
+        except Exception as error:
+            log.error(f"Failed to update launcher_data: {error}")
+            log.debug(traceback.format_exc)
 
 
-DefaultConfig(log_dir=LauncherConfig.logging_dir)
+# DefaultConfig(log_dir=LauncherConfig.logging_dir)
 log = get_logger()
 
 
 class ConfigLoader:
     """A class for loading and handling configuration data."""
 
-    def __init__(self, config_data: Dict) -> None:
+    def __init__(
+        self, config_data: Dict, launcher_config: LauncherConfig
+    ) -> None:
         """
         Initialize ConfigLoader with provided configuration data.
 
         Parameters:
             config_data (Dict): A dictionary containing configuration data.
+            launcher_config (LauncherConfig): An instance of LauncherConfig
+                containing launcher settings.
         """
         self._config_data = config_data
+        self._launcher_config = launcher_config
 
     def __eq__(self, other):
         if isinstance(other, ConfigLoader):
@@ -100,13 +197,17 @@ class ConfigLoader:
         return False
 
     @classmethod
-    def download_from_url(cls, download_url: str) -> "ConfigLoader":
+    def download_from_url(
+        cls, download_url: str, launcher_config: LauncherConfig
+    ) -> "ConfigLoader":
         """
         Download configuration data from a specified URL.
 
         Parameters:
             download_url (str): The URL from which to download
                 the configuration data.
+            launcher_config (LauncherConfig): An instance of LauncherConfig
+                containing launcher settings.
 
         Returns:
             ConfigLoader: A ConfigLoader instance.
@@ -131,7 +232,7 @@ class ConfigLoader:
         if not isinstance(config, dict):
             log.error("Incorrect config format.")
             raise ConfigProcessingError
-        return cls(config)
+        return cls(config, launcher_config)
 
     @property
     def config_list(self) -> List[str]:
@@ -142,7 +243,7 @@ class ConfigLoader:
             List[str]: A list of strings representing supported
                 configuration names.
         """
-        return [key for key in self._config_data]
+        return list(key for key in self._config_data)
 
     def get_config(self, config_name: str) -> "MinecraftLauncherConfig":
         """
@@ -163,10 +264,12 @@ class ConfigLoader:
             raise ConfigProcessingError(
                 f"config name: '{config_name}' was not found"
             )
-        return MinecraftLauncherConfig(self._config_data[config_name])
+        return MinecraftLauncherConfig(
+            self._config_data[config_name], self._launcher_config
+        )
 
 
-class MinecraftLauncherConfig(LauncherConfig):
+class MinecraftLauncherConfig:
     """
     Configuration settings for the Minecraft launcher, including
     specific Minecraft server configurations.
@@ -189,20 +292,24 @@ class MinecraftLauncherConfig(LauncherConfig):
     minecraft_skin_directory: str
     minecraft_cape_directory: str
 
-    def __init__(self, map_json_data):
+    def __init__(
+        self,
+        map_json_data,
+        launcher_config: LauncherConfig,
+    ):
+        self._launcher_config = launcher_config
         self.map_json_data = map_json_data
-        self._get_stored_data()
-        self.minecraft_directory = os.path.join(
-            self.minecraft_root_directory,
-            self.servers_directory,
+        self._minecraft_directory = os.path.join(
+            self._launcher_config.minecraft_root_directory,
+            self._launcher_config.SERVERS_DIR,
             self.config_name,
         )
         self.minecraft_skin_directory = os.path.join(
-            self.minecraft_root_directory,
+            self._launcher_config.minecraft_root_directory,
             "skins",
         )
         self.minecraft_cape_directory = os.path.join(
-            self.minecraft_root_directory,
+            self._launcher_config.minecraft_root_directory,
             "capes",
         )
 
@@ -251,42 +358,26 @@ class MinecraftLauncherConfig(LauncherConfig):
         """The port of the Minecraft server."""
         return self._get_config_value("minecraft_server_port")
 
+    @property
+    def minecraft_directory(self) -> str:
+        """The minecraft directory for current config."""
+        return self._minecraft_directory
+
     def is_minecraft_installed(
         self,
     ) -> bool:
         """
         Check in minecraft has already installed for current config profile.
         """
-        return self.launcher_stored_data.get(
-            f"{self.config_name}_is_installed", False
+        return bool(
+            self._launcher_config.get_launcher_data_value(
+                f"{self.config_name}_is_installed"
+            )
         )
 
     def set_minecraft_installed(self, is_installed: bool = True) -> None:
         """
         Set minecraft installed flag for this current profile.
         """
-        field = f"{self.config_name}_is_installed"
-        self.launcher_stored_data[field] = is_installed
-        self._update_stored_data()
-
-    def _get_stored_data(self) -> None:
-        """
-        Get stored data from the file.
-        """
-        try:
-            with shelve.open(self.launcher_data) as launcher_data:
-                self.launcher_stored_data = launcher_data["stored_data"]
-        except Exception as error:
-            log.error(f"Failed to get stored_data: {error}")
-            log.debug(traceback.format_exc)
-
-    def _update_stored_data(self) -> None:
-        """
-        Update stored data in the file.
-        """
-        try:
-            with shelve.open(self.launcher_data) as launcher_data:
-                launcher_data["stored_data"] = self.launcher_stored_data
-        except Exception as error:
-            log.error(f"Failed to update stored_data: {error}")
-            log.debug(traceback.format_exc)
+        key = f"{self.config_name}_is_installed"
+        self._launcher_config.set_launcher_data_value(key, is_installed)
