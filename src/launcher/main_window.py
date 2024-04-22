@@ -354,8 +354,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Операция заверщена!")
-            log.info("Операция заверщена!")
+            self.notif_widget.show_and_close("Операция завершена!")
+            log.info("Операция завершена!")
 
     def _choose_cape_and_upload(self, directory: str) -> None:
         # Open a file dialog and get the selected file path
@@ -383,8 +383,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Операция заверщена!")
-            log.info("Операция заверщена!")
+            self.notif_widget.show_and_close("Операция завершена!")
+            log.info("Операция завершена!")
 
     def _make_authorization_finished(self) -> None:
         if not self._authorization_thread.runtime_error:
@@ -480,7 +480,7 @@ class Window(QtWidgets.QMainWindow):
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
             self.msg_box.warn(
-                "Запуск игры завершлися с ошибкой",
+                "Запуск игры завершился с ошибкой",
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
                     self._launcher_config.logging_dir,
