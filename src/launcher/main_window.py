@@ -226,8 +226,9 @@ class Window(QtWidgets.QMainWindow):
         """
         current_text = self._ui_instance.comboBox_server_type.currentText()
         self._ui_instance.comboBox_server_type.clear()
-        for config_name in config_loader.config_list:
-            self._ui_instance.comboBox_server_type.addItem(config_name)
+        self._ui_instance.comboBox_server_type.addItems(
+            config_loader.config_list
+        )
         if current_text in config_loader.config_list:
             self._ui_instance.comboBox_server_type.setCurrentText(current_text)
         else:
