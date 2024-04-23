@@ -103,11 +103,12 @@ class Window(QtWidgets.QMainWindow):
         self.input_data = self.get_input_data()
 
         self.config_loader = self.get_config_loader()
+        self._update_server_type_combobox(self.config_loader)
         self.config: MinecraftLauncherConfig
         # init self.config and config_loader here:
         self.update_config()
         self.update_main_button_text()
-        self._ui_instance.comboBox_server_type.activated.connect(
+        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
             self.update_config
         )
 
@@ -224,6 +225,7 @@ class Window(QtWidgets.QMainWindow):
         Update server type combobox in ui interface
         with the information from map.json.
         """
+        self._ui_instance.comboBox_server_type.blockSignals(True)
         current_text = self._ui_instance.comboBox_server_type.currentText()
         self._ui_instance.comboBox_server_type.clear()
         self._ui_instance.comboBox_server_type.addItems(
@@ -233,6 +235,7 @@ class Window(QtWidgets.QMainWindow):
             self._ui_instance.comboBox_server_type.setCurrentText(current_text)
         else:
             self._ui_instance.comboBox_server_type.setCurrentIndex(0)
+        self._ui_instance.comboBox_server_type.blockSignals(False)
 
     def update_config(self) -> bool:
         """
@@ -268,9 +271,9 @@ class Window(QtWidgets.QMainWindow):
                 msg_title,
                 "Выберите сервер еще раз.",
             )
+            # Update latest configuration in ui interface
+            self._update_server_type_combobox(self.config_loader)
             return False
-        # Update latest configuration in ui interface
-        self._update_server_type_combobox(self.config_loader)
 
         self.input_data.update_input_data_from_ui()
         # Save user server choice
@@ -278,7 +281,6 @@ class Window(QtWidgets.QMainWindow):
         self.config = self.config_loader.get_config(
             server_type,
         )
-        self.update_main_button_text()
         self._install_thread.set_config(self.config)
         return True
 
@@ -304,6 +306,8 @@ class Window(QtWidgets.QMainWindow):
         return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
     def _make_authorization(self) -> None:
+        if not self.update_config():
+            return
         login = self.input_data.extract_element("lineEdit_nickname")
         password = self.input_data.extract_element("lineEdit_password")
         if not login or not password:

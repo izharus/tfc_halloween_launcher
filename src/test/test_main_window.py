@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 
 import minecraft_launcher_lib as mine_lib
 import pytest
+from PyQt6 import QtCore
+from src.launcher.design.styles import MainButtonData
 from src.launcher.design.utillity import MessageBoxManager
 from src.launcher.launcher_configs import (
     OFFLINE_MAP_JSON,
@@ -224,3 +226,53 @@ def test_update_config_outdate_config(
 
     assert status is False
     window.msg_box.warn.assert_called_once()
+
+
+def test_simulate_config_update(
+    mock_download_from_url,
+    mock_window,
+    mock_config_data,
+    mocker,
+    qtbot,
+):
+    """
+    Test situation when configs list changes while app is working.
+    """
+    server_name_3 = "server name 3"
+    mock_updated_config_data = mock_config_data | {
+        server_name_3: {"config": {"config_name": "config_name_3"}}
+    }
+    window = mock_window
+    with mocker.patch.object(
+        ConfigLoader,
+        "download_from_url",
+        return_value=ConfigLoader(mock_updated_config_data, LauncherConfig()),
+    ):
+        qtbot.mouseClick(
+            window._ui_instance.pushButton_install_and_launch,
+            QtCore.Qt.MouseButton.LeftButton,
+        )
+
+    assert set(window.config_loader.config_list) == set(
+        mock_updated_config_data.keys()
+    ), "A new field should be added to the config."
+    assert (
+        window._ui_instance.comboBox_server_type.currentText() == SERVER_NAME_1
+    ), "Current config should not be changed"
+    # Warning about changed config should be called once
+    window.msg_box.warn.assert_called_once()
+
+
+def test_simulate_config_changes(
+    mock_download_from_url,
+    mock_window,
+    mock_config_data,
+    qtbot,
+):
+    """
+    Simulate changing config in combobox.
+    """
+    window = mock_window
+    assert window.config.map_json_data == mock_config_data[SERVER_NAME_1]
+    qtbot.keyClicks(window._ui_instance.comboBox_server_type, SERVER_NAME_2)
+    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]

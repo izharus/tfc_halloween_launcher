@@ -193,7 +193,7 @@ class ConfigLoader:
 
     def __eq__(self, other):
         if isinstance(other, ConfigLoader):
-            return self._config_data == other._config_data
+            return set(self.config_list) == set(other.config_list)
         return False
 
     @classmethod
