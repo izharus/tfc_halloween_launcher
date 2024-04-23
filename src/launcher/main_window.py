@@ -290,7 +290,7 @@ class Window(QtWidgets.QMainWindow):
         Minecraft is installed or not.
         """
         if self.config.is_minecraft_installed():
-            self.main_button.set_launch_text()
+            self.main_button.set_launch_title()
         else:
             self.main_button.set_install_title()
 

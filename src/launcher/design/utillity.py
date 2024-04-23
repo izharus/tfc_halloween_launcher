@@ -166,7 +166,7 @@ class MainButton(MainButtonData):
         """
         self._instance.setText(self.install_text)
 
-    def set_launch_text(self):
+    def set_launch_title(self):
         """
         Set the title of the associated button to the launch text.
         """
