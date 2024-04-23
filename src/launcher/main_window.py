@@ -21,6 +21,8 @@ import traceback
 import webbrowser
 from typing import Dict, Union
 
+import boto3
+import boto3.exceptions
 import win32con
 import win32console
 import win32gui
@@ -55,6 +57,7 @@ from .utillity.custom_exceptions import (
 )
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
+from .utillity.yos import get_boto3_instance
 
 OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},
@@ -102,7 +105,11 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self.input_data = self.get_input_data()
-
+        self._boto3_client = get_boto3_instance()
+        if not self._boto3_client:
+            # TODO: offline mode
+            sys.exit()
+        # FIXME: make only one request to the server
         self.config_loader = self.get_config_loader()
         self._update_server_type_combobox(self.config_loader)
         self.config: MinecraftLauncherConfig
@@ -200,21 +207,34 @@ class Window(QtWidgets.QMainWindow):
 
         hide_console()
 
+    def show_config_error_message(self, error: Exception) -> None:
+        """Show an error message box for config updating fail."""
+        msg_title = "Не удалось загрузить конфиг обновления."
+        log.error(f"Failed to download a map config: {error}")
+        self.msg_box.warn(
+            msg_title,
+            "При нажатии 'Ок' откроется папка с логом. ",
+            callback=lambda: webbrowser.open(
+                self._launcher_config.logging_dir,
+            ),
+        )
+
     def get_config_loader(self) -> ConfigLoader:
         """Create the configuration loader."""
         try:
             return ConfigLoader.download_from_url(self._launcher_config)
         except (RequestDownloadError, ConfigProcessingError) as error:
-            msg_title = "Не удалось загрузить конфиг обновления."
-            log.error(f"Failed to download a map config: {error}")
-            self.msg_box.warn(
-                msg_title,
-                "При нажатии 'Ок' откроется папка с логом. ",
-                callback=lambda: webbrowser.open(
-                    self._launcher_config.logging_dir,
-                ),
-            )
-            return ConfigLoader(OFFLINE_MAP_JSON, self._launcher_config)
+            log.error("Failed to download a config file from url.")
+            try:
+                return ConfigLoader.download_from_yos(
+                    self._boto3_client,
+                    self._launcher_config,
+                )
+            except (boto3.exceptions.Boto3Error, ConfigProcessingError):
+                log.error("Failed to download a config file from yos.")
+                self.show_config_error_message(error)
+                # TODO: offline mode
+                sys.exit()
 
     def _update_server_type_combobox(
         self,

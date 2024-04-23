@@ -9,13 +9,14 @@ import json
 import os
 import shelve
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import boto3
 import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from log_wizard import log as get_logger
 
+from .boto3_cred import BOTO3_BUCKET_NAME
 from .utillity.custom_exceptions import (
     ConfigProcessingError,
     RequestDownloadError,
@@ -46,8 +47,9 @@ class LauncherConfig:
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
-    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json" # pylint: disable=C0301
-    MAP_JSON_YOS_KEY = "modpacks/map.json"
+    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json"  # pylint: disable=C0301
+    MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
+    BUCKET_NAME = BOTO3_BUCKET_NAME
 
     def __init__(self):
         """
@@ -238,16 +240,43 @@ class ConfigLoader:
             cls._pars_bytes_config(bytes_file_data),
             launcher_config,
         )
+
+    @classmethod
+    def download_from_yos(
+        cls,
+        boto3_client: boto3.client,
+        launcher_config: LauncherConfig,
+    ) -> "ConfigLoader":
+        """
+        Download configuration data from a Yandex Object Storage bucket.
+
+        Parameters:
+            boto3_client: [boto3.client]: An authorized boto3.client
+                instance.
+            launcher_config (LauncherConfig): An instance of LauncherConfig
+                containing launcher settings.
+
+        Returns:
+            ConfigLoader: A ConfigLoader instance.
+
+        Raises:
+            RequestDownloadError: If the download request for the config
+                fails.
+            ConfigProcessingError: If an error occurs while processing
+                the configuration data.
+        """
         try:
-            config = json.loads(bytes_file_data)
-        except Exception as error:
-            log.error(f"Failed to load json from config file: {error}")
-            log.debug(traceback.format_exc())
-            raise ConfigProcessingError from error
-        if not isinstance(config, dict):
-            log.error("Incorrect config format.")
-            raise ConfigProcessingError
-        return cls(config, launcher_config)
+            response = boto3_client.get_object(
+                Bucket=launcher_config.BUCKET_NAME,
+                Key=launcher_config.MAP_JSON_YOS_OBJ_KEY,
+            )
+        except boto3.exceptions.Boto3Error:
+            log.error("Failed to load a config file.")
+            raise
+        return cls(
+            cls._pars_bytes_config(response["Body"].read()),
+            launcher_config,
+        )
 
     @property
     def config_list(self) -> List[str]:
