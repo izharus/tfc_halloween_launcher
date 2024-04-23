@@ -19,7 +19,7 @@ import os
 import sys
 import traceback
 import webbrowser
-from typing import Union
+from typing import Dict, Union
 
 import win32con
 import win32console
@@ -44,8 +44,6 @@ from .launcher_authorization import (
     SkinUploaderThread,
 )
 from .launcher_configs import (
-    MAP_JSON_URL,
-    OFFLINE_MAP_JSON,
     ConfigLoader,
     LauncherConfig,
     MinecraftLauncherConfig,
@@ -58,6 +56,9 @@ from .utillity.custom_exceptions import (
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
 
+OFFLINE_MAP_JSON: Dict = {
+    "ОБНОВИТЬ": {},
+}
 log = get_logger()
 
 
@@ -202,9 +203,7 @@ class Window(QtWidgets.QMainWindow):
     def get_config_loader(self) -> ConfigLoader:
         """Create the configuration loader."""
         try:
-            return ConfigLoader.download_from_url(
-                MAP_JSON_URL, self._launcher_config
-            )
+            return ConfigLoader.download_from_url(self._launcher_config)
         except (RequestDownloadError, ConfigProcessingError) as error:
             msg_title = "Не удалось загрузить конфиг обновления."
             log.error(f"Failed to download a map config: {error}")

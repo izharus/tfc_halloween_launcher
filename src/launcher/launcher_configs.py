@@ -9,8 +9,10 @@ import json
 import os
 import shelve
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+import boto3
+import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from log_wizard import log as get_logger
 
@@ -19,14 +21,6 @@ from .utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
-
-MAP_JSON_URL = (
-    "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json"
-)
-
-OFFLINE_MAP_JSON: Dict = {
-    "ОБНОВИТЬ": {},
-}
 
 
 class LauncherConfig:
@@ -52,6 +46,8 @@ class LauncherConfig:
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
+    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json" # pylint: disable=C0301
+    MAP_JSON_YOS_KEY = "modpacks/map.json"
 
     def __init__(self):
         """
@@ -196,16 +192,29 @@ class ConfigLoader:
             return set(self.config_list) == set(other.config_list)
         return False
 
+    @staticmethod
+    def _pars_bytes_config(
+        bytes_file_data: bytes,
+    ) -> Dict:
+        try:
+            config = json.loads(bytes_file_data)
+        except Exception as error:
+            log.error(f"Failed to load json from config file: {error}")
+            log.debug(traceback.format_exc())
+            raise ConfigProcessingError from error
+        if not isinstance(config, dict):
+            log.error("Incorrect config format.")
+            raise ConfigProcessingError
+        return config
+
     @classmethod
     def download_from_url(
-        cls, download_url: str, launcher_config: LauncherConfig
+        cls, launcher_config: LauncherConfig
     ) -> "ConfigLoader":
         """
         Download configuration data from a specified URL.
 
         Parameters:
-            download_url (str): The URL from which to download
-                the configuration data.
             launcher_config (LauncherConfig): An instance of LauncherConfig
                 containing launcher settings.
 
@@ -219,10 +228,16 @@ class ConfigLoader:
                 the configuration data.
         """
         try:
-            bytes_file_data = FileDownloader.download_file(download_url)
+            bytes_file_data = FileDownloader.download_file(
+                launcher_config.MAP_JSON_URL
+            )
         except RequestDownloadError:
             log.error("Failed to load a config file.")
             raise
+        return cls(
+            cls._pars_bytes_config(bytes_file_data),
+            launcher_config,
+        )
         try:
             config = json.loads(bytes_file_data)
         except Exception as error:

@@ -6,12 +6,8 @@ import pytest
 from PyQt6 import QtCore
 from src.launcher.design.styles import MainButtonData
 from src.launcher.design.utillity import MessageBoxManager
-from src.launcher.launcher_configs import (
-    OFFLINE_MAP_JSON,
-    ConfigLoader,
-    LauncherConfig,
-)
-from src.launcher.main_window import Window
+from src.launcher.launcher_configs import ConfigLoader, LauncherConfig
+from src.launcher.main_window import OFFLINE_MAP_JSON, Window
 from src.launcher.utillity.custom_exceptions import (
     ConfigProcessingError,
     RequestDownloadError,

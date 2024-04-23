@@ -54,6 +54,8 @@ class TestConfigLoader:
     ):
         """Test download_from_url method with correct json data."""
         mock_download_file = MagicMock()
+        mock_config = LauncherConfig()
+
         mock_download_file.return_value = json.dumps(mock_config_data)
         with mocker.patch.object(
             FileDownloader,
@@ -61,9 +63,10 @@ class TestConfigLoader:
             mock_download_file,
         ):
             loader = ConfigLoader.download_from_url(
-                "test_url", LauncherConfig()
+                mock_config,
             )
         assert loader.config_list == list(mock_config_data.keys())
+        mock_download_file.assert_called_once_with(mock_config.MAP_JSON_URL)
 
     def test_download_from_url_request_error(self, mocker):
         """Test download_from_url method when download request fails."""
@@ -73,7 +76,7 @@ class TestConfigLoader:
                 "download_file",
                 side_effect=RequestDownloadError,
             )
-            ConfigLoader.download_from_url("test_url", LauncherConfig())
+            ConfigLoader.download_from_url(LauncherConfig())
 
     def test_download_from_url_config_invalid_json_data(self, mocker):
         """Test download_from_url method when json data is invalid."""
@@ -83,7 +86,7 @@ class TestConfigLoader:
                 "download_file",
                 return_value="invalid_json_data",
             )
-            ConfigLoader.download_from_url("test_url", LauncherConfig())
+            ConfigLoader.download_from_url(LauncherConfig())
 
     def test_download_from_url_incorrect_json_type(self, mocker):
         """
@@ -96,7 +99,7 @@ class TestConfigLoader:
                 "download_file",
                 return_value='["invalid_format", "config_data"]',
             )
-            ConfigLoader.download_from_url("test_url", LauncherConfig())
+            ConfigLoader.download_from_url(LauncherConfig())
 
     def test_config_list(self, mock_config_data):
         """
