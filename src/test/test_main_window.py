@@ -278,6 +278,45 @@ def test_simulate_config_changes(
     assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
 
 
+def test_multiple_updating_different_main_button_text(
+    mock_download_from_url, mock_window
+):
+    """
+    Test the behavior of updating the main button text when
+    switching server types.
+    """
+    window = mock_window
+    window.show()
+    config_1 = window.config_loader.get_config(SERVER_NAME_1)
+    config_1.set_minecraft_installed(is_installed=False)
+    config_2 = window.config_loader.get_config(SERVER_NAME_2)
+    config_2.set_minecraft_installed(is_installed=True)
+
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.install_text
+    )
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.launch_text
+    )
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_1)
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.install_text
+    )
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.launch_text
+    )
+
+
 def test_updating_main_button_text_after_success_installation(
     mock_download_from_url, mock_window
 ):
