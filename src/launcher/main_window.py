@@ -109,7 +109,6 @@ class Window(QtWidgets.QMainWindow):
         if not self._boto3_client:
             # TODO: offline mode
             sys.exit()
-        # FIXME: make only one request to the server
         self.config_loader = self.get_config_loader()
         self._update_server_type_combobox(self.config_loader)
         self.config: MinecraftLauncherConfig
@@ -256,31 +255,13 @@ class Window(QtWidgets.QMainWindow):
             self._ui_instance.comboBox_server_type.setCurrentIndex(0)
         self._ui_instance.comboBox_server_type.blockSignals(False)
 
-    def update_config(self) -> bool:
+    def update_config_loader(self) -> bool:
         """
-        Update configuration based on UI input.
-
-        This method retrieves the selected server type from the UI,
-        fetches the corresponding configuration data from the configuration
-        loader, handles any errors that may occur during the process,
-        and sets the configuration for the installation thread.
+        Update the configuration loader with the latest configuration.
 
         Returns:
-            bool: True if the configuration update process completes
-                successfully, False otherwise.
-
-        Notes:
-            This method assumes the existence of the following attributes:
-                - self.config_loader: An instance of ConfigLoader used
-                    to retrieve configuration data.
-                - self.input_data: An object containing input data from the UI.
-                - self._install_thread: An instance of the installation thread.
-        Raises:
-            ConfigProcessingError: If an error occurs while processing
-                the configuration.
-
+            bool: False if the configuration is updated, True otherwise.
         """
-        # Download latest configuration
         new_config_loader = self.get_config_loader()
         if new_config_loader != self.config_loader:
             self.config_loader = new_config_loader
@@ -293,6 +274,27 @@ class Window(QtWidgets.QMainWindow):
             # Update latest configuration in ui interface
             self._update_server_type_combobox(self.config_loader)
             return False
+        return True
+
+    def update_config(self) -> bool:
+        """
+        Update the configuration based on input data from the UI.
+
+        Returns:
+            bool: True if the configuration update process completes
+                successfully, False otherwise.
+
+        Notes:
+            This method assumes the existence of the following attributes:
+                - self.config_loader: An instance of ConfigLoader used
+                    to retrieve configuration data.
+                - self.input_data: An object containing input data from the UI.
+                - self._install_thread: An instance of the installation thread.
+
+        Raises:
+            ConfigProcessingError: If an error occurs while processing
+                the configuration.
+        """
 
         self.input_data.update_input_data_from_ui()
         # Save user server choice
@@ -431,7 +433,7 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-        if not self.update_config():
+        if not self.update_config_loader():
             return
         self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
