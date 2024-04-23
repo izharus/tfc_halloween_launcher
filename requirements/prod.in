@@ -3,3 +3,4 @@ pypiwin32 # show/hode console
 minecraft-launcher-lib
 pyinstaller
 log_wizard
+boto3

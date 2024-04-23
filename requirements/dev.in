@@ -6,3 +6,5 @@ pytest
 log_wizard
 pytest-mock
 requests_mock
+pytest-qt
+boto3
