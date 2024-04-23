@@ -460,6 +460,8 @@ class Window(QtWidgets.QMainWindow):
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
+        self.config.set_minecraft_installed()
+        self.update_main_button_text()
         self.hide()
         auth_data = self._authorization_thread.get_last_auth_data()
         if not auth_data:

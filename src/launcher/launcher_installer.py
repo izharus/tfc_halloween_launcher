@@ -228,7 +228,6 @@ class InstallThread(QThread):
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        self.config.set_minecraft_installed()
         map_dirs = self.config.map_json_data["main_data"]
         map_dirs += self.config.map_json_data["client_data"]
         if self.is_install_shaders:

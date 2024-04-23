@@ -75,7 +75,7 @@ def mock_window(
 def test_get_config_loader_success(
     mock_download_from_url, mock_config_data, mock_window
 ):
-    """TODO: Docstring"""
+    """Test that the configuration loader is successfully initialized."""
     window = mock_window
 
     assert window.config_loader._config_data == mock_config_data
@@ -276,3 +276,44 @@ def test_simulate_config_changes(
     assert window.config.map_json_data == mock_config_data[SERVER_NAME_1]
     qtbot.keyClicks(window._ui_instance.comboBox_server_type, SERVER_NAME_2)
     assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
+
+
+def test_updating_main_button_text_after_success_installation(
+    mock_download_from_url, mock_window
+):
+    """
+    Test the behavior of updating the main button text after
+    a successful installation.
+    """
+    window = mock_window
+    config_1 = window.config_loader.get_config(SERVER_NAME_1)
+    config_1.set_minecraft_installed(is_installed=False)
+
+    window._install_thread_finished()
+
+    assert config_1.is_minecraft_installed() is True
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.launch_text
+    )
+
+
+def test_updating_main_button_text_after_failed_installation(
+    mock_download_from_url, mock_window
+):
+    """
+    Test the behavior of updating the main button text after
+    a failed installation.
+    """
+    window = mock_window
+    config_1 = window.config_loader.get_config(SERVER_NAME_1)
+    config_1.set_minecraft_installed(is_installed=False)
+
+    window._install_thread.runtime_error = True
+    window._install_thread_finished()
+
+    assert config_1.is_minecraft_installed() is False
+    assert (
+        window._ui_instance.pushButton_install_and_launch.text()
+        == MainButtonData.install_text
+    )
