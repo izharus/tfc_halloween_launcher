@@ -141,7 +141,7 @@ class Window(QtWidgets.QMainWindow):
         )
         self._ui_instance.pushButton_choose_skin.clicked.connect(
             lambda: self._choose_skin_and_upload(
-                self.config.minecraft_skin_directory
+                self._launcher_config.minecraft_skin_directory
             )
         )
         self._skin_uploader_thread.finished.connect(
@@ -150,7 +150,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._ui_instance.pushButton_choose_cape.clicked.connect(
             lambda: self._choose_cape_and_upload(
-                self.config.minecraft_cape_directory
+                self._launcher_config.minecraft_cape_directory
             )
         )
         self._cape_uploader_thread.finished.connect(

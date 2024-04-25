@@ -38,6 +38,8 @@ class LauncherConfig:
             and access token.
         API_URL_PUSH_SKIN (str): The API URL for pushing user skin.
         API_URL_PUSH_CAPE (str): The API URL for pushing user cape.
+        minecraft_skin_directory = (str): Dir for choosing user skins.
+        minecraft_cape_directory = (str): Dir for choosing user capes.
     """
 
     LAUNCHER_NAME = "tfc_halloween"
@@ -75,6 +77,14 @@ class LauncherConfig:
         )
         os.makedirs(self._logging_dir, exist_ok=True)
         self._launcher_data = self._get_launcher_data()
+        self.minecraft_skin_directory = os.path.join(
+            self.minecraft_root_directory,
+            "skins",
+        )
+        self.minecraft_cape_directory = os.path.join(
+            self.minecraft_root_directory,
+            "capes",
+        )
 
     @property
     def minecraft_root_directory(self) -> str:
@@ -324,17 +334,8 @@ class MinecraftLauncherConfig:
 
 
         minecraft_directory (str): The directory where Minecraft is installed.
-        minecraft_skin_directory (str): The directory with skins.
-        minecraft_cape_directory (str): The directory with capes.
-        minecraft_java_version (str): The Java version to use.
-        repo_url (str): The URL for the GitHub repository where
-            mods are stored.
-
 
     """
-
-    minecraft_skin_directory: str
-    minecraft_cape_directory: str
 
     def __init__(
         self,
@@ -347,14 +348,6 @@ class MinecraftLauncherConfig:
             self._launcher_config.minecraft_root_directory,
             self._launcher_config.SERVERS_DIR,
             self.config_name,
-        )
-        self.minecraft_skin_directory = os.path.join(
-            self._launcher_config.minecraft_root_directory,
-            "skins",
-        )
-        self.minecraft_cape_directory = os.path.join(
-            self._launcher_config.minecraft_root_directory,
-            "capes",
         )
 
     def __eq__(self, other):
