@@ -205,21 +205,52 @@ def test_update_config_success(
     window.msg_box.create_msg_box.assert_not_called()
 
 
-def test_update_config_outdate_config(
-    mock_download_from_url, mock_window, mocker
+def test_update_config_existing_config(
+    mock_download_from_url,
+    mock_window,
+    mocker,
+    mock_config_data,
 ):
     """
-    Test update_config method when the configuration is outdated.
+    Test update_config method with the existing configuration.
     """
     window = mock_window
-    new_config_data = {"config3": {"config": {"config_name": "Config 3"}}}
-    with mocker.patch.object(
-        ConfigLoader,
-        "download_from_url",
-        return_value=ConfigLoader(new_config_data, LauncherConfig()),
-    ):
-        status = window.update_config()
+    first_config_name = window._ui_instance.comboBox_server_type.currentText()
+    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    cur_config_name = window._ui_instance.comboBox_server_type.currentText()
 
+    status = window.update_config()
+
+    assert status is True
+    assert first_config_name == SERVER_NAME_1
+    assert cur_config_name == SERVER_NAME_2
+    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
+
+
+def test_update_config_non_existing_config(
+    mock_download_from_url,
+    mock_window,
+    mocker,
+    mock_config_data,
+):
+    """
+    Test update_config method with the existing configuration.
+    """
+    window = mock_window
+    non_existing_server_name = "non_existing_server_name"
+    window._ui_instance.comboBox_server_type.addItem(
+        non_existing_server_name,
+    )
+    window._ui_instance.comboBox_server_type.setCurrentText(
+        non_existing_server_name,
+    )
+    cur_config_name = window._ui_instance.comboBox_server_type.currentText()
+    # warn will be called once, after calling setCurrentText in this test
+    window.msg_box.warn = MagicMock()
+
+    status = window.update_config()
+
+    assert cur_config_name == non_existing_server_name
     assert status is False
     window.msg_box.warn.assert_called_once()
 
@@ -248,7 +279,6 @@ def test_simulate_config_update(
             window._ui_instance.pushButton_install_and_launch,
             QtCore.Qt.MouseButton.LeftButton,
         )
-
     assert set(window.config_loader.config_list) == set(
         mock_updated_config_data.keys()
     ), "A new field should be added to the config."

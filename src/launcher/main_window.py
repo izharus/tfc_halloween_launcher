@@ -299,9 +299,18 @@ class Window(QtWidgets.QMainWindow):
         self.input_data.update_input_data_from_ui()
         # Save user server choice
         server_type = self.input_data.extract_element("comboBox_server_type")
-        self.config = self.config_loader.get_config(
-            server_type,
-        )
+        try:
+            self.config = self.config_loader.get_config(
+                server_type,
+            )
+        except ConfigProcessingError as error:
+            log.error(f"File to update config '{server_type}': {error}")
+            msg_title = "Неизвестная ошибка."
+            self.msg_box.warn(
+                msg_title,
+                f"Не удалось извлечь конфигурацию сервера: {server_type}.",
+            )
+            return False
         self._install_thread.set_config(self.config)
         return True
 
