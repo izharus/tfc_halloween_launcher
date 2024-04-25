@@ -6,6 +6,8 @@
 #
 altgraph==0.17.4
     # via pyinstaller
+annotated-types==0.6.0
+    # via pydantic
 boto3==1.34.85
     # via -r requirements/prod.in
 botocore==1.34.85
@@ -30,6 +32,10 @@ packaging==23.2
     # via pyinstaller
 pefile==2023.2.7
     # via pyinstaller
+pydantic==2.7.1
+    # via -r requirements/prod.in
+pydantic-core==2.18.2
+    # via pydantic
 pyinstaller==6.1.0
     # via -r requirements/prod.in
 pyinstaller-hooks-contrib==2023.10
@@ -54,6 +60,10 @@ s3transfer==0.10.1
     # via boto3
 six==1.16.0
     # via python-dateutil
+typing-extensions==4.11.0
+    # via
+    #   pydantic
+    #   pydantic-core
 urllib3==2.0.7
     # via
     #   botocore

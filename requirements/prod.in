@@ -4,3 +4,4 @@ minecraft-launcher-lib
 pyinstaller
 log_wizard
 boto3
+pydantic
