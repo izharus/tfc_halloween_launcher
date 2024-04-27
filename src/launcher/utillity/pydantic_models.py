@@ -1,7 +1,7 @@
 """A module with Pydantic models."""
 from typing import Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 # pylint: disable=R0903
@@ -79,3 +79,10 @@ class MapJson(BaseModel):
     """
 
     modpacks: Dict[str, Modpack]
+
+    @field_validator("modpacks")
+    @classmethod
+    def modpacks_must_not_be_empty(cls, modpacks: Dict[str, Modpack]) -> None:
+        """Ensure modpacks dictionary is not empty."""
+        if not modpacks:
+            raise ValueError("modpacks dictionary could not be empty")
