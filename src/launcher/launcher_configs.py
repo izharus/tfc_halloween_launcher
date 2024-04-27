@@ -24,7 +24,7 @@ from .utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
-from .utillity.pydantic_models import MapJson
+from .utillity.pydantic_models import MapJson, Modpack
 
 
 class LauncherConfig:
@@ -280,7 +280,7 @@ class ConfigLoader:
 
     def get_from_yos(
         self,
-    ) -> MapJson:
+    ) -> Dict:
         """
         Retrieves configuration data from YOS (Yandex Object Storage).
 
@@ -306,98 +306,151 @@ class ConfigLoader:
         return self._create_model_from_bytes(response["Body"].read())
 
 
-class MinecraftLauncherConfig:
+class ConfigGetter:
     """
-    Configuration settings for the Minecraft launcher, including
-    specific Minecraft server configurations.
+    A class for managing server configurations.
 
-    Note:
-        Call get_stored_data() to load stored data from the file.
     Attributes:
-
-
-        minecraft_directory (str): The directory where Minecraft is installed.
-
+        _launcher_config (LauncherConfig): The launcher configuration.
+        _modpacks_configs (Dict): A dictionary of modpack configurations.
+        _active_config (str): The name of the active modpack configuration.
     """
 
     def __init__(
         self,
-        map_json_data,
+        config_data: Dict,
         launcher_config: LauncherConfig,
     ):
+        """
+        Initializes the ConfigGetter instance.
+
+        Args:
+            config_data (Dict): Configuration data for the server.
+            launcher_config (LauncherConfig): The launcher configuration.
+
+        Raises:
+            ValidationError: If the config_data fails Pydantic validation.
+        """
         self._launcher_config = launcher_config
-        self.map_json_data = map_json_data
-        self._minecraft_directory = os.path.join(
-            self._launcher_config.minecraft_root_directory,
-            self._launcher_config.SERVERS_DIR,
-            self.config_name,
+        MapJson(**config_data)
+        self._modpacks_configs = config_data["modpacks"]
+        self._active_config: str = list(self._modpacks_configs.keys())[0]
+
+    @property
+    def active(self) -> "ServerConfig":
+        """
+        Returns the active server configuration.
+
+        Returns:
+            ServerConfig: The active server configuration.
+        """
+        return ServerConfig(
+            self._modpacks_configs[self._active_config], self._launcher_config
         )
 
-    def __eq__(self, other):
-        if isinstance(other, MinecraftLauncherConfig):
-            return self.map_json_data == other.map_json_data
+    @property
+    def config_list(self) -> List[str]:
+        """
+        Returns the list of available server configurations.
+
+        Returns:
+            List[str]: The list of available server configurations.
+        """
+        return list(self._modpacks_configs.keys())
+
+    def set_active(self, config_name: str) -> bool:
+        """
+        Sets the active server configuration.
+
+        Args:
+            config_name (str): The name of the configuration to set as active.
+
+        Returns:
+            bool: True if the configuration was successfully set
+                as active, False otherwise.
+        """
+        if config_name in self._modpacks_configs:
+            self._active_config = config_name
+            return True
         return False
 
-    def _get_config_value(self, key: str, default: Any = "") -> Any:
+
+class ServerConfig(Modpack):
+    """
+    Represents a Minecraft server configuration.
+
+    Inherits from Modpack.
+
+    Attributes:
+        _launcher_config (LauncherConfig): The launcher configuration.
+        _minecraft_directory (str): The directory where Minecraft server
+            data is stored.
+    """
+
+    def __init__(
+        self,
+        modpack_data: Dict,
+        launcher_config: LauncherConfig,
+    ):
         """
-        Helper method to get a value from the 'config' sub-dictionary
-        in 'map_json_data'.
+        Initializes the ServerConfig instance.
+
+        Args:
+            modpack_data (Dict): Configuration data for the modpack.
+            launcher_config (LauncherConfig): The launcher configuration.
         """
-        if self.map_json_data and "config" in self.map_json_data:
-            return self.map_json_data["config"].get(key, default)
-        log.error("Failed to parse param from config: {key}")
-        return default
+        super().__init__(**modpack_data)
+        self._launcher_config = launcher_config
+        self._minecraft_directory = self._generate_minecraft_directory()
 
-    @property
-    def config_name(self) -> str:
-        """The name of the launcher configuration."""
-        return self._get_config_value("config_name")
+    def _generate_minecraft_directory(self) -> str:
+        """
+        Generates the Minecraft directory based on the active configuration.
 
-    @property
-    def minecraft_version(self) -> str:
-        """minecraft_version (str): The version of Minecraft to be used."""
-        return self._get_config_value("minecraft_version")
-
-    @property
-    def forge_version(self) -> str:
-        """forge_version (str): The version of Forge to be used."""
-        return self._get_config_value("forge_version")
-
-    @property
-    def minecraft_profile(self):
-        """The Minecraft profile to be used."""
-        return self._get_config_value("minecraft_profile")
-
-    @property
-    def minecraft_server_ip(self) -> str:
-        """The IP address of the Minecraft server."""
-        return self._get_config_value("minecraft_server_ip")
-
-    @property
-    def minecraft_server_port(self) -> str:
-        """The port of the Minecraft server."""
-        return self._get_config_value("minecraft_server_port")
+        Returns:
+            str: The Minecraft directory.
+        """
+        config_name = self.server_config.config_name
+        return os.path.join(
+            self._launcher_config.minecraft_root_directory,
+            self._launcher_config.SERVERS_DIR,
+            config_name,
+        )
 
     @property
     def minecraft_directory(self) -> str:
-        """The minecraft directory for current config."""
+        """
+        Returns the Minecraft directory for the current configuration.
+
+        Returns:
+            str: The Minecraft directory.
+        """
         return self._minecraft_directory
 
+    @property
     def is_minecraft_installed(
         self,
     ) -> bool:
         """
-        Check in minecraft has already installed for current config profile.
+        Checks if Minecraft is already installed for the current configuration.
+
+        Returns:
+            bool: True if Minecraft is installed, False otherwise.
         """
         return bool(
             self._launcher_config.get_launcher_data_value(
-                f"{self.config_name}_is_installed"
+                f"{self.server_config.config_name}_is_installed"
             )
         )
 
-    def set_minecraft_installed(self, is_installed: bool = True) -> None:
+    @is_minecraft_installed.setter
+    def is_minecraft_installed(self, other: bool) -> None:
         """
-        Set minecraft installed flag for this current profile.
+        Sets the flag indicating whether Minecraft is installed
+        for the current configuration.
+
+        Args:
+            other (bool, optional): The value to set for the flag.
         """
-        key = f"{self.config_name}_is_installed"
-        self._launcher_config.set_launcher_data_value(key, is_installed)
+        key = f"{self.server_config.config_name}_is_installed"
+        self._launcher_config.set_launcher_data_value(key, other)
