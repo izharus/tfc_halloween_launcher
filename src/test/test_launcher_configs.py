@@ -96,13 +96,17 @@ class TestConfigLoader:
     """Unit tests for ConfigLoader."""
 
     def test__install_boto3_instance_when_client_not_installed(self, mocker):
-        """Test _install_boto3_instance method when boto3 client is not installed."""
+        """
+        Test _install_boto3_instance method when boto3 client
+        is not installed.
+        """
         # Create an instance of ConfigLoader
         config_loader = ConfigLoader(MagicMock(spec=LauncherConfig))
         config_loader._boto3_client = None
         mock_boto3_instance = "mock_boto3_instance"
         mock_client = MagicMock(return_value=mock_boto3_instance)
-        # Mock boto3.client to ensure it is called only if _boto3_client is None
+        # Mock boto3.client to ensure it is called only if _boto3_client
+        # is None
         with mocker.patch.object(boto3, "client", mock_client):
             # Call the _install_boto3_instance method
             config_loader._install_boto3_instance()
@@ -119,12 +123,16 @@ class TestConfigLoader:
     def test__install_boto3_instance_when_client_already_installed(
         self, mocker
     ):
-        """Test _install_boto3_instance method when boto3 client is already installed."""
+        """
+        Test _install_boto3_instance method when boto3 client
+        is already installed.
+        """
         config_loader = ConfigLoader(MagicMock(spec=LauncherConfig))
         config_loader._boto3_client = MagicMock()
         mock_boto3_instance = "mock_boto3_instance"
         mock_client = MagicMock(return_value=mock_boto3_instance)
-        # Mock boto3.client to ensure it is called only if _boto3_client is None
+        # Mock boto3.client to ensure it is called only
+        # if _boto3_client is None
         with mocker.patch.object(boto3, "client", mock_client):
             # Call the _install_boto3_instance method
             config_loader._install_boto3_instance()
