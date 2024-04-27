@@ -9,19 +9,22 @@ import json
 import os
 import shelve
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import boto3
 import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from log_wizard import log as get_logger
+from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utillity.custom_exceptions import (
+    ConfigDownloadError,
     ConfigProcessingError,
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
+from .utillity.pydantic_models import MapJson
 
 
 class LauncherConfig:
@@ -183,144 +186,124 @@ log = get_logger()
 
 
 class ConfigLoader:
-    """A class for loading and handling configuration data."""
+    """
+    A class for loading modpacks configuration data.
 
-    def __init__(
-        self, config_data: Dict, launcher_config: LauncherConfig
-    ) -> None:
+    Args:
+        launcher_config (LauncherConfig): An instance of LauncherConfig
+            containing configuration parameters.
+    """
+
+    def __init__(self, launcher_config: LauncherConfig) -> None:
         """
-        Initialize ConfigLoader with provided configuration data.
+        Initializes the ConfigLoader instance.
 
-        Parameters:
-            config_data (Dict): A dictionary containing configuration data.
+        Args:
             launcher_config (LauncherConfig): An instance of LauncherConfig
-                containing launcher settings.
+                containing modpacks configuration parameters.
         """
-        self._config_data = config_data
+        self._boto3_client: Optional[boto3.client] = None
+        self._install_boto3_instance()
         self._launcher_config = launcher_config
 
-    def __eq__(self, other):
-        if isinstance(other, ConfigLoader):
-            return set(self.config_list) == set(other.config_list)
-        return False
+    def _install_boto3_instance(self):
+        """
+        Install boto3 client instance if not already installed.
+        """
+        if not self._boto3_client:
+            try:
+                self._boto3_client = boto3.client(
+                    "s3",
+                    endpoint_url="https://storage.yandexcloud.net",
+                    aws_access_key_id=BOTO3_ACCESS_KEY,
+                    aws_secret_access_key=BOTO3_SECRET_KEY,
+                )
+            except boto3.exceptions.Boto3Error as error:
+                log.error(f"Failed to create an s3 instance: {error}")
+
+    @property
+    def boto3_client(self) -> Optional[boto3.client]:
+        """
+        Returns the boto3 client instance.
+
+        Returns:
+            Optional[boto3.client]: The boto3 client instance.
+        """
+        self._install_boto3_instance()
+        return self._boto3_client
 
     @staticmethod
-    def _pars_bytes_config(
+    def _create_model_from_bytes(
         bytes_file_data: bytes,
     ) -> Dict:
+        """
+        Creates a MapJson model instance from bytes file data.
+
+        Args:
+            bytes_file_data (bytes): The bytes file data containing JSON data.
+
+        Returns:
+            Dict: A Dict with the modpack config.
+
+        Raises:
+            ConfigProcessingError: If there is an error processing
+                the configuration data.
+        """
         try:
             config = json.loads(bytes_file_data)
         except Exception as error:
             log.error(f"Failed to load json from config file: {error}")
-            log.debug(traceback.format_exc())
             raise ConfigProcessingError from error
-        if not isinstance(config, dict):
-            log.error("Incorrect config format.")
-            raise ConfigProcessingError
         return config
 
-    @classmethod
-    def download_from_url(
-        cls, launcher_config: LauncherConfig
-    ) -> "ConfigLoader":
+    def get_from_url(
+        self,
+    ) -> Dict:
         """
-        Download configuration data from a specified URL.
-
-        Parameters:
-            launcher_config (LauncherConfig): An instance of LauncherConfig
-                containing launcher settings.
+        Retrieves configuration data from a URL.
 
         Returns:
-            ConfigLoader: A ConfigLoader instance.
+            Dict: A Dict with the modpack config.
 
         Raises:
-            RequestDownloadError: If the download request for the config
-                fails.
-            ConfigProcessingError: If an error occurs while processing
-                the configuration data.
+            ConfigProcessingError: If there is an error
+                processing the configuration data.
         """
         try:
             bytes_file_data = FileDownloader.download_file(
-                launcher_config.MAP_JSON_URL
+                self._launcher_config.MAP_JSON_URL
             )
-        except RequestDownloadError:
+        except RequestDownloadError as error:
             log.error("Failed to load a config file.")
-            raise
-        return cls(
-            cls._pars_bytes_config(bytes_file_data),
-            launcher_config,
-        )
+            raise ConfigDownloadError from error
+        return self._create_model_from_bytes(bytes_file_data)
 
-    @classmethod
-    def download_from_yos(
-        cls,
-        boto3_client: boto3.client,
-        launcher_config: LauncherConfig,
-    ) -> "ConfigLoader":
+    def get_from_yos(
+        self,
+    ) -> MapJson:
         """
-        Download configuration data from a Yandex Object Storage bucket.
-
-        Parameters:
-            boto3_client: [boto3.client]: An authorized boto3.client
-                instance.
-            launcher_config (LauncherConfig): An instance of LauncherConfig
-                containing launcher settings.
+        Retrieves configuration data from YOS (Yandex Object Storage).
 
         Returns:
-            ConfigLoader: A ConfigLoader instance.
+            Dict: A Dict with the modpack config.
 
         Raises:
-            RequestDownloadError: If the download request for the config
-                fails.
-            ConfigProcessingError: If an error occurs while processing
+            ConfigProcessingError: If there is an error processing
                 the configuration data.
         """
+        self._install_boto3_instance()
+        if not self._boto3_client:
+            log.error("Failed, boto3_client is None.")
+            raise ConfigDownloadError()
         try:
-            response = boto3_client.get_object(
-                Bucket=launcher_config.BUCKET_NAME,
-                Key=launcher_config.MAP_JSON_YOS_OBJ_KEY,
+            response = self._boto3_client.get_object(
+                Bucket=self._launcher_config.BUCKET_NAME,
+                Key=self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
             )
-        except boto3.exceptions.Boto3Error:
-            log.error("Failed to load a config file.")
-            raise
-        return cls(
-            cls._pars_bytes_config(response["Body"].read()),
-            launcher_config,
-        )
-
-    @property
-    def config_list(self) -> List[str]:
-        """
-        Get a list of all supported configurations.
-
-        Returns:
-            List[str]: A list of strings representing supported
-                configuration names.
-        """
-        return list(key for key in self._config_data)
-
-    def get_config(self, config_name: str) -> "MinecraftLauncherConfig":
-        """
-        Get the configuration data for a specified configuration name.
-
-        Parameters:
-            config_name (str): The name of the configuration to retrieve.
-
-        Returns:
-            MinecraftLauncherConfig: An instance of MinecraftLauncherConfig
-                containing the configuration data.
-
-        Raises:
-            ConfigProcessingError: If the specified configuration name is
-                not found in the loaded data.
-        """
-        if config_name not in self._config_data:
-            raise ConfigProcessingError(
-                f"config name: '{config_name}' was not found"
-            )
-        return MinecraftLauncherConfig(
-            self._config_data[config_name], self._launcher_config
-        )
+        except boto3.exceptions.Boto3Error as error:
+            log.error(f"Failed to load a config file. {error}")
+            raise ConfigDownloadError from error
+        return self._create_model_from_bytes(response["Body"].read())
 
 
 class MinecraftLauncherConfig:

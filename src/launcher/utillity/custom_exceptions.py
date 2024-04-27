@@ -23,6 +23,18 @@ class RequestDownloadError(Exception):
         return "Ошибка во время загрузки файлов."
 
 
+class ConfigDownloadError(Exception):
+    """
+    Raises if any error occurs due loading a config file.
+    """
+
+    def __init__(self, message="Failed to load a configuration file.") -> None:
+        super().__init__(message)
+
+    def __str__(self):
+        return "Ошибка во время загрузки файла конфигурации."
+
+
 class ConfigProcessingError(Exception):
     """
     Raises if any error occurs due processing a config file.
