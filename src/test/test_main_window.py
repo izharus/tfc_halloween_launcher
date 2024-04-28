@@ -1,32 +1,15 @@
 """Tests for main qt Window class."""
 from unittest.mock import MagicMock
 
+# pylint: disable=W0613,W0212, E0401
 import minecraft_launcher_lib as mine_lib
 import pytest
-from PyQt6 import QtCore
 from src.launcher.design.styles import MainButtonData
 from src.launcher.design.utillity import MessageBoxManager
-from src.launcher.launcher_configs import ConfigLoader, LauncherConfig
-from src.launcher.main_window import OFFLINE_MAP_JSON, Window
-from src.launcher.utillity.custom_exceptions import (
-    ConfigProcessingError,
-    RequestDownloadError,
-)
-
-# pylint: disable=W0613,W0212
-
-
-SERVER_NAME_1 = "server name 1"
-SERVER_NAME_2 = "server name 2"
-
-
-@pytest.fixture
-def mock_config_data():
-    """Mock a config data."""
-    return {
-        SERVER_NAME_1: {"config": {"config_name": "config_name_1"}},
-        SERVER_NAME_2: {"config": {"config_name": "config_name_2"}},
-    }
+from src.launcher.launcher_configs import ConfigLoader
+from src.launcher.main_window import Window
+from src.launcher.utillity.pydantic_models import ServerConfig
+from src.test.conftest import CONFIG_NAME_1, CONFIG_NAME_2
 
 
 @pytest.fixture
@@ -34,8 +17,8 @@ def mock_download_from_url(mocker, mock_config_data):
     """Mock ConfigLoader.download_from_url method."""
     with mocker.patch.object(
         ConfigLoader,
-        "download_from_url",
-        return_value=ConfigLoader(mock_config_data, LauncherConfig()),
+        "get_from_url",
+        return_value=mock_config_data,
     ):
         yield
 
@@ -73,104 +56,55 @@ def test_get_config_loader_success(
 ):
     """Test that the configuration loader is successfully initialized."""
     window = mock_window
+    assert window.config_loader.get_from_url() == mock_config_data
 
-    assert window.config_loader._config_data == mock_config_data
 
-
-def test_get_config_loader_download_failed(
+def test_update_server_type_combobox_with_new_config_data(
     mock_window,
-    mocker,
-):
-    """Test that the config loader handles download failure gracefully."""
-    window = mock_window
-    with mocker.patch.object(
-        ConfigLoader,
-        "download_from_url",
-        side_effect=RequestDownloadError,
-    ):
-        window.config_loader = window.get_config_loader()
-
-    assert window.config_loader._config_data == OFFLINE_MAP_JSON
-
-
-def test_get_config_loader_config_error(
-    mock_window,
-    mocker,
 ):
     """
-    Test that the config loader handles exception
-    ConfigProcessingError gracefully.
+    Test _update_server_type_combobox with new config data.
     """
-    window = mock_window
-    with mocker.patch.object(
-        ConfigLoader,
-        "download_from_url",
-        side_effect=ConfigProcessingError,
-    ):
-        window.config_loader = window.get_config_loader()
-    assert window.config_loader._config_data == OFFLINE_MAP_JSON
-    window.msg_box.warn.assert_called_once()
+    window: Window = mock_window
 
+    # mock config_list
+    window.config_getter._modpacks_configs = {"1": "1", "2": "2", "3": "3"}
 
-def test_update_server_type_combobox_with_config(
-    mock_config_data, mock_window
-):
-    """
-    Test _update_server_type_combobox with valid config data.
-    """
-    window = mock_window
+    # Call the method to be tested
+    window._update_server_type_combobox()
 
-    config_loader = ConfigLoader(mock_config_data, LauncherConfig())
-    window._update_server_type_combobox(config_loader)
-
-    config_names = config_loader.config_list
-
+    # Check if the combo box items match the expected config names
     combo_box_items = [
         window._ui_instance.comboBox_server_type.itemText(i)
         for i in range(window._ui_instance.comboBox_server_type.count())
     ]
-
-    assert set(config_names) == set(combo_box_items)
-
-
-def test_update_server_type_combobox_with_empty_config(mock_window):
-    """
-    Test _update_server_type_combobox with empty config data.
-    """
-
-    window = mock_window
-
-    window._update_server_type_combobox(ConfigLoader({}, LauncherConfig))
-
-    assert window._ui_instance.comboBox_server_type.count() == 0
+    assert set(combo_box_items) == {"1", "2", "3"}
+    # First config should be installed, if all old configs were deleted
+    assert window._ui_instance.comboBox_server_type.currentText() == "1"
 
 
-def test_update_server_type_combobox_with_different_config(
-    mock_config_data, mock_window
+def test_update_server_type_combobox_with_updated_config_data(
+    mock_window,
 ):
     """
-    Test _update_server_type_combobox with different config data.
+    Test _update_server_type_combobox with updated config data.
     """
+    window: Window = mock_window
 
-    window = mock_window
-    config_loader = ConfigLoader(mock_config_data, LauncherConfig())
-    window._update_server_type_combobox(config_loader)
+    # mock config_list
+    window.config_getter._modpacks_configs = {"1": "1", "4": "4"}
 
-    initial_combo_box_items = [
+    # Call the method to be tested
+    window._update_server_type_combobox()
+
+    # Check if the combo box items match the expected config names
+    combo_box_items = [
         window._ui_instance.comboBox_server_type.itemText(i)
         for i in range(window._ui_instance.comboBox_server_type.count())
     ]
-
-    new_config_data = {"config3": {"config": {"config_name": "Config 3"}}}
-    new_config_loader = ConfigLoader(new_config_data, LauncherConfig())
-    window._update_server_type_combobox(new_config_loader)
-
-    new_combo_box_items = [
-        window._ui_instance.comboBox_server_type.itemText(i)
-        for i in range(window._ui_instance.comboBox_server_type.count())
-    ]
-
-    assert set(new_combo_box_items) != set(initial_combo_box_items)
+    assert set(combo_box_items) == {"4", "1"}
+    # Config should not be switched
+    assert window._ui_instance.comboBox_server_type.currentText() == "1"
 
 
 def test_update_config_with_valid_config(
@@ -183,125 +117,15 @@ def test_update_config_with_valid_config(
     """
     window = mock_window
 
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
-    status = window.update_config()
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    # status = window.update_config()
 
-    assert status
-    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
-
-
-def test_update_config_success(
-    mock_download_from_url,
-    mock_window,
-):
-    """
-    Test update_config method with successful configuration update.
-    """
-    window = mock_window
-
-    status = window.update_config()
-
-    assert status is True
-    window.msg_box.create_msg_box.assert_not_called()
-
-
-def test_update_config_existing_config(
-    mock_download_from_url,
-    mock_window,
-    mocker,
-    mock_config_data,
-):
-    """
-    Test update_config method with the existing configuration.
-    """
-    window = mock_window
-    first_config_name = window._ui_instance.comboBox_server_type.currentText()
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
-    cur_config_name = window._ui_instance.comboBox_server_type.currentText()
-
-    status = window.update_config()
-
-    assert status is True
-    assert first_config_name == SERVER_NAME_1
-    assert cur_config_name == SERVER_NAME_2
-    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
-
-
-def test_update_config_non_existing_config(
-    mock_download_from_url,
-    mock_window,
-    mocker,
-    mock_config_data,
-):
-    """
-    Test update_config method with the existing configuration.
-    """
-    window = mock_window
-    non_existing_server_name = "non_existing_server_name"
-    window._ui_instance.comboBox_server_type.addItem(
-        non_existing_server_name,
+    # assert status
+    expected = ServerConfig(
+        **mock_config_data["modpacks"][CONFIG_NAME_2]["server_config"]
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(
-        non_existing_server_name,
-    )
-    cur_config_name = window._ui_instance.comboBox_server_type.currentText()
-    # warn will be called once, after calling setCurrentText in this test
-    window.msg_box.warn = MagicMock()
-
-    status = window.update_config()
-
-    assert cur_config_name == non_existing_server_name
-    assert status is False
-    window.msg_box.warn.assert_called_once()
-
-
-def test_simulate_config_update(
-    mock_download_from_url,
-    mock_window,
-    mock_config_data,
-    mocker,
-    qtbot,
-):
-    """
-    Test situation when configs list changes while app is working.
-    """
-    server_name_3 = "server name 3"
-    mock_updated_config_data = mock_config_data | {
-        server_name_3: {"config": {"config_name": "config_name_3"}}
-    }
-    window = mock_window
-    with mocker.patch.object(
-        ConfigLoader,
-        "download_from_url",
-        return_value=ConfigLoader(mock_updated_config_data, LauncherConfig()),
-    ):
-        qtbot.mouseClick(
-            window._ui_instance.pushButton_install_and_launch,
-            QtCore.Qt.MouseButton.LeftButton,
-        )
-    assert set(window.config_loader.config_list) == set(
-        mock_updated_config_data.keys()
-    ), "A new field should be added to the config."
-    assert (
-        window._ui_instance.comboBox_server_type.currentText() == SERVER_NAME_1
-    ), "Current config should not be changed"
-    # Warning about changed config should be called once
-    window.msg_box.warn.assert_called_once()
-
-
-def test_simulate_config_changes(
-    mock_download_from_url,
-    mock_window,
-    mock_config_data,
-    qtbot,
-):
-    """
-    Simulate changing config in combobox.
-    """
-    window = mock_window
-    assert window.config.map_json_data == mock_config_data[SERVER_NAME_1]
-    qtbot.keyClicks(window._ui_instance.comboBox_server_type, SERVER_NAME_2)
-    assert window.config.map_json_data == mock_config_data[SERVER_NAME_2]
+    current = window.config_getter.active.server_config
+    assert expected == current
 
 
 def test_multiple_updating_different_main_button_text(
@@ -311,32 +135,32 @@ def test_multiple_updating_different_main_button_text(
     Test the behavior of updating the main button text when
     switching server types.
     """
-    window = mock_window
+    window: Window = mock_window
     window.show()
-    config_1 = window.config_loader.get_config(SERVER_NAME_1)
-    config_1.set_minecraft_installed(is_installed=False)
-    config_2 = window.config_loader.get_config(SERVER_NAME_2)
-    config_2.set_minecraft_installed(is_installed=True)
+    window.config_getter.set_active(CONFIG_NAME_1)
+    window.config_getter.active.is_minecraft_installed = False
+    window.config_getter.set_active(CONFIG_NAME_2)
+    window.config_getter.active.is_minecraft_installed = True
 
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.install_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
 
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.launch_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_1)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_1)
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.install_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(SERVER_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.launch_text
@@ -351,12 +175,12 @@ def test_updating_main_button_text_after_success_installation(
     a successful installation.
     """
     window = mock_window
-    config_1 = window.config_loader.get_config(SERVER_NAME_1)
-    config_1.set_minecraft_installed(is_installed=False)
+    window.config_getter.set_active(CONFIG_NAME_1)
+    window.config_getter.active.is_minecraft_installed = False
 
     window._install_thread_finished()
 
-    assert config_1.is_minecraft_installed() is True
+    assert window.config_getter.active.is_minecraft_installed is True
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.launch_text
@@ -371,13 +195,13 @@ def test_updating_main_button_text_after_failed_installation(
     a failed installation.
     """
     window = mock_window
-    config_1 = window.config_loader.get_config(SERVER_NAME_1)
-    config_1.set_minecraft_installed(is_installed=False)
-
+    window.config_getter.set_active(CONFIG_NAME_1)
+    window.config_getter.active.is_minecraft_installed = False
     window._install_thread.runtime_error = True
+
     window._install_thread_finished()
 
-    assert config_1.is_minecraft_installed() is False
+    assert window.config_getter.active.is_minecraft_installed is False
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.install_text

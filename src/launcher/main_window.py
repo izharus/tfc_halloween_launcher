@@ -19,10 +19,9 @@ import os
 import sys
 import traceback
 import webbrowser
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
-import boto3
-import boto3.exceptions
+import pydantic
 import win32con
 import win32console
 import win32gui
@@ -45,19 +44,11 @@ from .launcher_authorization import (
     CapeUploaderThread,
     SkinUploaderThread,
 )
-from .launcher_configs import (
-    ConfigLoader,
-    LauncherConfig,
-    MinecraftLauncherConfig,
-)
+from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
-from .utillity.custom_exceptions import (
-    ConfigProcessingError,
-    RequestDownloadError,
-)
+from .utillity.custom_exceptions import ConfigProcessingError
 from .utillity.path_manager import PathManager
 from .utillity.thread_data_utils import ThreadUiInputData
-from .utillity.yos import get_boto3_instance
 
 OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},
@@ -105,22 +96,15 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self.input_data = self.get_input_data()
-        self._boto3_client = get_boto3_instance()
-        if not self._boto3_client:
-            # TODO: offline mode
-            sys.exit()
-        self.config_loader = self.get_config_loader()
-        self._update_server_type_combobox(self.config_loader)
-        self.config: MinecraftLauncherConfig
+        self.config_loader: ConfigLoader = ConfigLoader(self._launcher_config)
+
+        self.config_getter: ConfigGetter
         # init self.config and config_loader here:
         self.update_config()
+        self._update_server_type_combobox()
         self.update_main_button_text()
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
-            self.update_config
-        )
-
-        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
-            self.update_main_button_text
+            self.set_config_from_ui
         )
 
         self._skin_uploader_thread = SkinUploaderThread(
@@ -209,7 +193,7 @@ class Window(QtWidgets.QMainWindow):
     def show_config_error_message(self, error: Exception) -> None:
         """Show an error message box for config updating fail."""
         msg_title = "Не удалось загрузить конфиг обновления."
-        log.error(f"Failed to download a map config: {error}")
+        log.error(f"Failed to load a map config: {error}")
         self.msg_box.warn(
             msg_title,
             "При нажатии 'Ок' откроется папка с логом. ",
@@ -218,26 +202,8 @@ class Window(QtWidgets.QMainWindow):
             ),
         )
 
-    def get_config_loader(self) -> ConfigLoader:
-        """Create the configuration loader."""
-        try:
-            return ConfigLoader.download_from_url(self._launcher_config)
-        except (RequestDownloadError, ConfigProcessingError) as error:
-            log.error("Failed to download a config file from url.")
-            try:
-                return ConfigLoader.download_from_yos(
-                    self._boto3_client,
-                    self._launcher_config,
-                )
-            except (boto3.exceptions.Boto3Error, ConfigProcessingError):
-                log.error("Failed to download a config file from yos.")
-                self.show_config_error_message(error)
-                # TODO: offline mode
-                sys.exit()
-
     def _update_server_type_combobox(
         self,
-        config_loader: ConfigLoader,
     ) -> None:
         """
         Update server type combobox in ui interface
@@ -247,33 +213,30 @@ class Window(QtWidgets.QMainWindow):
         current_text = self._ui_instance.comboBox_server_type.currentText()
         self._ui_instance.comboBox_server_type.clear()
         self._ui_instance.comboBox_server_type.addItems(
-            config_loader.config_list
+            self.config_getter.config_list
         )
-        if current_text in config_loader.config_list:
+        if current_text in self.config_getter.config_list:
             self._ui_instance.comboBox_server_type.setCurrentText(current_text)
         else:
             self._ui_instance.comboBox_server_type.setCurrentIndex(0)
         self._ui_instance.comboBox_server_type.blockSignals(False)
 
-    def update_config_loader(self) -> bool:
-        """
-        Update the configuration loader with the latest configuration.
-
-        Returns:
-            bool: False if the configuration is updated, True otherwise.
-        """
-        new_config_loader = self.get_config_loader()
-        if new_config_loader != self.config_loader:
-            self.config_loader = new_config_loader
-            log.error("Config was updated.")
-            msg_title = "Конфигурация серверов обновилась."
-            self.msg_box.warn(
-                msg_title,
-                "Выберите сервер еще раз.",
-            )
-            # Update latest configuration in ui interface
-            self._update_server_type_combobox(self.config_loader)
+    def set_config_from_ui(self, config_name: Optional[str] = None) -> bool:
+        """Update current config from combobox text in interface."""
+        if not config_name:
+            config_name = self._ui_instance.comboBox_server_type.currentText()
+        if not config_name:
+            log.error("Config name is empty.")
             return False
+        try:
+            self.config_getter.set_active(config_name)
+        except ConfigProcessingError as error:
+            log.error(f"Config not found, config list was be updated: {error}")
+            self.show_config_error_message(error)
+            return False
+        finally:
+            self._update_server_type_combobox()
+            self.update_main_button_text()
         return True
 
     def update_config(self) -> bool:
@@ -295,23 +258,24 @@ class Window(QtWidgets.QMainWindow):
             ConfigProcessingError: If an error occurs while processing
                 the configuration.
         """
-
-        self.input_data.update_input_data_from_ui()
-        # Save user server choice
-        server_type = self.input_data.extract_element("comboBox_server_type")
         try:
-            self.config = self.config_loader.get_config(
-                server_type,
-            )
+            config_data = self.config_loader.get_from_url()
         except ConfigProcessingError as error:
-            log.error(f"File to update config '{server_type}': {error}")
-            msg_title = "Неизвестная ошибка."
-            self.msg_box.warn(
-                msg_title,
-                f"Не удалось извлечь конфигурацию сервера: {server_type}.",
+            log.error("Failed to download a config file from url.")
+            try:
+                config_data = self.config_loader.get_from_yos()
+            except ConfigProcessingError:
+                log.error("Failed to download a config file from yos.")
+                self.show_config_error_message(error)
+                return False
+        try:
+            self.config_getter = ConfigGetter(
+                config_data, self._launcher_config
             )
+        except pydantic.ValidationError as error:
+            log.error(f"Invalid config: {error}")
+            self.show_config_error_message(error)
             return False
-        self._install_thread.set_config(self.config)
         return True
 
     def update_main_button_text(self):
@@ -319,7 +283,7 @@ class Window(QtWidgets.QMainWindow):
         Updates the text of the main button based on whether
         Minecraft is installed or not.
         """
-        if self.config.is_minecraft_installed():
+        if self.config_getter.active.is_minecraft_installed:
             self.main_button.set_launch_title()
         else:
             self.main_button.set_install_title()
@@ -337,6 +301,8 @@ class Window(QtWidgets.QMainWindow):
 
     def _make_authorization(self) -> None:
         if not self.update_config():
+            return
+        if not self.set_config_from_ui():
             return
         login = self.input_data.extract_element("lineEdit_nickname")
         password = self.input_data.extract_element("lineEdit_password")
@@ -442,14 +408,13 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-        if not self.update_config_loader():
-            return
+        self._install_thread.set_config(self.config_getter.active)
         self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
             return
         if not self._validator.is_java_installed():
-            java_install_url = self.config.java_install_url
+            java_install_url = self._launcher_config.java_install_url
             install_java_link = f'<a href="{java_install_url}">\
     Я хочу установить Java сейчас!</a> '
             self.msg_box.warn(
@@ -490,7 +455,7 @@ class Window(QtWidgets.QMainWindow):
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
-        self.config.set_minecraft_installed()
+        self.config_getter.active.is_minecraft_installed = True
         self.update_main_button_text()
         self.hide()
         auth_data = self._authorization_thread.get_last_auth_data()
@@ -507,7 +472,7 @@ class Window(QtWidgets.QMainWindow):
             nickname,
             uuid,
             access_token,
-            self.config,
+            self.config_getter.active,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()

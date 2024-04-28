@@ -6,7 +6,7 @@ a Minecraft launcher, including Minecraft, Forge, mods, shaders, and
 executing the Minecraft game.
 
 Classes:
-    - MinecraftLauncherConfig: Configuration settings for a Minecraft launcher.
+    - ServerConfig: Configuration settings for a Minecraft launcher.
     - ModDownloader: A threaded downloader for Minecraft mods from a remote
         repository.
     - InstallThread: A threaded installer for Minecraft, Forge, and mods.
@@ -35,7 +35,7 @@ from log_wizard import log as get_logger
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from .launcher_configs import MinecraftLauncherConfig
+from .launcher_configs import ServerConfig
 from .utillity.custom_exceptions import (
     CalculateHashFailed,
     FilesSaveError,
@@ -43,6 +43,7 @@ from .utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from .utillity.file_downloader import FileDownloader
+from .utillity.pydantic_models import FileInfo
 
 log = get_logger()
 
@@ -52,7 +53,7 @@ class ModsInstaller(QThread, FileDownloader):
 
     def __init__(
         self,
-        files_info_list: List[Dict],
+        files_info_list: List[FileInfo],
         minecraft_directory: str,
         mods_directory: str = "mods",
     ):
@@ -70,9 +71,9 @@ class ModsInstaller(QThread, FileDownloader):
             bool: True if all files were deleted, False otherwise.
         """
         validate_file_names = list(
-            file_info["file_name"]
+            file_info.file_name
             for file_info in self.files_info_list
-            if file_info["file_name"].split(".")[-1] == "jar"
+            if file_info.file_name.split(".")[-1] == "jar"
         )
 
         for _root, _directories, files in os.walk(self.mods_directory):
@@ -109,8 +110,8 @@ class ModsInstaller(QThread, FileDownloader):
             callback["setMax"](len(self.files_info_list))
             progress_bar_index = 0
         for file_info in self.files_info_list:
-            file_name = file_info["file_name"]
-            dist_file_path = file_info["dist_file_path"]
+            file_name = file_info.file_name
+            dist_file_path = file_info.dist_file_path
             file_path = os.path.join(self.minecraft_directory, dist_file_path)
             if callback:
                 callback["setProgress"](progress_bar_index)
@@ -122,7 +123,7 @@ class ModsInstaller(QThread, FileDownloader):
                 except CalculateHashFailed:
                     log.error(f"Failed to calculate hash for: {file_name}.")
                     return False
-                if file_hash == file_info["hash"]:
+                if file_hash == file_info.hash:
                     log.info(f"File hash correct: {file_name}")
                     continue
                 log.info(f"File hash incorrect: {file_name}")
@@ -130,7 +131,7 @@ class ModsInstaller(QThread, FileDownloader):
                 callback["setStatus"](f"Downloading file: {file_name}...")
             try:
                 self.save_file(
-                    file_path, self.download_file(file_info["api_url"])
+                    file_path, self.download_file(file_info.api_url)
                 )
             except (FilesSaveError, RequestDownloadError):
                 log.error(f"Failed to download file: {file_name}.")
@@ -142,7 +143,7 @@ class InstallThread(QThread):
     """
     Thread for installing Minecraft, Forge, and mods.
 
-    This class extends QThread and MinecraftLauncherConfig to create a
+    This class extends QThread and ServerConfig to create a
     dedicated thread for the installation process. It manages the
     installation of Minecraft, Forge, and mods, and provides progress
     updates to the UI.
@@ -168,9 +169,7 @@ class InstallThread(QThread):
     progress = pyqtSignal("int")
     text = pyqtSignal("QString")
 
-    def __init__(
-        self, config: Optional[MinecraftLauncherConfig] = None
-    ) -> None:
+    def __init__(self, config: Optional[ServerConfig] = None) -> None:
         QThread.__init__(self)
         self.config = config
         self._callback_dict = {
@@ -188,7 +187,7 @@ class InstallThread(QThread):
         """Indicates if shaders should be installed."""
         self.is_install_shaders = is_install_shaders
 
-    def set_config(self, config: MinecraftLauncherConfig):
+    def set_config(self, config: ServerConfig):
         """
         Set or update the configuration for the installation thread.
         """
@@ -222,31 +221,27 @@ class InstallThread(QThread):
         if not self.config:
             raise MinecraftLauncherConfigNotSet()
 
-        if not self.config.is_minecraft_installed():
+        if not self.config.is_minecraft_installed:
             mine_lib.forge.install_forge_version(
-                self.config.forge_version,
+                self.config.server_config.forge_version,
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        map_dirs = self.config.map_json_data["main_data"]
-        map_dirs += self.config.map_json_data["client_data"]
+        map_dirs = self.config.main_data
         if self.is_install_shaders:
-            if "client_data_shaders" in self.config.map_json_data:
-                map_dirs += self.config.map_json_data["client_data_shaders"]
+            if "client_data_shaders" in self.config.client_additional_data:
+                map_dirs += self.config.client_additional_data[
+                    "client_data_shaders"
+                ]
             else:
                 log.error(
                     "Shaders couldn't be installed for "
-                    f"{self.config.config_name}"
+                    f"{self.config.server_config.config_name}"
                 )
                 self.runtime_error = True
                 return
 
-        files_data = list(
-            file_data
-            for file_data in map_dirs
-            if file_data["install_on_client"]
-        )
-        downloader = ModsInstaller(files_data, self.config.minecraft_directory)
+        downloader = ModsInstaller(map_dirs, self.config.minecraft_directory)
         status = downloader.check_and_download(
             callback=self._callback_dict,
         )
@@ -284,7 +279,7 @@ class MinecraftExecutorThread(QThread):
         nickname: str,
         uuid: str,
         access_token: str,
-        config: MinecraftLauncherConfig,
+        config: ServerConfig,
     ):
         QThread.__init__(self)
         self.nickname = nickname
@@ -331,7 +326,7 @@ class MinecraftExecutorThread(QThread):
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
-                self.config.minecraft_profile,
+                self.config.server_config.minecraft_profile,
                 self.config.minecraft_directory,
                 self.create_launcher_options(),
             )
