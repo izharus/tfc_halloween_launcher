@@ -320,6 +320,7 @@ class ConfigGetter:
         self,
         config_data: Dict,
         launcher_config: LauncherConfig,
+        boto3_client: Optional[boto3.client] = None,
     ):
         """
         Initializes the ConfigGetter instance.
@@ -327,6 +328,7 @@ class ConfigGetter:
         Args:
             config_data (Dict): Configuration data for the server.
             launcher_config (LauncherConfig): The launcher configuration.
+            boto3_client: (Optional[boto3.client]): A boto3 client instance.
 
         Raises:
             ValidationError: If the config_data fails Pydantic validation.
@@ -335,6 +337,7 @@ class ConfigGetter:
         MapJson(**config_data)
         self._modpacks_configs = config_data["modpacks"]
         self._active_config: str = list(self._modpacks_configs.keys())[0]
+        self._boto3_client = boto3_client
 
     @property
     def active(self) -> "ServerConfig":
@@ -345,7 +348,9 @@ class ConfigGetter:
             ServerConfig: The active server configuration.
         """
         return ServerConfig(
-            self._modpacks_configs[self._active_config], self._launcher_config
+            self._modpacks_configs[self._active_config],
+            self._launcher_config,
+            boto3_client=self._boto3_client,
         )
 
     @property
@@ -391,6 +396,7 @@ class ServerConfig(Modpack):
         self,
         modpack_data: Dict,
         launcher_config: LauncherConfig,
+        boto3_client: Optional[boto3.client] = None,
     ):
         """
         Initializes the ServerConfig instance.
@@ -402,6 +408,12 @@ class ServerConfig(Modpack):
         super().__init__(**modpack_data)
         self._launcher_config = launcher_config
         self._minecraft_directory = self._generate_minecraft_directory()
+        self._boto3_client = boto3_client
+
+    @property
+    def boto3_client(self) -> Optional[boto3.client]:
+        """Return a boto3_client instance if it exists."""
+        return self._boto3_client
 
     def _generate_minecraft_directory(self) -> str:
         """

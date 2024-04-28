@@ -270,7 +270,9 @@ class Window(QtWidgets.QMainWindow):
                 return False
         try:
             self.config_getter = ConfigGetter(
-                config_data, self._launcher_config
+                config_data,
+                self._launcher_config,
+                boto3_client=self.config_loader.boto3_client,
             )
         except pydantic.ValidationError as error:
             log.error(f"Invalid config: {error}")

@@ -30,6 +30,8 @@ import subprocess
 import traceback
 from typing import Callable, Dict, List, Optional
 
+import boto3
+import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from log_wizard import log as get_logger
 from minecraft_launcher_lib.types import MinecraftOptions
@@ -96,6 +98,8 @@ class ModsInstaller(QThread, FileDownloader):
     def check_and_download(
         self,
         callback: Optional[Dict[str, Callable]] = None,
+        boto3_client: Optional[boto3.client] = None,
+        bucket_name: Optional[str] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
@@ -103,6 +107,9 @@ class ModsInstaller(QThread, FileDownloader):
         Args:
             callback (dict): A dictionary of callback functions for
             updating the UI.
+            boto3_client: (Optional[boto3.client]): A boto3 client instance.
+            bucket_name: (Optional[str]): A bucket name for downloading from
+                object storage.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
@@ -129,6 +136,20 @@ class ModsInstaller(QThread, FileDownloader):
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
+            if boto3_client and bucket_name:
+                try:
+                    boto3_client.download_file(
+                        bucket_name,
+                        file_info.yan_obj_storage,
+                        file_path,
+                    )
+                    continue
+                except boto3.exceptions.Boto3Error as error:
+                    log.error(
+                        "Failed to download file from object storage: "
+                        f"{error}"
+                    )
+                    return False
             try:
                 self.save_file(
                     file_path, self.download_file(file_info.api_url)
@@ -244,6 +265,9 @@ class InstallThread(QThread):
         downloader = ModsInstaller(map_dirs, self.config.minecraft_directory)
         status = downloader.check_and_download(
             callback=self._callback_dict,
+            boto3_client=self.config.boto3_client,
+            # pylint: disable=W0212
+            bucket_name=self.config._launcher_config.BUCKET_NAME,
         )
         if not status:
             self.runtime_error = True
