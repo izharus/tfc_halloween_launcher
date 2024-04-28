@@ -18,13 +18,15 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.3.2
     # via requests
+colorama==0.4.6
+    # via loguru
 idna==3.4
     # via requests
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-log-wizard==1.2.0
+loguru==0.7.2
     # via -r requirements/prod.in
 minecraft-launcher-lib==6.3
     # via -r requirements/prod.in
@@ -68,6 +70,8 @@ urllib3==2.0.7
     # via
     #   botocore
     #   requests
+win32-setctime==1.1.0
+    # via loguru
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

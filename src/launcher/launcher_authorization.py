@@ -18,7 +18,7 @@ import traceback
 from typing import Dict, Optional
 
 import requests
-from log_wizard import log as get_logger
+from loguru import logger as log
 from PyQt6.QtCore import QThread
 
 from .utillity.custom_exceptions import (
@@ -29,8 +29,6 @@ from .utillity.custom_exceptions import (
     IvalidAuthenticationResponseError,
     UserAuthenticationError,
 )
-
-log = get_logger()
 
 
 class AuthorizationThread(QThread):

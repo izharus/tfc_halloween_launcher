@@ -33,7 +33,7 @@ from typing import Callable, Dict, List, Optional
 import boto3
 import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
-from log_wizard import log as get_logger
+from loguru import logger as log
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
@@ -46,8 +46,6 @@ from .utillity.custom_exceptions import (
 )
 from .utillity.file_downloader import FileDownloader
 from .utillity.pydantic_models import FileInfo
-
-log = get_logger()
 
 
 class ModsInstaller(QThread, FileDownloader):
@@ -138,6 +136,7 @@ class ModsInstaller(QThread, FileDownloader):
                 callback["setStatus"](f"Downloading file: {file_name}...")
             if boto3_client and bucket_name:
                 try:
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
                     boto3_client.download_file(
                         bucket_name,
                         file_info.yan_obj_storage,

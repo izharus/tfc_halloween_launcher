@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 import boto3
 import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
-from log_wizard import log as get_logger
+from loguru import logger as log
 from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
 from .boto3_cred import BOTO3_BUCKET_NAME
@@ -179,10 +179,6 @@ class LauncherConfig:
         except Exception as error:
             log.error(f"Failed to update launcher_data: {error}")
             log.debug(traceback.format_exc)
-
-
-# DefaultConfig(log_dir=LauncherConfig.logging_dir)
-log = get_logger()
 
 
 class ConfigLoader:

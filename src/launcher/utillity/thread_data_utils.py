@@ -44,10 +44,8 @@ import typing
 from contextlib import contextmanager
 from typing import Any, Dict, Union
 
-from log_wizard import log as get_logger
+from loguru import logger as log
 from PyQt6 import QtCore, QtWidgets
-
-log = get_logger()
 
 
 class ThreadData:

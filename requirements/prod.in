@@ -2,6 +2,6 @@ PyQt6 # design
 pypiwin32 # show/hode console
 minecraft-launcher-lib
 pyinstaller
-log_wizard
+loguru
 boto3
 pydantic

@@ -26,6 +26,7 @@ click==8.1.7
 colorama==0.4.6
     # via
     #   click
+    #   loguru
     #   pylint
     #   pytest
 dill==0.3.7
@@ -40,7 +41,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-log-wizard==1.2.0
+loguru==0.7.2
     # via -r requirements/dev.in
 mccabe==0.7.0
     # via pylint
@@ -117,3 +118,5 @@ urllib3==2.0.7
     # via
     #   botocore
     #   requests
+win32-setctime==1.1.0
+    # via loguru

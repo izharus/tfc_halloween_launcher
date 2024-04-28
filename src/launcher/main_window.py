@@ -25,7 +25,7 @@ import pydantic
 import win32con
 import win32console
 import win32gui
-from log_wizard import log as get_logger
+from loguru import logger as log
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPixmap
@@ -53,7 +53,6 @@ from .utillity.thread_data_utils import ThreadUiInputData
 OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},
 }
-log = get_logger()
 
 
 def hide_console() -> None:
@@ -77,6 +76,16 @@ class Window(QtWidgets.QMainWindow):
         super().__init__()
         self._ui_instance = Ui_MainWindow()
         self._launcher_config = LauncherConfig()
+        logging_dir = self._launcher_config.logging_dir
+        logging_dir += "/launcher_{time:YYYY-MM}.log"
+        log.add(
+            logging_dir,
+            rotation="1 month",
+            retention="1 month",  # Retain log files for 1 month after rotation
+            compression="zip",  # Optional: Enable compression for rotated logs
+            level="DEBUG",
+            serialize=False,
+        )
         self._ui_instance.setupUi(self)
         self.resize(500, 125)  # Adjust 800 to your desired width
 
