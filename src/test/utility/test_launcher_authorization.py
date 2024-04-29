@@ -11,7 +11,7 @@ from src.launcher import launcher_authorization, launcher_configs
 from src.launcher.utility.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
-    IternalAuthenticationError,
+    InternalAuthenticationError,
     UserAuthenticationError,
 )
 
@@ -161,7 +161,7 @@ def test_get_authenticate_response_internal_error():
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
-        with pytest.raises(launcher_authorization.IternalAuthenticationError):
+        with pytest.raises(launcher_authorization.InternalAuthenticationError):
             # pylint: disable=W0212
             auth_class._get_authenticate_response("test_user", "test_password")
 
@@ -182,7 +182,7 @@ def test_get_authenticate_response_unexpected_error():
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
-        with pytest.raises(IternalAuthenticationError) as exc_info:
+        with pytest.raises(InternalAuthenticationError) as exc_info:
             # pylint: disable=W0212
             auth_class._get_authenticate_response("test_user", "test_password")
 
@@ -420,7 +420,7 @@ def test_skin_upload_with_invalid_api_response_code():
         # Check if runtime_error is None
         assert isinstance(
             skin_thread.runtime_error,
-            launcher_authorization.IternalAuthenticationError,
+            launcher_authorization.InternalAuthenticationError,
         )
 
 

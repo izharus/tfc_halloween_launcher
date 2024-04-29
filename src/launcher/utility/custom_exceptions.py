@@ -2,9 +2,9 @@
 
 
 class MinecraftLauncherConfigNotSet(RuntimeError):
-    """Raises if lancher config not set"""
+    """Raises if launcher config not set"""
 
-    def __init__(self, message="Lancher config not set. Use set_config()."):
+    def __init__(self, message="Launcher config not set. Use set_config()."):
         super().__init__(message)
 
     def __str__(self):
@@ -104,7 +104,7 @@ class UserAuthenticationError(Exception):
         return "Неправильное имя пользователя или пароль."
 
 
-class IternalAuthenticationError(RuntimeError):
+class InternalAuthenticationError(RuntimeError):
     """
     Custom exception raised for errors related to authentication operations.
     """
@@ -121,7 +121,7 @@ class IternalAuthenticationError(RuntimeError):
         return "Некорректный ответ от сервера #2."
 
 
-class IvalidAuthenticationResponseError(RuntimeError):
+class InvalidAuthenticationResponseError(RuntimeError):
     """
     Custom exception for invalid authentication responses.
     """
