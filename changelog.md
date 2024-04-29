@@ -31,3 +31,21 @@
 ### Bug Fixes
 - Refactored the configuration structure to eliminate some bugs. During the first launch, the launcher will check the hash of game files.
 - Multiple minor refinements...
+
+## Version 3.0.0 (05.12.2023)
+
+### Features
+- Added integration with Yandex Object Storage. Modes now download from two separate services to make updates more stable.
+- Added multiple logging messages.
+- Fancy ru-locale names of modpacks.
+- Added loguru for logging messages instead of low_wizard.
+- Pydantic models were integrated into launcher_configs for validation of modpacks configs.
+- Refactored launcher_configs to make the application more independent and easier to update.
+- Implemented other small features.
+
+### Bug Fixes
+- Fixed launcher crashing if ethernet connection was lost.
+- Fixed launcher crashing if web service for downloading config was unreachable.
+- Corrected typos in info/error messages.
+- Fixed main button text not changing game installation.
+- Addressed other small fixes.
