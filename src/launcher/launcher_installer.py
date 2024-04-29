@@ -10,7 +10,7 @@ Classes:
     - ModDownloader: A threaded downloader for Minecraft mods from a remote
         repository.
     - InstallThread: A threaded installer for Minecraft, Forge, and mods.
-    - InstallShadersThread: A threaded installer for shaders and shaderpacks.
+    - InstallShadersThread: A threaded installer for shaders and shader packs.
     - MinecraftExecutorThread: A threaded executor for launching th
         Minecraft game.
 
@@ -79,16 +79,16 @@ class ModsInstaller(QThread, FileDownloader):
         for _root, _directories, files in os.walk(self.mods_directory):
             for file in files:
                 if file not in validate_file_names:
-                    undifinied_file_path = os.path.join(
+                    undefined_file_path = os.path.join(
                         self.mods_directory, file
                     )
-                    log.info(f"Deleting unknown file: {undifinied_file_path}")
+                    log.info(f"Deleting unknown file: {undefined_file_path}")
                     try:
-                        os.remove(undifinied_file_path)
+                        os.remove(undefined_file_path)
                     except Exception as error:
                         log.error(
                             "Error filed deleting the file:"
-                            f"{undifinied_file_path}, {error}"
+                            f"{undefined_file_path}, {error}"
                         )
                         return False
         return True
@@ -292,13 +292,6 @@ class MinecraftExecutorThread(QThread):
         nickname (str): The nickname to be used in the Minecraft game.
         uuid (str): The UUID of the user.
         access_token (str): User access token.
-
-    Methods:
-        is_nicnname_incorrect(nickname: str) -> bool: Check if the provided
-            nickname is too short and show a message box if it doesn't meet
-            the minimum length requirement.
-        execute_minecraft(): Execute the Minecraft game with the specified
-            nickname.
 
     """
 
