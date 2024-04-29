@@ -82,7 +82,10 @@ class MapJson(BaseModel):
 
     @field_validator("modpacks")
     @classmethod
-    def modpacks_must_not_be_empty(cls, modpacks: Dict[str, Modpack]) -> None:
+    def modpacks_must_not_be_empty(
+        cls, modpacks: Dict[str, Modpack]
+    ) -> Dict[str, Modpack]:
         """Ensure modpacks dictionary is not empty."""
         if not modpacks:
             raise ValueError("modpacks dictionary could not be empty")
+        return modpacks
