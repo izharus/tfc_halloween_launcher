@@ -228,6 +228,7 @@ class TestConfigGetter:
         )
         assert server_config._active_config == CONFIG_NAME_1
         assert server_config.active == ServerConfig(
+            CONFIG_NAME_1,
             mock_config_data["modpacks"][CONFIG_NAME_1],
             mock_launcher_config,
         )
@@ -236,6 +237,7 @@ class TestConfigGetter:
 
         assert server_config.set_active(CONFIG_NAME_2) is True
         assert server_config.active == ServerConfig(
+            CONFIG_NAME_2,
             mock_config_data["modpacks"][CONFIG_NAME_2],
             mock_launcher_config,
         )
@@ -266,7 +268,7 @@ class TestServerConfig:
         )
 
         server_config.is_minecraft_installed = True
-        field = f"{server_config.server_config.config_name}_is_installed"
+        field = f"{server_config.internal_name}_is_installed"
         assert server_config._launcher_config.launcher_data[field] is True
 
     def test_sis_minecraft_installed_set_true_and_false(
@@ -283,7 +285,7 @@ class TestServerConfig:
 
         server_config.is_minecraft_installed = True
         server_config.is_minecraft_installed = False
-        field = f"{server_config.server_config.config_name}_is_installed"
+        field = f"{server_config.internal_name}_is_installed"
         assert server_config._launcher_config.launcher_data[field] is False
 
     def test_is_minecraft_installed(self, tmp_path, mock_config_data):

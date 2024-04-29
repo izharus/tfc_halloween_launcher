@@ -256,7 +256,7 @@ class InstallThread(QThread):
             else:
                 log.error(
                     "Shaders couldn't be installed for "
-                    f"{self.config.server_config.config_name}"
+                    f"{self.config.internal_name}"
                 )
                 self.runtime_error = True
                 return
@@ -332,8 +332,8 @@ class MinecraftExecutorThread(QThread):
         options["username"] = self.nickname
         options["uuid"] = self.uuid
         options["token"] = self.access_token
-        # options["server"] = self.minecraft_server_ip
-        # options["port"] = self.minecraft_server_port
+        options["server"] = self.config.server_config.minecraft_server_ip
+        options["port"] = self.config.server_config.minecraft_server_port
         return options
 
     def run(self):

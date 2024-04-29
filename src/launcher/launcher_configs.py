@@ -344,6 +344,7 @@ class ConfigGetter:
             ServerConfig: The active server configuration.
         """
         return ServerConfig(
+            self._active_config,
             self._modpacks_configs[self._active_config],
             self._launcher_config,
             boto3_client=self._boto3_client,
@@ -386,10 +387,14 @@ class ServerConfig(Modpack):
         _launcher_config (LauncherConfig): The launcher configuration.
         _minecraft_directory (str): The directory where Minecraft server
             data is stored.
+        internal_name (str): Internal name for current config.
     """
+
+    internal_name: str
 
     def __init__(
         self,
+        internal_name: str,
         modpack_data: Dict,
         launcher_config: LauncherConfig,
         boto3_client: Optional[boto3.client] = None,
@@ -398,10 +403,11 @@ class ServerConfig(Modpack):
         Initializes the ServerConfig instance.
 
         Args:
+            internal_name (str): Internal name for current config.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
         """
-        super().__init__(**modpack_data)
+        super().__init__(**modpack_data, internal_name=internal_name)
         self._launcher_config = launcher_config
         self._minecraft_directory = self._generate_minecraft_directory()
         self._boto3_client = boto3_client
@@ -418,11 +424,10 @@ class ServerConfig(Modpack):
         Returns:
             str: The Minecraft directory.
         """
-        config_name = self.server_config.config_name
         return os.path.join(
             self._launcher_config.minecraft_root_directory,
             self._launcher_config.SERVERS_DIR,
-            config_name,
+            self.internal_name,
         )
 
     @property
@@ -447,7 +452,7 @@ class ServerConfig(Modpack):
         """
         return bool(
             self._launcher_config.get_launcher_data_value(
-                f"{self.server_config.config_name}_is_installed"
+                f"{self.internal_name}_is_installed"
             )
         )
 
@@ -460,5 +465,5 @@ class ServerConfig(Modpack):
         Args:
             other (bool, optional): The value to set for the flag.
         """
-        key = f"{self.server_config.config_name}_is_installed"
+        key = f"{self.internal_name}_is_installed"
         self._launcher_config.set_launcher_data_value(key, other)
