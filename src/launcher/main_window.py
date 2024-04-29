@@ -46,9 +46,9 @@ from .launcher_authorization import (
 )
 from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
-from .utillity.custom_exceptions import ConfigProcessingError
-from .utillity.path_manager import PathManager
-from .utillity.thread_data_utils import ThreadUiInputData
+from .utility.custom_exceptions import ConfigProcessingError
+from .utility.path_manager import PathManager
+from .utility.thread_data_utils import ThreadUiInputData
 
 OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},

@@ -17,12 +17,12 @@ from src.launcher.launcher_configs import (
     LauncherConfig,
     ServerConfig,
 )
-from src.launcher.utillity.custom_exceptions import (
+from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     RequestDownloadError,
 )
-from src.launcher.utillity.file_downloader import FileDownloader
+from src.launcher.utility.file_downloader import FileDownloader
 from src.test.conftest import (
     CONFIG_NAME_1,
     CONFIG_NAME_2,

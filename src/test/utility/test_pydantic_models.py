@@ -1,7 +1,7 @@
 """Tests for src/launcher/utillity/pydantic_models.py"""
 import pydantic
 import pytest
-from src.launcher.utillity.pydantic_models import MapJson
+from src.launcher.utility.pydantic_models import MapJson
 
 
 def test_map_json_empty_modpacks_variable():

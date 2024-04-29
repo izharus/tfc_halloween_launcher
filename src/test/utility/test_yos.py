@@ -2,7 +2,7 @@
 import boto3
 import boto3.exceptions
 import boto3.utils
-from src.launcher.utillity.yos import get_boto3_instance
+from src.launcher.utility.yos import get_boto3_instance
 
 
 def test_get_boto3_instance_success():

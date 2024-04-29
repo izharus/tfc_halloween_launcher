@@ -38,14 +38,14 @@ from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from .launcher_configs import ServerConfig
-from .utillity.custom_exceptions import (
+from .utility.custom_exceptions import (
     CalculateHashFailed,
     FilesSaveError,
     MinecraftLauncherConfigNotSet,
     RequestDownloadError,
 )
-from .utillity.file_downloader import FileDownloader
-from .utillity.pydantic_models import FileInfo
+from .utility.file_downloader import FileDownloader
+from .utility.pydantic_models import FileInfo
 
 
 class ModsInstaller(QThread, FileDownloader):

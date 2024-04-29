@@ -18,13 +18,13 @@ from loguru import logger as log
 from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
 from .boto3_cred import BOTO3_BUCKET_NAME
-from .utillity.custom_exceptions import (
+from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     RequestDownloadError,
 )
-from .utillity.file_downloader import FileDownloader
-from .utillity.pydantic_models import MapJson, Modpack
+from .utility.file_downloader import FileDownloader
+from .utility.pydantic_models import MapJson, Modpack
 
 
 class LauncherConfig:

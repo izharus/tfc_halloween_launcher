@@ -21,7 +21,7 @@ import requests
 from loguru import logger as log
 from PyQt6.QtCore import QThread
 
-from .utillity.custom_exceptions import (
+from .utility.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
     Base64ParsingError,

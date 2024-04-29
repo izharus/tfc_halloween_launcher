@@ -8,7 +8,7 @@ import pytest
 import requests
 import requests_mock
 from src.launcher import launcher_authorization, launcher_configs
-from src.launcher.utillity.custom_exceptions import (
+from src.launcher.utility.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
     IternalAuthenticationError,

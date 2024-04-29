@@ -34,7 +34,7 @@ of each class.
 
 Note: This module requires the PyQt6 library to be installed.
 
-"""
+"""""
 
 import json
 import os

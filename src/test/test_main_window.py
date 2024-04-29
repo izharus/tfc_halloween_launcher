@@ -8,7 +8,7 @@ from src.launcher.design.styles import MainButtonData
 from src.launcher.design.utillity import MessageBoxManager
 from src.launcher.launcher_configs import ConfigLoader
 from src.launcher.main_window import Window
-from src.launcher.utillity.pydantic_models import ServerConfig
+from src.launcher.utility.pydantic_models import ServerConfig
 from src.test.conftest import (
     CONFIG_NAME_1,
     CONFIG_NAME_2,
