@@ -9,7 +9,13 @@ from src.launcher.design.utillity import MessageBoxManager
 from src.launcher.launcher_configs import ConfigLoader
 from src.launcher.main_window import Window
 from src.launcher.utillity.pydantic_models import ServerConfig
-from src.test.conftest import CONFIG_NAME_1, CONFIG_NAME_2
+from src.test.conftest import (
+    CONFIG_NAME_1,
+    CONFIG_NAME_2,
+    DISPLAY_NAME_1,
+    DISPLAY_NAME_2,
+    MODPACK_DISPLAY_NAME,
+)
 
 
 @pytest.fixture
@@ -59,52 +65,75 @@ def test_get_config_loader_success(
     assert window.config_loader.get_from_url() == mock_config_data
 
 
-def test_update_server_type_combobox_with_new_config_data(
+def test_update_server_type_combobox_with_updated_config_data(
+    mock_download_from_url,
     mock_window,
+    mock_config_data,
+    mock_modpack_data,
+    mocker,
 ):
     """
     Test _update_server_type_combobox with new config data.
     """
-    window: Window = mock_window
+    window = mock_window
 
-    # mock config_list
-    window.config_getter._modpacks_configs = {"1": "1", "2": "2", "3": "3"}
+    config_name_3 = "config3"
+    mock_config_data["modpacks"][config_name_3] = mock_modpack_data
+    with mocker.patch.object(
+        ConfigLoader,
+        "get_from_url",
+        return_value=mock_config_data,
+    ):
+        window.update_config()
+        # Call the method to be tested
+        window._update_server_type_combobox()
 
-    # Call the method to be tested
-    window._update_server_type_combobox()
+        # Check if the combo box items match the expected config names
+        combo_box_items = [
+            window._ui_instance.comboBox_server_type.itemText(i)
+            for i in range(window._ui_instance.comboBox_server_type.count())
+        ]
+        assert set(combo_box_items) == {
+            DISPLAY_NAME_1,
+            DISPLAY_NAME_2,
+            MODPACK_DISPLAY_NAME,
+        }
+        # First config should be installed, if all old configs were deleted
+        cur_name = window._ui_instance.comboBox_server_type.currentText()
+        assert cur_name == DISPLAY_NAME_1
 
-    # Check if the combo box items match the expected config names
-    combo_box_items = [
-        window._ui_instance.comboBox_server_type.itemText(i)
-        for i in range(window._ui_instance.comboBox_server_type.count())
-    ]
-    assert set(combo_box_items) == {"1", "2", "3"}
-    # First config should be installed, if all old configs were deleted
-    assert window._ui_instance.comboBox_server_type.currentText() == "1"
 
-
-def test_update_server_type_combobox_with_updated_config_data(
+def test_update_server_type_combobox_with_new_config_data(
+    mock_download_from_url,
     mock_window,
+    mock_modpack_data,
+    mocker,
 ):
     """
     Test _update_server_type_combobox with updated config data.
     """
-    window: Window = mock_window
+    window = mock_window
 
-    # mock config_list
-    window.config_getter._modpacks_configs = {"1": "1", "4": "4"}
+    config_name_3 = "config3"
+    mock_config_data = {"modpacks": {config_name_3: mock_modpack_data}}
+    with mocker.patch.object(
+        ConfigLoader,
+        "get_from_url",
+        return_value=mock_config_data,
+    ):
+        window.update_config()
+        # Call the method to be tested
+        window._update_server_type_combobox()
 
-    # Call the method to be tested
-    window._update_server_type_combobox()
-
-    # Check if the combo box items match the expected config names
-    combo_box_items = [
-        window._ui_instance.comboBox_server_type.itemText(i)
-        for i in range(window._ui_instance.comboBox_server_type.count())
-    ]
-    assert set(combo_box_items) == {"4", "1"}
-    # Config should not be switched
-    assert window._ui_instance.comboBox_server_type.currentText() == "1"
+        # Check if the combo box items match the expected config names
+        combo_box_items = [
+            window._ui_instance.comboBox_server_type.itemText(i)
+            for i in range(window._ui_instance.comboBox_server_type.count())
+        ]
+        assert set(combo_box_items) == {MODPACK_DISPLAY_NAME}
+        # First config should be installed, if all old configs were deleted
+        cur_name = window._ui_instance.comboBox_server_type.currentText()
+        assert cur_name == MODPACK_DISPLAY_NAME
 
 
 def test_update_config_with_valid_config(
@@ -117,7 +146,7 @@ def test_update_config_with_valid_config(
     """
     window = mock_window
 
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
     # status = window.update_config()
 
     # assert status
@@ -137,30 +166,30 @@ def test_multiple_updating_different_main_button_text(
     """
     window: Window = mock_window
     window.show()
-    window.config_getter.set_active(CONFIG_NAME_1)
+    window.config_getter.set_active(DISPLAY_NAME_1)
     window.config_getter.active.is_minecraft_installed = False
-    window.config_getter.set_active(CONFIG_NAME_2)
+    window.config_getter.set_active(DISPLAY_NAME_2)
     window.config_getter.active.is_minecraft_installed = True
 
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.install_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
 
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.launch_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_1)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_1)
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.install_text
     )
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
-    window._ui_instance.comboBox_server_type.setCurrentText(CONFIG_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
+    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
     assert (
         window._ui_instance.pushButton_install_and_launch.text()
         == MainButtonData.launch_text

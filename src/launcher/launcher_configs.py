@@ -309,7 +309,8 @@ class ConfigGetter:
     Attributes:
         _launcher_config (LauncherConfig): The launcher configuration.
         _modpacks_configs (Dict): A dictionary of modpack configurations.
-        _active_config (str): The name of the active modpack configuration.
+        _active_config_display_name (str): The name of the active modpack
+            configuration.
     """
 
     def __init__(
@@ -330,9 +331,17 @@ class ConfigGetter:
             ValidationError: If the config_data fails Pydantic validation.
         """
         self._launcher_config = launcher_config
-        MapJson(**config_data)
+        map_json = MapJson(**config_data)
         self._modpacks_configs = config_data["modpacks"]
-        self._active_config: str = list(self._modpacks_configs.keys())[0]
+
+        self._display_names_list = list(
+            config.server_config.config_name
+            for config in map_json.modpacks.values()
+        )
+        self._active_config_display_name: str = self._display_names_list[0]
+        self._configs_map = dict(
+            zip(self._display_names_list, map_json.modpacks.keys())
+        )
         self._boto3_client = boto3_client
 
     @property
@@ -344,8 +353,10 @@ class ConfigGetter:
             ServerConfig: The active server configuration.
         """
         return ServerConfig(
-            self._active_config,
-            self._modpacks_configs[self._active_config],
+            self._configs_map[self._active_config_display_name],
+            self._modpacks_configs[
+                self._configs_map[self._active_config_display_name]
+            ],
             self._launcher_config,
             boto3_client=self._boto3_client,
         )
@@ -358,21 +369,21 @@ class ConfigGetter:
         Returns:
             List[str]: The list of available server configurations.
         """
-        return list(self._modpacks_configs.keys())
+        return list(self._display_names_list)
 
-    def set_active(self, config_name: str) -> bool:
+    def set_active(self, display_name: str) -> bool:
         """
         Sets the active server configuration.
 
         Args:
-            config_name (str): The name of the configuration to set as active.
+            display_name (str): The name of the configuration to set as active.
 
         Returns:
             bool: True if the configuration was successfully set
                 as active, False otherwise.
         """
-        if config_name in self._modpacks_configs:
-            self._active_config = config_name
+        if display_name in self._configs_map:
+            self._active_config_display_name = display_name
             return True
         return False
 

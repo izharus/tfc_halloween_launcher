@@ -23,7 +23,12 @@ from src.launcher.utillity.custom_exceptions import (
     RequestDownloadError,
 )
 from src.launcher.utillity.file_downloader import FileDownloader
-from src.test.conftest import CONFIG_NAME_1, CONFIG_NAME_2
+from src.test.conftest import (
+    CONFIG_NAME_1,
+    CONFIG_NAME_2,
+    DISPLAY_NAME_1,
+    DISPLAY_NAME_2,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -215,7 +220,7 @@ class TestConfigGetter:
         configuration names.
         """
         server_config = ConfigGetter(mock_config_data, LauncherConfig())
-        assert server_config.config_list == [CONFIG_NAME_1, CONFIG_NAME_2]
+        assert server_config.config_list == [DISPLAY_NAME_1, DISPLAY_NAME_2]
 
     def test_set_active_existing_config(self, mock_config_data):
         """
@@ -226,16 +231,14 @@ class TestConfigGetter:
             mock_config_data,
             mock_launcher_config,
         )
-        assert server_config._active_config == CONFIG_NAME_1
+        assert server_config._active_config_display_name == DISPLAY_NAME_1
         assert server_config.active == ServerConfig(
             CONFIG_NAME_1,
             mock_config_data["modpacks"][CONFIG_NAME_1],
             mock_launcher_config,
         )
 
-        server_config.set_active(CONFIG_NAME_2)
-
-        assert server_config.set_active(CONFIG_NAME_2) is True
+        assert server_config.set_active(DISPLAY_NAME_2) is True
         assert server_config.active == ServerConfig(
             CONFIG_NAME_2,
             mock_config_data["modpacks"][CONFIG_NAME_2],
