@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import QFileDialog
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
-from .design.utillity import (
+from .design.utility import (
     MainButton,
     MessageBoxManager,
     NotificationWidget,

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import minecraft_launcher_lib as mine_lib
 import pytest
 from src.launcher.design.styles import MainButtonData
-from src.launcher.design.utillity import MessageBoxManager
+from src.launcher.design.utility import MessageBoxManager
 from src.launcher.launcher_configs import ConfigLoader
 from src.launcher.main_window import Window
 from src.launcher.utility.pydantic_models import ServerConfig

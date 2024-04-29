@@ -5,7 +5,7 @@ import traceback
 
 from loguru import logger as log
 
-from .design.utillity import MessageBoxManager
+from .design.utility import MessageBoxManager
 
 
 class Validator:
