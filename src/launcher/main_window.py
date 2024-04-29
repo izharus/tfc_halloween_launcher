@@ -208,7 +208,7 @@ class Window(QtWidgets.QMainWindow):
         """Show an error message box for config updating fail."""
         msg_title = (
             "Не удалось загрузить конфиг обновления. "
-            "Возможно нет доступа к сети."
+            "Возможно нет доступа к сети или конфиг поврежден."
         )
         log.error(f"Failed to load a map config: {error}")
         self.msg_box.warn(
