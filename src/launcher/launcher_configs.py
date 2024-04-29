@@ -266,7 +266,7 @@ class ConfigLoader:
                 processing the configuration data.
         """
         try:
-            bytes_file_data = FileDownloader.download_file(
+            bytes_file_data = FileDownloader.download_file_from_url(
                 self._launcher_config.MAP_JSON_URL
             )
         except RequestDownloadError as error:
@@ -292,14 +292,15 @@ class ConfigLoader:
             log.error("Failed, boto3_client is None.")
             raise ConfigDownloadError()
         try:
-            response = self._boto3_client.get_object(
-                Bucket=self._launcher_config.BUCKET_NAME,
-                Key=self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
+            bytes_file_data = FileDownloader.download_file_from_yos(
+                self._boto3_client,
+                self._launcher_config.BUCKET_NAME,
+                self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
             )
-        except boto3.exceptions.Boto3Error as error:
+        except RequestDownloadError as error:
             log.error(f"Failed to load a config file. {error}")
             raise ConfigDownloadError from error
-        return self._create_model_from_bytes(response["Body"].read())
+        return self._create_model_from_bytes(bytes_file_data)
 
 
 class ConfigGetter:

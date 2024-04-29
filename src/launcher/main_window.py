@@ -46,7 +46,10 @@ from .launcher_authorization import (
 )
 from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
-from .utility.custom_exceptions import ConfigProcessingError
+from .utility.custom_exceptions import (
+    ConfigDownloadError,
+    ConfigProcessingError,
+)
 from .utility.path_manager import PathManager
 from .utility.thread_data_utils import ThreadUiInputData
 
@@ -264,16 +267,16 @@ class Window(QtWidgets.QMainWindow):
                 - self._install_thread: An instance of the installation thread.
 
         Raises:
-            ConfigProcessingError: If an error occurs while processing
+            ConfigDownloadError: If an error occurs while processing
                 the configuration.
         """
         try:
             config_data = self.config_loader.get_from_url()
-        except ConfigProcessingError as error:
+        except ConfigDownloadError as error:
             log.error("Failed to download a config file from url.")
             try:
                 config_data = self.config_loader.get_from_yos()
-            except ConfigProcessingError:
+            except ConfigDownloadError:
                 log.error("Failed to download a config file from yos.")
                 self.show_config_error_message(error)
                 return False

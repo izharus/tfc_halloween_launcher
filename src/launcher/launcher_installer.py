@@ -134,28 +134,33 @@ class ModsInstaller(QThread, FileDownloader):
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
-            if boto3_client and bucket_name:
-                try:
-                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                    boto3_client.download_file(
-                        bucket_name,
-                        file_info.yan_obj_storage,
-                        file_path,
-                    )
-                    continue
-                except boto3.exceptions.Boto3Error as error:
-                    log.error(
-                        "Failed to download file from object storage: "
-                        f"{error}"
-                    )
-                    return False
             try:
                 self.save_file(
-                    file_path, self.download_file(file_info.api_url)
+                    file_path, self.download_file_from_url(file_info.api_url)
                 )
+                continue
             except (FilesSaveError, RequestDownloadError):
-                log.error(f"Failed to download file: {file_name}.")
+                log.error(
+                    f"Failed to download file from github url: {file_name}."
+                )
+                if boto3_client and bucket_name:
+                    try:
+                        self.save_file(
+                            file_path,
+                            self.download_file_from_yos(
+                                boto3_client,
+                                bucket_name,
+                                file_info.yan_obj_storage,
+                            ),
+                        )
+                        continue
+                    except boto3.exceptions.Boto3Error as error:
+                        log.error(
+                            "Failed to download file from object storage: "
+                            f"{error}"
+                        )
                 return False
+
         return True
 
 

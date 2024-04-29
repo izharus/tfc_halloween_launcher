@@ -120,7 +120,7 @@ class TestConfigLoader:
         mock_download_file.return_value = json.dumps(mock_config_data)
         with mocker.patch.object(
             FileDownloader,
-            "download_file",
+            "download_file_from_url",
             mock_download_file,
         ):
             config = config_loader.get_from_url()
@@ -134,7 +134,7 @@ class TestConfigLoader:
         with pytest.raises(ConfigDownloadError):
             mocker.patch.object(
                 FileDownloader,
-                "download_file",
+                "download_file_from_url",
                 side_effect=RequestDownloadError,
             )
             config_loader.get_from_url()
