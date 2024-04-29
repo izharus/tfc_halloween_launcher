@@ -18,19 +18,17 @@ import traceback
 from typing import Dict, Optional
 
 import requests
-from log_wizard import log as get_logger
+from loguru import logger as log
 from PyQt6.QtCore import QThread
 
-from .utillity.custom_exceptions import (
+from .utility.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
     Base64ParsingError,
-    IternalAuthenticationError,
-    IvalidAuthenticationResponseError,
+    InternalAuthenticationError,
+    InvalidAuthenticationResponseError,
     UserAuthenticationError,
 )
-
-log = get_logger()
 
 
 class AuthorizationThread(QThread):
@@ -179,13 +177,13 @@ class AuthorizationThread(QThread):
                 log.error(
                     f"Failed to _authenticate_user with 500 code: {username}"
                 )
-                raise IternalAuthenticationError()
+                raise InternalAuthenticationError()
             case code:
                 log.error(
                     "Failed to _authenticate_user with unexpected"
                     f" {code}: {username}"
                 )
-                raise IternalAuthenticationError(error_code=code)
+                raise InternalAuthenticationError(error_code=code)
 
     def _authenticate_user(self, username: str, password: str) -> None:
         """
@@ -207,7 +205,7 @@ class AuthorizationThread(QThread):
         """
         response = self._get_authenticate_response(username, password)
         if not self.is_response_valid(response):
-            raise IvalidAuthenticationResponseError
+            raise InvalidAuthenticationResponseError
         self._last_auth_data = response.json()
 
     def run(self):
@@ -216,6 +214,7 @@ class AuthorizationThread(QThread):
 
         This method is called when the thread starts running.
         """
+        log.info("Authentication started.")
         if not self._username or not self._password:
             self.runtime_error = AuthDataNotSet()
             return
@@ -228,12 +227,12 @@ class AuthorizationThread(QThread):
         except (
             AuthorizationServiceUnavailable,
             UserAuthenticationError,
-            IternalAuthenticationError,
-            IvalidAuthenticationResponseError,
+            InternalAuthenticationError,
+            InvalidAuthenticationResponseError,
         ) as error:
             # Handle the AuthorizationServiceUnavailable exception
             self.runtime_error = error
-
+        log.info(f"User authentication success: {self._username}")
         self.set_auth_data(None, None)
 
 
@@ -342,13 +341,13 @@ class SkinUploaderThread(QThread):
                 log.error(
                     f"Failed to _push_skin with 500 code: {self._username}"
                 )
-                raise IternalAuthenticationError()
+                raise InternalAuthenticationError()
             case code:
                 log.error(
                     "Failed to _authenticate_user with unexpected"
                     f" {code}: {self._username}"
                 )
-                raise IternalAuthenticationError(error_code=code)
+                raise InternalAuthenticationError(error_code=code)
 
     def run(self):
         """
@@ -371,7 +370,7 @@ class SkinUploaderThread(QThread):
         except (
             AuthorizationServiceUnavailable,
             UserAuthenticationError,
-            IternalAuthenticationError,
+            InternalAuthenticationError,
             Base64ParsingError,
         ) as error:
             # Handle the AuthorizationServiceUnavailable exception

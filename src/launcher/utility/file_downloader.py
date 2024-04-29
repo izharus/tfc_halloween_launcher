@@ -1,10 +1,12 @@
 """
-This module implements a simple class of utillity functions
+This module implements a simple class of utility functions
 for safe downloading of files.
 """
 import hashlib
 import os
 
+import boto3
+import boto3.exceptions
 import requests
 
 from .custom_exceptions import (
@@ -39,13 +41,15 @@ class FileDownloader:
             raise CalculateHashFailed() from error
 
     @staticmethod
-    def download_file(download_url: str) -> bytes:
+    def download_file_from_url(download_url: str, timeout: int = 10) -> bytes:
         """
         Download a file from the given URL.
 
         Args:
             download_url (str): The URL from which to
                 download the file.
+            timeout (int, optional): The maximum time in seconds to wait for
+                a response. Defaults to 10 seconds.
 
         Returns:
             bytes: The content of the downloaded file.
@@ -54,11 +58,42 @@ class FileDownloader:
                 during file download.
         """
         try:
-            response = requests.get(download_url, timeout=10)
+            response = requests.get(download_url, timeout=timeout)
             response.raise_for_status()
             return response.content
         except Exception as error:
             raise RequestDownloadError from error
+
+    @staticmethod
+    def download_file_from_yos(
+        boto3_client: boto3.client, bucket_name: str, object_key: str
+    ) -> bytes:
+        """
+        Download a file from the specified S3 bucket.
+
+        Args:
+            boto3_client: A boto3 S3 client instance.
+            bucket_name (str): The name of the S3 bucket.
+            object_key (str): The key of the object to download.
+
+        Returns:
+            bytes: The content of the downloaded file.
+        Raises:
+            RequestDownloadError: If there's an HTTP error
+                during file download.
+        """
+        try:
+            response = boto3_client.get_object(
+                Bucket=bucket_name, Key=object_key
+            )
+            return response["Body"].read()
+
+        # boto3.exceptions.Boto3Error do not catches
+        # exceptions if ethernet connection was lost
+        except Exception as e:
+            raise RequestDownloadError(
+                f"Failed to download file from S3: {e}"
+            ) from e
 
     @staticmethod
     def save_file(

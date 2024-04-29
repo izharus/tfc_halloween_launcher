@@ -3,11 +3,9 @@
 import subprocess
 import traceback
 
-from log_wizard import log as get_logger
+from loguru import logger as log
 
-from .design.utillity import MessageBoxManager
-
-log = get_logger()
+from .design.utility import MessageBoxManager
 
 
 class Validator:

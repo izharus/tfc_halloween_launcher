@@ -6,13 +6,27 @@
 #
 altgraph==0.17.4
     # via pyinstaller
+annotated-types==0.6.0
+    # via pydantic
+boto3==1.34.85
+    # via -r requirements/prod.in
+botocore==1.34.85
+    # via
+    #   boto3
+    #   s3transfer
 certifi==2023.7.22
     # via requests
 charset-normalizer==3.3.2
     # via requests
+colorama==0.4.6
+    # via loguru
 idna==3.4
     # via requests
-log-wizard==1.2.0
+jmespath==1.0.1
+    # via
+    #   boto3
+    #   botocore
+loguru==0.7.2
     # via -r requirements/prod.in
 minecraft-launcher-lib==6.3
     # via -r requirements/prod.in
@@ -20,6 +34,10 @@ packaging==23.2
     # via pyinstaller
 pefile==2023.2.7
     # via pyinstaller
+pydantic==2.7.1
+    # via -r requirements/prod.in
+pydantic-core==2.18.2
+    # via pydantic
 pyinstaller==6.1.0
     # via -r requirements/prod.in
 pyinstaller-hooks-contrib==2023.10
@@ -32,14 +50,28 @@ pyqt6-qt6==6.6.0
     # via pyqt6
 pyqt6-sip==13.6.0
     # via pyqt6
+python-dateutil==2.9.0.post0
+    # via botocore
 pywin32==306
     # via pypiwin32
 pywin32-ctypes==0.2.2
     # via pyinstaller
 requests==2.31.0
     # via minecraft-launcher-lib
+s3transfer==0.10.1
+    # via boto3
+six==1.16.0
+    # via python-dateutil
+typing-extensions==4.11.0
+    # via
+    #   pydantic
+    #   pydantic-core
 urllib3==2.0.7
-    # via requests
+    # via
+    #   botocore
+    #   requests
+win32-setctime==1.1.0
+    # via loguru
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
