@@ -112,7 +112,9 @@ class Window(QtWidgets.QMainWindow):
 
         self.config_getter: ConfigGetter
         # init self.config and config_loader here:
-        self.update_config()
+        if not self.update_config():
+            log.critical("update_config was failed, exit...")
+            sys.exit()
         self._update_server_type_combobox()
         self.update_main_button_text()
         self._ui_instance.comboBox_server_type.currentTextChanged.connect(
@@ -204,7 +206,10 @@ class Window(QtWidgets.QMainWindow):
 
     def show_config_error_message(self, error: Exception) -> None:
         """Show an error message box for config updating fail."""
-        msg_title = "Не удалось загрузить конфиг обновления."
+        msg_title = (
+            "Не удалось загрузить конфиг обновления. "
+            "Возможно нет доступа к сети."
+        )
         log.error(f"Failed to load a map config: {error}")
         self.msg_box.warn(
             msg_title,
