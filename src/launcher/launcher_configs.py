@@ -52,7 +52,7 @@ class LauncherConfig:
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
-    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/dev/map.json"  # pylint: disable=C0301
+    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json"  # pylint: disable=C0301
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
 
