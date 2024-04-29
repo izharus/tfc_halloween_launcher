@@ -6,6 +6,7 @@ import hashlib
 import os
 
 import boto3
+import boto3.exceptions
 import requests
 
 from .custom_exceptions import (
@@ -86,7 +87,10 @@ class FileDownloader:
                 Bucket=bucket_name, Key=object_key
             )
             return response["Body"].read()
-        except boto3.exceptions.Boto3Error as e:
+
+        # boto3.exceptions.Boto3Error do not catches
+        # exceptions if ethernet connection was lost
+        except Exception as e:
             raise RequestDownloadError(
                 f"Failed to download file from S3: {e}"
             ) from e
