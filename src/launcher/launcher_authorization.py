@@ -214,6 +214,7 @@ class AuthorizationThread(QThread):
 
         This method is called when the thread starts running.
         """
+        log.info("Authentication started.")
         if not self._username or not self._password:
             self.runtime_error = AuthDataNotSet()
             return
@@ -231,7 +232,7 @@ class AuthorizationThread(QThread):
         ) as error:
             # Handle the AuthorizationServiceUnavailable exception
             self.runtime_error = error
-
+        log.info(f"User authentication success: {self._username}")
         self.set_auth_data(None, None)
 
 

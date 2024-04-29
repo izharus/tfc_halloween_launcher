@@ -129,7 +129,7 @@ class ModsInstaller(QThread, FileDownloader):
                     log.error(f"Failed to calculate hash for: {file_name}.")
                     return False
                 if file_hash == file_info.hash:
-                    log.info(f"File hash correct: {file_name}")
+                    # log.info(f"File hash correct: {file_name}")
                     continue
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
@@ -138,6 +138,7 @@ class ModsInstaller(QThread, FileDownloader):
                 self.save_file(
                     file_path, self.download_file_from_url(file_info.api_url)
                 )
+                log.info(f"File was downloaded from url: {file_name}")
                 continue
             except (FilesSaveError, RequestDownloadError):
                 log.error(
@@ -152,6 +153,10 @@ class ModsInstaller(QThread, FileDownloader):
                                 bucket_name,
                                 file_info.yan_obj_storage,
                             ),
+                        )
+                        log.info(
+                            "File was downloaded from object storage: "
+                            f"{file_name}"
                         )
                         continue
                     except boto3.exceptions.Boto3Error as error:
