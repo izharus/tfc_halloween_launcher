@@ -335,7 +335,7 @@ class ConfigGetter:
         self._modpacks_configs = config_data["modpacks"]
 
         self._display_names_list = list(
-            config.server_config.config_name
+            config.server_config.display_name
             for config in map_json.modpacks.values()
         )
         self._active_config_display_name: str = self._display_names_list[0]

@@ -34,7 +34,7 @@ class ServerConfig(BaseModel):
     Vanilla Minecraft.
 
     Attributes:
-        config_name (str): The visible name for the current modpack
+        display_name (str): The visible name for the current modpack
             configuration.
         minecraft_version (str): The version of Minecraft.
         forge_version (str): The Forge version.
@@ -43,7 +43,7 @@ class ServerConfig(BaseModel):
         minecraft_server_port (str): The port of the Minecraft server.
     """
 
-    config_name: str
+    display_name: str
     minecraft_version: str
     forge_version: str
     minecraft_profile: str

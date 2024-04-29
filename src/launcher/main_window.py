@@ -230,15 +230,15 @@ class Window(QtWidgets.QMainWindow):
             self._ui_instance.comboBox_server_type.setCurrentIndex(0)
         self._ui_instance.comboBox_server_type.blockSignals(False)
 
-    def set_config_from_ui(self, config_name: Optional[str] = None) -> bool:
+    def set_config_from_ui(self, display_name: Optional[str] = None) -> bool:
         """Update current config from combobox text in interface."""
-        if not config_name:
-            config_name = self._ui_instance.comboBox_server_type.currentText()
-        if not config_name:
+        if not display_name:
+            display_name = self._ui_instance.comboBox_server_type.currentText()
+        if not display_name:
             log.error("Config name is empty.")
             return False
         try:
-            self.config_getter.set_active(config_name)
+            self.config_getter.set_active(display_name)
         except ConfigProcessingError as error:
             log.error(f"Config not found, config list was be updated: {error}")
             self.show_config_error_message(error)

@@ -15,7 +15,7 @@ def mock_config_data():
         "modpacks": {
             CONFIG_NAME_1: {
                 "server_config": {
-                    "config_name": DISPLAY_NAME_1,
+                    "display_name": DISPLAY_NAME_1,
                     "minecraft_version": "1.16.5",
                     "forge_version": "1.16.5-36.2.0",
                     "minecraft_profile": "TestProfile1",
@@ -35,7 +35,7 @@ def mock_config_data():
             },
             CONFIG_NAME_2: {
                 "server_config": {
-                    "config_name": DISPLAY_NAME_2,
+                    "display_name": DISPLAY_NAME_2,
                     "minecraft_version": "1.16.5",
                     "forge_version": "1.16.5-36.2.0",
                     "minecraft_profile": "TestProfile2",
@@ -62,7 +62,7 @@ def mock_modpack_data():
     """Mock a modpack data."""
     return {
         "server_config": {
-            "config_name": MODPACK_DISPLAY_NAME,
+            "display_name": MODPACK_DISPLAY_NAME,
             "minecraft_version": "1.17.1",
             "forge_version": "1.17.1-37.0.0",
             "minecraft_profile": "TestProfile3",
