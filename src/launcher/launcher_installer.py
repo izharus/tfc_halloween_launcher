@@ -6,11 +6,11 @@ a Minecraft launcher, including Minecraft, Forge, mods, shaders, and
 executing the Minecraft game.
 
 Classes:
-    - MinecraftLauncherConfig: Configuration settings for a Minecraft launcher.
+    - ServerConfig: Configuration settings for a Minecraft launcher.
     - ModDownloader: A threaded downloader for Minecraft mods from a remote
         repository.
     - InstallThread: A threaded installer for Minecraft, Forge, and mods.
-    - InstallShadersThread: A threaded installer for shaders and shaderpacks.
+    - InstallShadersThread: A threaded installer for shaders and shader packs.
     - MinecraftExecutorThread: A threaded executor for launching th
         Minecraft game.
 
@@ -30,21 +30,22 @@ import subprocess
 import traceback
 from typing import Callable, Dict, List, Optional
 
+import boto3
+import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
-from log_wizard import log as get_logger
+from loguru import logger as log
 from minecraft_launcher_lib.types import MinecraftOptions
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from .launcher_configs import MinecraftLauncherConfig
-from .utillity.custom_exceptions import (
+from .launcher_configs import ServerConfig
+from .utility.custom_exceptions import (
     CalculateHashFailed,
     FilesSaveError,
     MinecraftLauncherConfigNotSet,
     RequestDownloadError,
 )
-from .utillity.file_downloader import FileDownloader
-
-log = get_logger()
+from .utility.file_downloader import FileDownloader
+from .utility.pydantic_models import FileInfo
 
 
 class ModsInstaller(QThread, FileDownloader):
@@ -52,7 +53,7 @@ class ModsInstaller(QThread, FileDownloader):
 
     def __init__(
         self,
-        files_info_list: List[Dict],
+        files_info_list: List[FileInfo],
         minecraft_directory: str,
         mods_directory: str = "mods",
     ):
@@ -70,24 +71,24 @@ class ModsInstaller(QThread, FileDownloader):
             bool: True if all files were deleted, False otherwise.
         """
         validate_file_names = list(
-            file_info["file_name"]
+            file_info.file_name
             for file_info in self.files_info_list
-            if file_info["file_name"].split(".")[-1] == "jar"
+            if file_info.file_name.split(".")[-1] == "jar"
         )
 
         for _root, _directories, files in os.walk(self.mods_directory):
             for file in files:
                 if file not in validate_file_names:
-                    undifinied_file_path = os.path.join(
+                    undefined_file_path = os.path.join(
                         self.mods_directory, file
                     )
-                    log.info(f"Deleting unknown file: {undifinied_file_path}")
+                    log.info(f"Deleting unknown file: {undefined_file_path}")
                     try:
-                        os.remove(undifinied_file_path)
+                        os.remove(undefined_file_path)
                     except Exception as error:
                         log.error(
                             "Error filed deleting the file:"
-                            f"{undifinied_file_path}, {error}"
+                            f"{undefined_file_path}, {error}"
                         )
                         return False
         return True
@@ -95,6 +96,8 @@ class ModsInstaller(QThread, FileDownloader):
     def check_and_download(
         self,
         callback: Optional[Dict[str, Callable]] = None,
+        boto3_client: Optional[boto3.client] = None,
+        bucket_name: Optional[str] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
@@ -102,6 +105,9 @@ class ModsInstaller(QThread, FileDownloader):
         Args:
             callback (dict): A dictionary of callback functions for
             updating the UI.
+            boto3_client: (Optional[boto3.client]): A boto3 client instance.
+            bucket_name: (Optional[str]): A bucket name for downloading from
+                object storage.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
@@ -109,8 +115,8 @@ class ModsInstaller(QThread, FileDownloader):
             callback["setMax"](len(self.files_info_list))
             progress_bar_index = 0
         for file_info in self.files_info_list:
-            file_name = file_info["file_name"]
-            dist_file_path = file_info["dist_file_path"]
+            file_name = file_info.file_name
+            dist_file_path = file_info.dist_file_path
             file_path = os.path.join(self.minecraft_directory, dist_file_path)
             if callback:
                 callback["setProgress"](progress_bar_index)
@@ -122,19 +128,44 @@ class ModsInstaller(QThread, FileDownloader):
                 except CalculateHashFailed:
                     log.error(f"Failed to calculate hash for: {file_name}.")
                     return False
-                if file_hash == file_info["hash"]:
-                    log.info(f"File hash correct: {file_name}")
+                if file_hash == file_info.hash:
+                    # log.info(f"File hash correct: {file_name}")
                     continue
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
             try:
                 self.save_file(
-                    file_path, self.download_file(file_info["api_url"])
+                    file_path, self.download_file_from_url(file_info.api_url)
                 )
+                log.info(f"File was downloaded from url: {file_name}")
+                continue
             except (FilesSaveError, RequestDownloadError):
-                log.error(f"Failed to download file: {file_name}.")
+                log.error(
+                    f"Failed to download file from github url: {file_name}."
+                )
+                if boto3_client and bucket_name:
+                    try:
+                        self.save_file(
+                            file_path,
+                            self.download_file_from_yos(
+                                boto3_client,
+                                bucket_name,
+                                file_info.yan_obj_storage,
+                            ),
+                        )
+                        log.info(
+                            "File was downloaded from object storage: "
+                            f"{file_name}"
+                        )
+                        continue
+                    except boto3.exceptions.Boto3Error as error:
+                        log.error(
+                            "Failed to download file from object storage: "
+                            f"{error}"
+                        )
                 return False
+
         return True
 
 
@@ -142,7 +173,7 @@ class InstallThread(QThread):
     """
     Thread for installing Minecraft, Forge, and mods.
 
-    This class extends QThread and MinecraftLauncherConfig to create a
+    This class extends QThread and ServerConfig to create a
     dedicated thread for the installation process. It manages the
     installation of Minecraft, Forge, and mods, and provides progress
     updates to the UI.
@@ -168,9 +199,7 @@ class InstallThread(QThread):
     progress = pyqtSignal("int")
     text = pyqtSignal("QString")
 
-    def __init__(
-        self, config: Optional[MinecraftLauncherConfig] = None
-    ) -> None:
+    def __init__(self, config: Optional[ServerConfig] = None) -> None:
         QThread.__init__(self)
         self.config = config
         self._callback_dict = {
@@ -188,7 +217,7 @@ class InstallThread(QThread):
         """Indicates if shaders should be installed."""
         self.is_install_shaders = is_install_shaders
 
-    def set_config(self, config: MinecraftLauncherConfig):
+    def set_config(self, config: ServerConfig):
         """
         Set or update the configuration for the installation thread.
         """
@@ -222,34 +251,32 @@ class InstallThread(QThread):
         if not self.config:
             raise MinecraftLauncherConfigNotSet()
 
-        if not self.config.is_minecraft_installed():
+        if not self.config.is_minecraft_installed:
             mine_lib.forge.install_forge_version(
-                self.config.forge_version,
+                self.config.server_config.forge_version,
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        self.config.set_minecraft_installed()
-        map_dirs = self.config.map_json_data["main_data"]
-        map_dirs += self.config.map_json_data["client_data"]
+        map_dirs = self.config.main_data
         if self.is_install_shaders:
-            if "client_data_shaders" in self.config.map_json_data:
-                map_dirs += self.config.map_json_data["client_data_shaders"]
+            if "client_data_shaders" in self.config.client_additional_data:
+                map_dirs += self.config.client_additional_data[
+                    "client_data_shaders"
+                ]
             else:
                 log.error(
                     "Shaders couldn't be installed for "
-                    f"{self.config.config_name}"
+                    f"{self.config.internal_name}"
                 )
                 self.runtime_error = True
                 return
 
-        files_data = list(
-            file_data
-            for file_data in map_dirs
-            if file_data["install_on_client"]
-        )
-        downloader = ModsInstaller(files_data, self.config.minecraft_directory)
+        downloader = ModsInstaller(map_dirs, self.config.minecraft_directory)
         status = downloader.check_and_download(
             callback=self._callback_dict,
+            boto3_client=self.config.boto3_client,
+            # pylint: disable=W0212
+            bucket_name=self.config._launcher_config.BUCKET_NAME,
         )
         if not status:
             self.runtime_error = True
@@ -271,13 +298,6 @@ class MinecraftExecutorThread(QThread):
         uuid (str): The UUID of the user.
         access_token (str): User access token.
 
-    Methods:
-        is_nicnname_incorrect(nickname: str) -> bool: Check if the provided
-            nickname is too short and show a message box if it doesn't meet
-            the minimum length requirement.
-        execute_minecraft(): Execute the Minecraft game with the specified
-            nickname.
-
     """
 
     def __init__(
@@ -285,7 +305,7 @@ class MinecraftExecutorThread(QThread):
         nickname: str,
         uuid: str,
         access_token: str,
-        config: MinecraftLauncherConfig,
+        config: ServerConfig,
     ):
         QThread.__init__(self)
         self.nickname = nickname
@@ -315,8 +335,8 @@ class MinecraftExecutorThread(QThread):
         options["username"] = self.nickname
         options["uuid"] = self.uuid
         options["token"] = self.access_token
-        # options["server"] = self.minecraft_server_ip
-        # options["port"] = self.minecraft_server_port
+        options["server"] = self.config.server_config.minecraft_server_ip
+        options["port"] = self.config.server_config.minecraft_server_port
         return options
 
     def run(self):
@@ -332,7 +352,7 @@ class MinecraftExecutorThread(QThread):
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
-                self.config.minecraft_profile,
+                self.config.server_config.minecraft_profile,
                 self.config.minecraft_directory,
                 self.create_launcher_options(),
             )

@@ -2,23 +2,23 @@
 # pylint:disable = E0401
 import os
 import secrets
+from unittest.mock import MagicMock
 
 import pytest
 import requests
 import requests_mock
 from src.launcher import launcher_authorization, launcher_configs
-from src.launcher.utillity.custom_exceptions import (
+from src.launcher.utility.custom_exceptions import (
     AuthDataNotSet,
     AuthorizationServiceUnavailable,
-    IternalAuthenticationError,
+    InternalAuthenticationError,
     UserAuthenticationError,
 )
 
 
 def test_authorization_thread_inition():
     """Check if AuthorizationThread could be initialized correctly."""
-    config = launcher_configs.get_config("TFC Halloween TEST")
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     assert auth_class
 
 
@@ -27,8 +27,7 @@ def test_start_authorization_thread_without_setting_auth_data():
     Test AuthorizationThread behavior when started without setting
     authentication data.
     """
-    config = launcher_configs.get_config("TFC Halloween TEST")
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
 
     # Start the thread
     auth_class.start()  # i need to wait until auth_class finished
@@ -52,9 +51,8 @@ def test_authorization_thread_check_if_auth_data_resets(mocker):
         "src.launcher.launcher_authorization.AuthorizationThread._authenticate_user",
         return_value=None,
     )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
 
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     auth_class.set_auth_data("test_user", "test_password")
 
     # Start the thread
@@ -62,7 +60,7 @@ def test_authorization_thread_check_if_auth_data_resets(mocker):
     # Wait for the thread to finish
     auth_class.wait(1000)
 
-    # Firse call should be successful
+    # First call should be successful
     assert auth_class.runtime_error is None
 
     # Start the thread
@@ -84,8 +82,7 @@ def test_authorization_thread_authorization_service_unavailable(mocker):
         side_effect=requests.exceptions.ConnectTimeout,
     )
 
-    config = launcher_configs.get_config("TFC Halloween TEST")()
-    auth_class = launcher_authorization.AuthorizationThread(config)
+    auth_class = launcher_authorization.AuthorizationThread(MagicMock())
     auth_class.set_auth_data("test_user", "test_password")
     auth_class.start()
     auth_class.wait(1000)
@@ -98,14 +95,10 @@ def test_authorization_thread_authorization_service_unavailable(mocker):
     )
 
 
-def test_get_authenticate_response_success(mocker):
+def test_get_authenticate_response_success():
     """Test _get_authenticate_response for a successful authentication."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for success (status code 200)
         m.post(
@@ -126,17 +119,13 @@ def test_get_authenticate_response_success(mocker):
         assert result.json() == {"status": "success", "data": {"key": "value"}}
 
 
-def test_get_authenticate_response_unauthorized(mocker):
+def test_get_authenticate_response_unauthorized():
     """
     Test _get_authenticate_response for an unauthorized authentication
     (status code 401).
     """
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for unauthorized (status code 401)
@@ -153,20 +142,17 @@ def test_get_authenticate_response_unauthorized(mocker):
             auth_class._get_authenticate_response("test_user", "test_password")
 
 
-def test_get_authenticate_response_internal_error(mocker):
+def test_get_authenticate_response_internal_error():
     """
     Test _get_authenticate_response for an internal server error
     (status code 500).
     """
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
-        # Mock the requests.post method for internal server error (status code 500)
+        # Mock the requests.post method for internal server
+        # error (status code 500)
         m.post(config.minecraft_launcher_ip_addr, status_code=500)
 
         auth_class = launcher_authorization.AuthorizationThread(
@@ -175,20 +161,16 @@ def test_get_authenticate_response_internal_error(mocker):
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
-        with pytest.raises(launcher_authorization.IternalAuthenticationError):
+        with pytest.raises(launcher_authorization.InternalAuthenticationError):
             # pylint: disable=W0212
             auth_class._get_authenticate_response("test_user", "test_password")
 
 
-def test_get_authenticate_response_unexpected_error(mocker):
+def test_get_authenticate_response_unexpected_error():
     """Test _get_authenticate_response for an unexpected error
     (other status code)."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
 
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for an unexpected status code
@@ -200,7 +182,7 @@ def test_get_authenticate_response_unexpected_error(mocker):
         auth_class.set_auth_data("test_user", "test_password")
 
         # Call the internal method and assert it raises the expected exception
-        with pytest.raises(IternalAuthenticationError) as exc_info:
+        with pytest.raises(InternalAuthenticationError) as exc_info:
             # pylint: disable=W0212
             auth_class._get_authenticate_response("test_user", "test_password")
 
@@ -275,13 +257,8 @@ def test_is_response_valid_with_json_parsing_error(mocker):
 
 def test_update_last_auth_data(mocker):
     """Test _update_last_auth_data for a successful update."""
-    # pylint: disable = C0301
-    mocker.patch(
-        "src.launcher.launcher_configs.MinecraftLauncherConfig.parse_map_json_data",
-        return_value="Test map_json file data.",
-    )
-    config = launcher_configs.get_config("TFC Halloween TEST")()
-
+    config = MagicMock()
+    config.minecraft_launcher_ip_addr = "https://test_api_url"
     auth_class = launcher_authorization.AuthorizationThread(
         config.minecraft_launcher_ip_addr
     )
@@ -299,7 +276,7 @@ def test_update_last_auth_data(mocker):
 def test_successful_skin_upload():
     """Test successful Minecraft skin upload."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     with requests_mock.Mocker() as m:
         # Mock the requests.post method for success (status code 200)
         m.post(
@@ -328,7 +305,7 @@ def test_successful_skin_upload():
 def test_make_json_response():
     """Tests if json creates correctly."""
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
 
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
@@ -358,7 +335,7 @@ def test_make_json_response():
 
 def test_skin_upload_with_invalid_skin_path():
     """Test skin upload with an invalid skin path."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     # Create an instance of SkinUploaderThread
     skin_thread = launcher_authorization.SkinUploaderThread(api_url)
     with requests_mock.Mocker() as m:
@@ -387,7 +364,7 @@ def test_skin_upload_with_invalid_skin_path():
 
 def test_skin_upload_with_invalid_auth_data():
     """Test skin upload with an invalid auth data."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -418,7 +395,7 @@ def test_skin_upload_with_invalid_auth_data():
 
 def test_skin_upload_with_invalid_api_response_code():
     """Test skin upload with an invalid API response status code."""
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread
@@ -443,7 +420,7 @@ def test_skin_upload_with_invalid_api_response_code():
         # Check if runtime_error is None
         assert isinstance(
             skin_thread.runtime_error,
-            launcher_authorization.IternalAuthenticationError,
+            launcher_authorization.InternalAuthenticationError,
         )
 
 
@@ -452,7 +429,7 @@ def test_skin_upload_with_unavailable_authorization_service():
     Test the behavior of skin upload when the authorization service
     is unavailable.
     """
-    api_url = launcher_configs.LauncherConfig.minecraft_launcher_ip_addr
+    api_url = launcher_configs.LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
     # Create an instance of SkinUploaderThread

@@ -170,3 +170,4 @@ prod_venv/
 dev_venv/
 config/
 logs/
+src/launcher/boto3_cred.py

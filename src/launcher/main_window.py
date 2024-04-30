@@ -19,12 +19,13 @@ import os
 import sys
 import traceback
 import webbrowser
-from typing import Union
+from typing import Dict, Optional, Union
 
+import pydantic
 import win32con
 import win32console
 import win32gui
-from log_wizard import log as get_logger
+from loguru import logger as log
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPixmap
@@ -32,7 +33,7 @@ from PyQt6.QtWidgets import QFileDialog
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
-from .design.utillity import (
+from .design.utility import (
     MainButton,
     MessageBoxManager,
     NotificationWidget,
@@ -43,16 +44,18 @@ from .launcher_authorization import (
     CapeUploaderThread,
     SkinUploaderThread,
 )
-from .launcher_configs import (
-    LauncherConfig,
-    MinecraftLauncherConfig,
-    get_config,
-)
+from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
-from .utillity.path_manager import PathManager
-from .utillity.thread_data_utils import ThreadUiInputData
+from .utility.custom_exceptions import (
+    ConfigDownloadError,
+    ConfigProcessingError,
+)
+from .utility.path_manager import PathManager
+from .utility.thread_data_utils import ThreadUiInputData
 
-log = get_logger()
+OFFLINE_MAP_JSON: Dict = {
+    "ОБНОВИТЬ": {},
+}
 
 
 def hide_console() -> None:
@@ -75,7 +78,17 @@ class Window(QtWidgets.QMainWindow):
         log.debug("Window class __init__ entered.")
         super().__init__()
         self._ui_instance = Ui_MainWindow()
-
+        self._launcher_config = LauncherConfig()
+        logging_dir = self._launcher_config.logging_dir
+        logging_dir += "/launcher_{time:YYYY-MM}.log"
+        log.add(
+            logging_dir,
+            rotation="1 month",
+            retention="1 month",  # Retain log files for 1 month after rotation
+            compression="zip",  # Optional: Enable compression for rotated logs
+            level="DEBUG",
+            serialize=False,
+        )
         self._ui_instance.setupUi(self)
         self.resize(500, 125)  # Adjust 800 to your desired width
 
@@ -95,23 +108,24 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self.input_data = self.get_input_data()
-        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
-            self.update_config
-        )
-        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
-            self.update_main_button_text
-        )
+        self.config_loader: ConfigLoader = ConfigLoader(self._launcher_config)
 
-        self.config: MinecraftLauncherConfig
-
-        # init self.config here:
-        self.update_config()
+        self.config_getter: ConfigGetter
+        # init self.config and config_loader here:
+        if not self.update_config():
+            log.critical("update_config was failed, exit...")
+            sys.exit()
+        self._update_server_type_combobox()
         self.update_main_button_text()
+        self._ui_instance.comboBox_server_type.currentTextChanged.connect(
+            self.set_config_from_ui
+        )
+
         self._skin_uploader_thread = SkinUploaderThread(
-            self.config.api_url_push_skin,
+            self._launcher_config.API_URL_PUSH_SKIN,
         )
         self._cape_uploader_thread = CapeUploaderThread(
-            self.config.api_url_push_cape,
+            self._launcher_config.API_URL_PUSH_CAPE,
         )
         self._ui_instance.pushButton_delete_skin.clicked.connect(
             lambda: self._delete_user_texture(
@@ -125,7 +139,7 @@ class Window(QtWidgets.QMainWindow):
         )
         self._ui_instance.pushButton_choose_skin.clicked.connect(
             lambda: self._choose_skin_and_upload(
-                self.config.minecraft_skin_directory
+                self._launcher_config.minecraft_skin_directory
             )
         )
         self._skin_uploader_thread.finished.connect(
@@ -134,7 +148,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._ui_instance.pushButton_choose_cape.clicked.connect(
             lambda: self._choose_cape_and_upload(
-                self.config.minecraft_cape_directory
+                self._launcher_config.minecraft_cape_directory
             )
         )
         self._cape_uploader_thread.finished.connect(
@@ -143,7 +157,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
         self._authorization_thread = AuthorizationThread(
-            self.config.minecraft_launcher_ip_addr
+            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
         )
         self._install_thread.progress_max.connect(
             lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
@@ -163,11 +177,13 @@ class Window(QtWidgets.QMainWindow):
             self._make_authorization_finished
         )
 
-        self.setWindowTitle("TFC-Halloween 2.0.0")
+        self.setWindowTitle("TFC-Halloween 3.0.0")
 
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
-            lambda: open_directory(self.config.minecraft_directory)
+            lambda: open_directory(
+                self._launcher_config.minecraft_root_directory
+            )
         )
         self.is_working = True
         self.safe_inputs_timer = QTimer()
@@ -188,28 +204,106 @@ class Window(QtWidgets.QMainWindow):
 
         hide_console()
 
-    def update_config(self):
-        """
-        Update configuration based on UI input.
+    def show_config_error_message(self, error: Exception) -> None:
+        """Show an error message box for config updating fail."""
+        msg_title = (
+            "Не удалось загрузить конфиг обновления. "
+            "Возможно нет доступа к сети или конфиг поврежден."
+        )
+        log.error(f"Failed to load a map config: {error}")
+        self.msg_box.warn(
+            msg_title,
+            "При нажатии 'Ок' откроется папка с логом. ",
+            callback=lambda: webbrowser.open(
+                self._launcher_config.logging_dir,
+            ),
+        )
 
-        Fetches the selected server type, updates input data,
-        creates a new configuration, retrieves stored data, and
-        sets the configuration for the installation thread.
+    def _update_server_type_combobox(
+        self,
+    ) -> None:
         """
-        self.input_data.update_input_data_from_ui()
-        self.config = get_config(
-            self.input_data.extract_element("comboBox_server_type")
-        )()
-        self.config.get_stored_data()
-        self._install_thread.set_config(self.config)
+        Update server type combobox in ui interface
+        with the information from map.json.
+        """
+        self._ui_instance.comboBox_server_type.blockSignals(True)
+        current_text = self._ui_instance.comboBox_server_type.currentText()
+        self._ui_instance.comboBox_server_type.clear()
+        self._ui_instance.comboBox_server_type.addItems(
+            self.config_getter.config_list
+        )
+        if current_text in self.config_getter.config_list:
+            self._ui_instance.comboBox_server_type.setCurrentText(current_text)
+        else:
+            self._ui_instance.comboBox_server_type.setCurrentIndex(0)
+        self._ui_instance.comboBox_server_type.blockSignals(False)
+
+    def set_config_from_ui(self, display_name: Optional[str] = None) -> bool:
+        """Update current config from combobox text in interface."""
+        if not display_name:
+            display_name = self._ui_instance.comboBox_server_type.currentText()
+        if not display_name:
+            log.error("Config name is empty.")
+            return False
+        try:
+            self.config_getter.set_active(display_name)
+        except ConfigProcessingError as error:
+            log.error(f"Config not found, config list was be updated: {error}")
+            self.show_config_error_message(error)
+            return False
+        finally:
+            self._update_server_type_combobox()
+            self.update_main_button_text()
+        return True
+
+    def update_config(self) -> bool:
+        """
+        Update the configuration based on input data from the UI.
+
+        Returns:
+            bool: True if the configuration update process completes
+                successfully, False otherwise.
+
+        Notes:
+            This method assumes the existence of the following attributes:
+                - self.config_loader: An instance of ConfigLoader used
+                    to retrieve configuration data.
+                - self.input_data: An object containing input data from the UI.
+                - self._install_thread: An instance of the installation thread.
+
+        Raises:
+            ConfigDownloadError: If an error occurs while processing
+                the configuration.
+        """
+        try:
+            config_data = self.config_loader.get_from_url()
+        except ConfigDownloadError as error:
+            log.error("Failed to download a config file from url.")
+            try:
+                config_data = self.config_loader.get_from_yos()
+            except ConfigDownloadError:
+                log.error("Failed to download a config file from yos.")
+                self.show_config_error_message(error)
+                return False
+        try:
+            self.config_getter = ConfigGetter(
+                config_data,
+                self._launcher_config,
+                boto3_client=self.config_loader.boto3_client,
+            )
+        except pydantic.ValidationError as error:
+            log.error(f"Invalid config: {error}")
+            self.show_config_error_message(error)
+            return False
+        return True
 
     def update_main_button_text(self):
         """
         Updates the text of the main button based on whether
         Minecraft is installed or not.
         """
-        if self.config.is_minecraft_installed():
-            self.main_button.set_launch_text()
+        if self.config_getter.active.is_minecraft_installed:
+            self.main_button.set_launch_title()
         else:
             self.main_button.set_install_title()
 
@@ -221,10 +315,14 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             ThreadUiInputData : an instance of ThreadUiInputData class
         """
-        ui_data_file_path = LauncherConfig.ui_data_path
+        ui_data_file_path = self._launcher_config.ui_data_path
         return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
     def _make_authorization(self) -> None:
+        if not self.update_config():
+            return
+        if not self.set_config_from_ui():
+            return
         login = self.input_data.extract_element("lineEdit_nickname")
         password = self.input_data.extract_element("lineEdit_password")
         if not login or not password:
@@ -276,8 +374,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Операция заверщена!")
-            log.info("Операция заверщена!")
+            self.notif_widget.show_and_close("Операция завершена!")
+            log.info("Операция завершена!")
 
     def _choose_cape_and_upload(self, directory: str) -> None:
         # Open a file dialog and get the selected file path
@@ -305,8 +403,8 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close(str(run_time_error))
             log.error(str(run_time_error))
         else:
-            self.notif_widget.show_and_close("Операция заверщена!")
-            log.info("Операция заверщена!")
+            self.notif_widget.show_and_close("Операция завершена!")
+            log.info("Операция завершена!")
 
     def _make_authorization_finished(self) -> None:
         if not self._authorization_thread.runtime_error:
@@ -329,13 +427,13 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-
+        self._install_thread.set_config(self.config_getter.active)
         self.input_data.update_input_data_from_ui()
         nickname = self.input_data.extract_element("lineEdit_nickname")
         if not self._validator.is_valid_nickname(nickname):
             return
         if not self._validator.is_java_installed():
-            java_install_url = self.config.java_install_url
+            java_install_url = self._launcher_config.java_install_url
             install_java_link = f'<a href="{java_install_url}">\
     Я хочу установить Java сейчас!</a> '
             self.msg_box.warn(
@@ -371,11 +469,13 @@ class Window(QtWidgets.QMainWindow):
                 msg_title,
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
-                    LauncherConfig.logging_dir,
+                    self._launcher_config.logging_dir,
                 ),
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
+        self.config_getter.active.is_minecraft_installed = True
+        self.update_main_button_text()
         self.hide()
         auth_data = self._authorization_thread.get_last_auth_data()
         if not auth_data:
@@ -391,7 +491,7 @@ class Window(QtWidgets.QMainWindow):
             nickname,
             uuid,
             access_token,
-            self.config,
+            self.config_getter.active,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()
@@ -401,10 +501,10 @@ class Window(QtWidgets.QMainWindow):
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
             self.msg_box.warn(
-                "Запуск игры завершлися с ошибкой",
+                "Запуск игры завершился с ошибкой",
                 "При нажатии 'Ок' откроется папка с логом. ",
                 callback=lambda: webbrowser.open(
-                    LauncherConfig.logging_dir,
+                    self._launcher_config.logging_dir,
                 ),
             )
         self.show()
@@ -435,7 +535,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     log.critical("Exception occurred:")
     log.critical(exc_type)
     log.critical(exc_value)
-    log.critical(traceback.format_tb(exc_traceback))
+    log.critical(" ".join(traceback.format_tb(exc_traceback)))
     msg_box = MessageBoxManager("")
 
     msg_box.warn(
@@ -444,7 +544,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
             "Отправьте последний файл 'log.debug' разработчику. "
             "При нажатии 'Ок' откроется папка с логом. "
         ),
-        callback=lambda: webbrowser.open(LauncherConfig.logging_dir),
+        callback=lambda: webbrowser.open(LauncherConfig().logging_dir),
     )
     sys.exit(1)
     # Handle the exception or log it as needed
