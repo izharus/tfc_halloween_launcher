@@ -32,7 +32,7 @@
 - Refactored the configuration structure to eliminate some bugs. During the first launch, the launcher will check the hash of game files.
 - Multiple minor refinements...
 
-## Version 3.0.0 (05.12.2023)
+## Version 3.0.0 (30.04.2024)
 
 ### Features
 - Added integration with Yandex Object Storage. Modes now download from two separate services to make updates more stable.
@@ -49,3 +49,9 @@
 - Corrected typos in info/error messages.
 - Fixed main button text not changing game installation.
 - Addressed other small fixes.
+
+## Version 3.0.1 (30.04.2024)
+### Features
+- Added handling stderr from Minecraft thread.
+### Bug Fixes
+- Console now is no visible.
