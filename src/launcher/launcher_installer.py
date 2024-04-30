@@ -339,8 +339,18 @@ class MinecraftExecutorThread(QThread):
             with subprocess.Popen(
                 minecraft_command,
                 cwd=self.config.minecraft_directory,
+                # Redirect stdout to PIPE to capture output
+                # stdout=subprocess.PIPE,
+                # Redirect stderr to PIPE to capture error output
+                stderr=subprocess.PIPE,
+                universal_newlines=True,  # Use text mode for stdout/stderr
             ) as minecraft_process:
-                minecraft_process.wait()  # Wait for the subprocess to complete
+                # first var is stdout
+                _, stderr = minecraft_process.communicate()
+                if stderr:
+                    log.error(f"Minecraft stderr: {stderr}")
+                else:
+                    log.debug("Minecraft stderr is empty")
         except Exception as error:
             self.runtime_error = error
             log.debug(
