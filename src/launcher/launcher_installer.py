@@ -356,9 +356,15 @@ class MinecraftExecutorThread(QThread):
                 self.config.minecraft_directory,
                 self.create_launcher_options(),
             )
+            # Hide the console window
+            creation_flags = (
+                subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+            )
+
             with subprocess.Popen(
                 minecraft_command,
                 cwd=self.config.minecraft_directory,
+                creationflags=creation_flags,
                 # Redirect stdout to PIPE to capture output
                 # stdout=subprocess.PIPE,
                 # Redirect stderr to PIPE to capture error output

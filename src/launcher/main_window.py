@@ -177,7 +177,7 @@ class Window(QtWidgets.QMainWindow):
             self._make_authorization_finished
         )
 
-        self.setWindowTitle("TFC-Halloween 3.0.1")
+        self.setWindowTitle("TFC-Halloween 3.0.2")
 
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(

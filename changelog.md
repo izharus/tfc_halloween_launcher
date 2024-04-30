@@ -55,3 +55,7 @@
 - Added handling stderr from Minecraft thread.
 ### Bug Fixes
 - Console now is no visible.
+
+## Version 3.0.2 (30.04.2024)
+### Bug Fixes
+- Now the console is hidden while the game launched, not only in launcher mode.
