@@ -323,6 +323,7 @@ class Window(QtWidgets.QMainWindow):
             return
         if not self.set_config_from_ui():
             return
+        self.input_data.update_input_data_from_ui()
         login = self.input_data.extract_element("lineEdit_nickname")
         password = self.input_data.extract_element("lineEdit_password")
         if not login or not password:

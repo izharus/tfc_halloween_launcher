@@ -49,3 +49,8 @@
 - Corrected typos in info/error messages.
 - Fixed main button text not changing game installation.
 - Addressed other small fixes.
+
+
+## Version
+### Bug Fixes
+- Fixed unsafe saving of user password/login choice.
