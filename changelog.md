@@ -59,3 +59,7 @@
 ## Version 3.0.2 (30.04.2024)
 ### Bug Fixes
 - Now the console is hidden while the game launched, not only in launcher mode.
+
+## Version 3.0.3 (05.05.2024)
+### Bug Fixes
+- Use unicode to translite non latin symbols.
