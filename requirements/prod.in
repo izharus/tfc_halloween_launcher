@@ -5,3 +5,4 @@ pyinstaller
 loguru
 boto3
 pydantic
+unidecode

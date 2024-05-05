@@ -9,3 +9,4 @@ requests_mock
 pytest-qt
 boto3
 pydantic
+unidecode

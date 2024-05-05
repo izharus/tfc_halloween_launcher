@@ -15,7 +15,9 @@ import boto3
 import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
+from unidecode import unidecode
 from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
+
 
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utility.custom_exceptions import (
@@ -60,9 +62,19 @@ class LauncherConfig:
         """
         Initialize directories and load launcher data from file if available.
         """
-        self._minecraft_root_directory = (
+        _minecraft_root_directory = (
             mine_lib.utils.get_minecraft_directory() + f"_{self.LAUNCHER_NAME}"
         )
+        log.info(
+            "Original minecraft_root_directory: "
+            f"{_minecraft_root_directory}"
+        )
+        self._minecraft_root_directory = unidecode(_minecraft_root_directory)
+        log.info(
+            "Current minecraft_root_directory: "
+            f"{self._minecraft_root_directory}"
+        )
+
         os.makedirs(self._minecraft_root_directory, exist_ok=True)
         self._ui_data_path = os.path.join(
             self._minecraft_root_directory,
