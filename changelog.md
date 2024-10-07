@@ -50,6 +50,7 @@
 - Fixed main button text not changing game installation.
 - Addressed other small fixes.
 
+
 ## Version 3.0.1 (30.04.2024)
 ### Features
 - Added handling stderr from Minecraft thread.
@@ -63,3 +64,4 @@
 ## Version 3.0.3 (05.05.2024)
 ### Bug Fixes
 - Use unicode to translite non latin symbols.
+- Fixed unsafe saving of user password/login choice.
