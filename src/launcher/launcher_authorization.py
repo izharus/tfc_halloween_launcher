@@ -13,6 +13,7 @@ Classes:
 Note: This module assumes the existence of certain classes and functions
       imported from other modules such as `MinecraftLauncherConfig`.
 """
+
 import base64
 import traceback
 from typing import Dict, Optional
@@ -164,26 +165,25 @@ class AuthorizationThread(QThread):
             log.error(f"_authenticate_user failed: {error}")
             log.debug(traceback.format_exc())
             raise AuthorizationServiceUnavailable() from error
-        match response.status_code:
-            case 200:
-                log.info(f"_authenticate_user success: {username}.")
-                return response
-            case 401:
-                log.error(
-                    f"Failed to _authenticate_user with 401 code: {username}"
-                )
-                raise UserAuthenticationError()
-            case 500:
-                log.error(
-                    f"Failed to _authenticate_user with 500 code: {username}"
-                )
-                raise InternalAuthenticationError()
-            case code:
-                log.error(
-                    "Failed to _authenticate_user with unexpected"
-                    f" {code}: {username}"
-                )
-                raise InternalAuthenticationError(error_code=code)
+        if response.status_code == 200:
+            log.info(f"_authenticate_user success: {username}.")
+            return response
+        elif response.status_code == 401:
+            log.error(
+                f"Failed to _authenticate_user with 401 code: {username}"
+            )
+            raise UserAuthenticationError()
+        elif response.status_code == 500:
+            log.error(
+                f"Failed to _authenticate_user with 500 code: {username}"
+            )
+            raise InternalAuthenticationError()
+        else:
+            log.error(
+                "Failed to _authenticate_user with unexpected"
+                f" {response.status_code}: {username}"
+            )
+            raise InternalAuthenticationError(error_code=response.status_code)
 
     def _authenticate_user(self, username: str, password: str) -> None:
         """
@@ -329,25 +329,20 @@ class SkinUploaderThread(QThread):
             log.error(f"_authenticate_user failed: {error}")
             log.debug(traceback.format_exc())
             raise AuthorizationServiceUnavailable() from error
-        match response.status_code:
-            case 200:
-                log.info(f"_push_skin success: {self._username}.")
-            case 401:
-                log.error(
-                    f"Failed to _push_skin with 401 code: {self._username}"
-                )
-                raise UserAuthenticationError()
-            case 500:
-                log.error(
-                    f"Failed to _push_skin with 500 code: {self._username}"
-                )
-                raise InternalAuthenticationError()
-            case code:
-                log.error(
-                    "Failed to _authenticate_user with unexpected"
-                    f" {code}: {self._username}"
-                )
-                raise InternalAuthenticationError(error_code=code)
+        if response.status_code == 200:
+            log.info(f"_push_skin success: {self._username}.")
+        elif response.status_code == 401:
+            log.error(f"Failed to _push_skin with 401 code: {self._username}")
+            raise UserAuthenticationError()
+        elif response.status_code == 500:
+            log.error(f"Failed to _push_skin with 500 code: {self._username}")
+            raise InternalAuthenticationError()
+        else:
+            log.error(
+                "Failed to _authenticate_user with unexpected"
+                f" {response.status_code}: {self._username}"
+            )
+            raise InternalAuthenticationError(error_code=response.status_code)
 
     def run(self):
         """
