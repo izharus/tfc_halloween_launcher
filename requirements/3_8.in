@@ -1,0 +1,16 @@
+minecraft-launcher-lib
+PySide2
+QtPy
+pypiwin32 # show/hode console
+loguru
+boto3
+pydantic==2.6.2 # older versions do not support windows 7
+unidecode
+
+
+pyinstaller
+pytest
+pytest-mock
+requests_mock
+pytest-qt
+pylint

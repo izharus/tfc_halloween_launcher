@@ -20,7 +20,7 @@ from typing import Dict, Optional
 
 import requests
 from loguru import logger as log
-from PyQt6.QtCore import QThread
+from qtpy.QtCore import QThread
 
 from .utility.custom_exceptions import (
     AuthDataNotSet,

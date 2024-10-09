@@ -1,12 +1,16 @@
 minecraft-launcher-lib
-PyQt6-tools
-pylint
+PySide6
+QtPy
 pypiwin32 # show/hode console
-pytest
 loguru
-pytest-mock
-requests_mock
-pytest-qt
 boto3
 pydantic
 unidecode
+
+
+pyinstaller
+pytest
+pytest-mock
+requests_mock
+pytest-qt
+pylint

@@ -14,6 +14,7 @@ The application also handles the visibility of the console window, sets the
 icon, and provides safety timers for updating input data from the UI.
 
 """
+
 # pylint: disable=unnecessary-lambda
 import os
 import sys
@@ -26,10 +27,10 @@ import win32con
 import win32console
 import win32gui
 from loguru import logger as log
-from PyQt6 import QtWidgets
-from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QFileDialog
+from qtpy import QtWidgets
+from qtpy.QtCore import QTimer
+from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtWidgets import QFileDialog
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
