@@ -1,4 +1,5 @@
 """Tests for src/launcher_config.py"""
+
 # pylint:disable = E0401
 # pylint: disable=W0212
 import json
@@ -19,6 +20,7 @@ from src.launcher.launcher_configs import (
 )
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
+    ConfigLoaderInitError,
     ConfigProcessingError,
     RequestDownloadError,
 )
@@ -74,38 +76,17 @@ class TestConfigLoader:
         )
         assert config_loader._boto3_client == mock_boto3_instance
 
-    def test__install_boto3_instance_when_client_already_installed(
-        self, mocker
-    ):
+    def test_init_config_loader_failed(self, mocker):
         """
-        Test _install_boto3_instance method when boto3 client
-        is already installed.
+        Test ConfigLoader raise an exception if failed
+        to install the boto3_client.
         """
-        config_loader = ConfigLoader(MagicMock(spec=LauncherConfig))
-        config_loader._boto3_client = MagicMock()
-        mock_boto3_instance = "mock_boto3_instance"
-        mock_client = MagicMock(return_value=mock_boto3_instance)
-        # Mock boto3.client to ensure it is called only
-        # if _boto3_client is None
-        with mocker.patch.object(boto3, "client", mock_client):
-            # Call the _install_boto3_instance method
-            config_loader._install_boto3_instance()
-
-        # Ensure that boto3.client was not called
-        mock_client.assert_not_called()
-
-    def test__install_boto3_instance_handles_exception(self, mocker):
-        """Test _install_boto3_instance method handles exception."""
         # Create an instance of ConfigLoader
-        config_loader = ConfigLoader(MagicMock(spec=LauncherConfig))
-        config_loader._boto3_client = None
-        mock_client = MagicMock(side_effect=boto3.exceptions.Boto3Error)
-        # Mock boto3.client to raise a Boto3Error exception
-        with mocker.patch.object(boto3, "client", mock_client):
-            # Call the _install_boto3_instance method
-            config_loader._install_boto3_instance()
-
-        assert config_loader._boto3_client is None
+        with mocker.patch.object(
+            boto3, "client", side_effect=boto3.exceptions.Boto3Error
+        ):
+            with pytest.raises(ConfigLoaderInitError):
+                ConfigLoader(MagicMock(spec=LauncherConfig))
 
     def test_get_from_url_success(
         self,
@@ -219,7 +200,9 @@ class TestConfigGetter:
         Test config_list method to ensure it returns a list of supported
         configuration names.
         """
-        server_config = ConfigGetter(mock_config_data, LauncherConfig())
+        server_config = ConfigGetter(
+            mock_config_data, LauncherConfig(), MagicMock()
+        )
         assert server_config.config_list == [DISPLAY_NAME_1, DISPLAY_NAME_2]
 
     def test_set_active_existing_config(self, mock_config_data):
@@ -230,12 +213,14 @@ class TestConfigGetter:
         server_config = ConfigGetter(
             mock_config_data,
             mock_launcher_config,
+            MagicMock(),
         )
         assert server_config._active_config_display_name == DISPLAY_NAME_1
         assert server_config.active == ServerConfig(
             CONFIG_NAME_1,
             mock_config_data["modpacks"][CONFIG_NAME_1],
             mock_launcher_config,
+            MagicMock(),
         )
 
         assert server_config.set_active(DISPLAY_NAME_2) is True
@@ -243,6 +228,7 @@ class TestConfigGetter:
             CONFIG_NAME_2,
             mock_config_data["modpacks"][CONFIG_NAME_2],
             mock_launcher_config,
+            MagicMock(),
         )
 
     def test_set_active_non_existing_config(self, mock_config_data):
@@ -253,6 +239,7 @@ class TestConfigGetter:
         server_config = ConfigGetter(
             mock_config_data,
             mock_launcher_config,
+            MagicMock(),
         )
         assert server_config.set_active("NonExistingConfig") is False
 
@@ -265,6 +252,7 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
+            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -281,6 +269,7 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
+            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -298,6 +287,7 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
+            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -315,6 +305,7 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
+            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"

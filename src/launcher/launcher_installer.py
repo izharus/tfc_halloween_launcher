@@ -40,9 +40,7 @@ from qtpy.QtCore import QThread, Signal
 from .launcher_configs import ServerConfig
 from .utility.custom_exceptions import (
     CalculateHashFailed,
-    FilesSaveError,
     MinecraftLauncherConfigNotSet,
-    RequestDownloadError,
 )
 from .utility.file_downloader import FileDownloader
 from .utility.pydantic_models import FileInfo
@@ -95,19 +93,19 @@ class ModsInstaller(QThread, FileDownloader):
 
     def check_and_download(
         self,
+        boto3_client: boto3.client,
+        bucket_name: str,
         callback: Optional[Dict[str, Callable]] = None,
-        boto3_client: Optional[boto3.client] = None,
-        bucket_name: Optional[str] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
         them again if hash incorrect or if files do not exist.
         Args:
+            bucket_name: (str): A bucket name for downloading from
+                object storage.
+            boto3_client: (boto3.client): A boto3 client instance.
             callback (dict): A dictionary of callback functions for
             updating the UI.
-            boto3_client: (Optional[boto3.client]): A boto3 client instance.
-            bucket_name: (Optional[str]): A bucket name for downloading from
-                object storage.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
@@ -134,36 +132,24 @@ class ModsInstaller(QThread, FileDownloader):
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
+
             try:
                 self.save_file(
-                    file_path, self.download_file_from_url(file_info.api_url)
+                    file_path,
+                    self.download_file_from_yos(
+                        boto3_client,
+                        bucket_name,
+                        file_info.yan_obj_storage,
+                    ),
                 )
-                log.info(f"File was downloaded from url: {file_name}")
+                log.info(
+                    "File was downloaded from object storage: " f"{file_name}"
+                )
                 continue
-            except (FilesSaveError, RequestDownloadError):
+            except boto3.exceptions.Boto3Error as error:
                 log.error(
-                    f"Failed to download file from github url: {file_name}."
+                    "Failed to download file from object storage: " f"{error}"
                 )
-                if boto3_client and bucket_name:
-                    try:
-                        self.save_file(
-                            file_path,
-                            self.download_file_from_yos(
-                                boto3_client,
-                                bucket_name,
-                                file_info.yan_obj_storage,
-                            ),
-                        )
-                        log.info(
-                            "File was downloaded from object storage: "
-                            f"{file_name}"
-                        )
-                        continue
-                    except boto3.exceptions.Boto3Error as error:
-                        log.error(
-                            "Failed to download file from object storage: "
-                            f"{error}"
-                        )
                 return False
 
         return True

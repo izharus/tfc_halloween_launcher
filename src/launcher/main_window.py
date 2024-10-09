@@ -49,6 +49,7 @@ from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
 from .utility.custom_exceptions import (
     ConfigDownloadError,
+    ConfigLoaderInitError,
     ConfigProcessingError,
 )
 from .utility.path_manager import PathManager
@@ -109,7 +110,17 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self.input_data = self.get_input_data()
-        self.config_loader: ConfigLoader = ConfigLoader(self._launcher_config)
+        try:
+            self.config_loader: ConfigLoader = ConfigLoader(
+                self._launcher_config
+            )
+        except ConfigLoaderInitError as error:
+            log.critical(f"Failed to install boto3: {error}")
+            self.msg_box.warn(
+                "Сетевая ошибка.",
+                str(error),
+            )
+            sys.exit()
 
         self.config_getter: ConfigGetter
         # init self.config and config_loader here:
@@ -277,15 +288,11 @@ class Window(QtWidgets.QMainWindow):
                 the configuration.
         """
         try:
-            config_data = self.config_loader.get_from_url()
+            config_data = self.config_loader.get_from_yos()
         except ConfigDownloadError as error:
-            log.error("Failed to download a config file from url.")
-            try:
-                config_data = self.config_loader.get_from_yos()
-            except ConfigDownloadError:
-                log.error("Failed to download a config file from yos.")
-                self.show_config_error_message(error)
-                return False
+            log.error("Failed to download a config file from yos.")
+            self.show_config_error_message(error)
+            return False
         try:
             self.config_getter = ConfigGetter(
                 config_data,

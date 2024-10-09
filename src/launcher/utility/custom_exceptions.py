@@ -1,6 +1,16 @@
 """A modules with custom exception classes"""
 
 
+class ConfigLoaderInitError(Exception):
+    """Raises if failed to initialize ConfigLoader"""
+
+    def __init__(self, message="Failed to initialize ConfigLoader."):
+        super().__init__(message)
+
+    def __str__(self):
+        return "Не удалось установить связь с сервером."
+
+
 class MinecraftLauncherConfigNotSet(RuntimeError):
     """Raises if launcher config not set"""
 

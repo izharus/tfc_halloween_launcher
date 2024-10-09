@@ -1,4 +1,5 @@
 """Tests for main qt Window class."""
+
 from unittest.mock import MagicMock
 
 # pylint: disable=W0613,W0212, E0401
@@ -30,6 +31,17 @@ def mock_download_from_url(mocker, mock_config_data):
 
 
 @pytest.fixture
+def mock_boto3_client_get_object(mocker, mock_config_data):
+    """Mock ConfigLoader.download_from_url method."""
+    with mocker.patch.object(
+        ConfigLoader,
+        "get_from_yos",
+        return_value=mock_config_data,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_window(
     mocker,
     qtbot,
@@ -39,6 +51,7 @@ def mock_window(
     Create an window instance without notification message boxes.
     Set minecraft root dir to the temp dir.
     """
+    # fmt: off
     with mocker.patch.object(
         MessageBoxManager,
         "create_msg_box",
@@ -55,6 +68,7 @@ def mock_window(
         window = Window()
         qtbot.addWidget(window)
         yield window
+    # fmt: on
 
 
 def test_get_config_loader_success(
@@ -66,7 +80,7 @@ def test_get_config_loader_success(
 
 
 def test_update_server_type_combobox_with_updated_config_data(
-    mock_download_from_url,
+    mock_boto3_client_get_object,
     mock_window,
     mock_config_data,
     mock_modpack_data,
@@ -81,7 +95,7 @@ def test_update_server_type_combobox_with_updated_config_data(
     mock_config_data["modpacks"][config_name_3] = mock_modpack_data
     with mocker.patch.object(
         ConfigLoader,
-        "get_from_url",
+        "get_from_yos",
         return_value=mock_config_data,
     ):
         window.update_config()
@@ -104,7 +118,7 @@ def test_update_server_type_combobox_with_updated_config_data(
 
 
 def test_update_server_type_combobox_with_new_config_data(
-    mock_download_from_url,
+    mock_boto3_client_get_object,
     mock_window,
     mock_modpack_data,
     mocker,
@@ -118,7 +132,7 @@ def test_update_server_type_combobox_with_new_config_data(
     mock_config_data = {"modpacks": {config_name_3: mock_modpack_data}}
     with mocker.patch.object(
         ConfigLoader,
-        "get_from_url",
+        "get_from_yos",
         return_value=mock_config_data,
     ):
         window.update_config()
@@ -137,7 +151,7 @@ def test_update_server_type_combobox_with_new_config_data(
 
 
 def test_update_config_with_valid_config(
-    mock_download_from_url,
+    mock_boto3_client_get_object,
     mock_window,
     mock_config_data,
 ):
@@ -146,7 +160,9 @@ def test_update_config_with_valid_config(
     """
     window = mock_window
 
-    window._ui_instance.comboBox_server_type.setCurrentText(DISPLAY_NAME_2)
+    window._ui_instance.comboBox_server_type.currentTextChanged.emit(
+        DISPLAY_NAME_2
+    )
     # status = window.update_config()
 
     # assert status
@@ -158,7 +174,7 @@ def test_update_config_with_valid_config(
 
 
 def test_multiple_updating_different_main_button_text(
-    mock_download_from_url, mock_window
+    mock_boto3_client_get_object, mock_window
 ):
     """
     Test the behavior of updating the main button text when
@@ -197,7 +213,7 @@ def test_multiple_updating_different_main_button_text(
 
 
 def test_updating_main_button_text_after_success_installation(
-    mock_download_from_url, mock_window
+    mock_boto3_client_get_object, mock_window
 ):
     """
     Test the behavior of updating the main button text after
@@ -217,7 +233,7 @@ def test_updating_main_button_text_after_success_installation(
 
 
 def test_updating_main_button_text_after_failed_installation(
-    mock_download_from_url, mock_window
+    mock_boto3_client_get_object, mock_window
 ):
     """
     Test the behavior of updating the main button text after
