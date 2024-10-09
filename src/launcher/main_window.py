@@ -434,7 +434,7 @@ class Window(QtWidgets.QMainWindow):
         if not self._validator.is_valid_nickname(nickname):
             return
         if not self._validator.is_java_installed():
-            java_install_url = self._launcher_config.java_install_url
+            java_install_url = self._launcher_config.JAVA_INSTALL_URL
             install_java_link = f'<a href="{java_install_url}">\
     Я хочу установить Java сейчас!</a> '
             self.msg_box.warn(
