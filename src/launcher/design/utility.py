@@ -1,10 +1,11 @@
 """Utillity module for creating and managing UI elements."""
+
 from typing import Any, Callable, Optional
 
-from PyQt6 import QtGui, QtWidgets
-from PyQt6.QtCore import QUrl
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
+from qtpy import QtGui, QtWidgets
+from qtpy.QtCore import QUrl
+from qtpy.QtGui import QDesktopServices
+from qtpy.QtWidgets import QLabel, QPushButton, QWidget
 
 from .styles import MainButtonData
 

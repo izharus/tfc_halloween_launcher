@@ -35,7 +35,7 @@ import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
 from minecraft_launcher_lib.types import MinecraftOptions
-from PyQt6.QtCore import QThread, pyqtSignal
+from qtpy.QtCore import QThread, Signal
 
 from .launcher_configs import ServerConfig
 from .utility.custom_exceptions import (
@@ -195,9 +195,9 @@ class InstallThread(QThread):
             thread.
     """
 
-    progress_max = pyqtSignal("int")
-    progress = pyqtSignal("int")
-    text = pyqtSignal("QString")
+    progress_max = Signal("int")
+    progress = Signal("int")
+    text = Signal("QString")
 
     def __init__(self, config: Optional[ServerConfig] = None) -> None:
         QThread.__init__(self)

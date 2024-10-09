@@ -34,7 +34,7 @@ of each class.
 
 Note: This module requires the PyQt6 library to be installed.
 
-"""""
+"""
 
 import json
 import os
@@ -45,7 +45,8 @@ from contextlib import contextmanager
 from typing import Any, Dict, Union
 
 from loguru import logger as log
-from PyQt6 import QtCore, QtWidgets
+from qtpy import QtWidgets
+from qtpy.QtCore import QMutex, QObject, Signal
 
 
 class ThreadData:
@@ -468,7 +469,7 @@ class QMutexContextManager:
         Returns:
             None
         """
-        self._mutex = QtCore.QMutex()
+        self._mutex = QMutex()
 
     @contextmanager
     def lock(self):
@@ -489,7 +490,7 @@ class QMutexContextManager:
         finally:
             self._mutex.unlock()
 
-    def get_mutex(self) -> QtCore.QMutex:
+    def get_mutex(self) -> QMutex:
         """
         Get the underlying QMutex object used by the context manager.
 
@@ -498,12 +499,12 @@ class QMutexContextManager:
         manual locking and unlocking are required.
 
         Returns:
-            QtCore.QMutex: The QMutex object used by the context manager.
+            QMutex: The QMutex object used by the context manager.
         """
         return self._mutex
 
 
-class LabelTextEditUpdater(QtCore.QObject):
+class LabelTextEditUpdater(QObject):
     """
     A class for updating the text of a QLabel or QTextEdit widget in a
     thread-safe manner.
@@ -527,7 +528,7 @@ class LabelTextEditUpdater(QtCore.QObject):
     updater.write_to_widget("New text")
     """
 
-    signal = QtCore.pyqtSignal(str)
+    signal = Signal(str)
 
     def __init__(
         self,
@@ -572,7 +573,7 @@ class LabelTextEditUpdater(QtCore.QObject):
 
 
 # class TextEditLogWriter
-class TextEditLogWriter(QtCore.QObject):
+class TextEditLogWriter(QObject):
     """
     A class for writing log lines to a QTextEdit widget in a thread-safe
     manner.
@@ -585,7 +586,7 @@ class TextEditLogWriter(QtCore.QObject):
         log_writer.write_to_log("Log line 2")
     """
 
-    signal = QtCore.pyqtSignal(str)
+    signal = Signal(str)
 
     def __init__(self, log_widget):
         """

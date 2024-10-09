@@ -166,8 +166,7 @@ build
 data/ui_inputs_data/
 .vs/
 .vscode/
-prod_venv/
-dev_venv/
+.venv*
 config/
 logs/
 src/launcher/boto3_cred.py
