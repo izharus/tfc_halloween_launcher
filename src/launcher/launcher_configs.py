@@ -5,6 +5,7 @@ This module defines classes and methods for configuring the Minecraft
 launcher and managing server configurations.
 
 """
+
 import json
 import os
 import shelve
@@ -16,12 +17,12 @@ import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
 from unidecode import unidecode
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
-
+from ..launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utility.custom_exceptions import (
     ConfigDownloadError,
+    ConfigLoaderInitError,
     ConfigProcessingError,
     RequestDownloadError,
 )
@@ -209,25 +210,31 @@ class ConfigLoader:
         Args:
             launcher_config (LauncherConfig): An instance of LauncherConfig
                 containing modpacks configuration parameters.
+
+        Raises: ConfigLoaderInitError if failed to initialize
+            a boto3 instance.
         """
-        self._boto3_client: Optional[boto3.client] = None
+        self._boto3_client: boto3.client
         self._install_boto3_instance()
         self._launcher_config = launcher_config
 
     def _install_boto3_instance(self):
         """
         Install boto3 client instance if not already installed.
+
+        Raises: ConfigLoaderInitError if failed to initialize
+            a boto3 instance.
         """
-        if not self._boto3_client:
-            try:
-                self._boto3_client = boto3.client(
-                    "s3",
-                    endpoint_url="https://storage.yandexcloud.net",
-                    aws_access_key_id=BOTO3_ACCESS_KEY,
-                    aws_secret_access_key=BOTO3_SECRET_KEY,
-                )
-            except boto3.exceptions.Boto3Error as error:
-                log.error(f"Failed to create an s3 instance: {error}")
+        try:
+            self._boto3_client = boto3.client(
+                "s3",
+                endpoint_url="https://storage.yandexcloud.net",
+                aws_access_key_id=BOTO3_ACCESS_KEY,
+                aws_secret_access_key=BOTO3_SECRET_KEY,
+            )
+        except boto3.exceptions.Boto3Error as error:
+            log.error(f"Failed to create an s3 instance: {error}")
+            raise ConfigLoaderInitError from error
 
     @property
     def boto3_client(self) -> Optional[boto3.client]:
@@ -299,10 +306,6 @@ class ConfigLoader:
             ConfigProcessingError: If there is an error processing
                 the configuration data.
         """
-        self._install_boto3_instance()
-        if not self._boto3_client:
-            log.error("Failed, boto3_client is None.")
-            raise ConfigDownloadError()
         try:
             bytes_file_data = FileDownloader.download_file_from_yos(
                 self._boto3_client,
@@ -330,7 +333,7 @@ class ConfigGetter:
         self,
         config_data: Dict,
         launcher_config: LauncherConfig,
-        boto3_client: Optional[boto3.client] = None,
+        boto3_client: boto3.client,
     ):
         """
         Initializes the ConfigGetter instance.
@@ -338,7 +341,7 @@ class ConfigGetter:
         Args:
             config_data (Dict): Configuration data for the server.
             launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client: (Optional[boto3.client]): A boto3 client instance.
+            boto3_client: (boto3.client]: A boto3 client instance.
 
         Raises:
             ValidationError: If the config_data fails Pydantic validation.
@@ -421,7 +424,7 @@ class ServerConfig(Modpack):
         internal_name: str,
         modpack_data: Dict,
         launcher_config: LauncherConfig,
-        boto3_client: Optional[boto3.client] = None,
+        boto3_client: boto3.client,
     ):
         """
         Initializes the ServerConfig instance.
@@ -430,6 +433,7 @@ class ServerConfig(Modpack):
             internal_name (str): Internal name for current config.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
+            boto3_client (boto3.client): A boto3 instance.
         """
         super().__init__(**modpack_data, internal_name=internal_name)
         self._launcher_config = launcher_config
@@ -437,7 +441,7 @@ class ServerConfig(Modpack):
         self._boto3_client = boto3_client
 
     @property
-    def boto3_client(self) -> Optional[boto3.client]:
+    def boto3_client(self) -> boto3.client:
         """Return a boto3_client instance if it exists."""
         return self._boto3_client
 

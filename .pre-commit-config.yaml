@@ -28,7 +28,8 @@ repos:
       rev: v1.11.2
       hooks:
       -   id: mypy
-          additional_dependencies: [types-requests==2.31.0.9]     
+          additional_dependencies: [types-requests==2.31.0.9]
+          exclude: 'tests/.*\.py'     
   -   repo: 'https://github.com/jazzband/pip-tools'
       rev: '7.4.1'
       hooks:
