@@ -27,7 +27,16 @@ Note that the execution launcher also requires the latest version of Java, 32-bi
 
 Install virtual environment for target system, activate it and install all dependencies:
 ```bash
+py -3.8-32 -m venv .venv_3_8x86
+py -3.8-64 -m venv .venv_3_8x64
 py -3.12-64 -m venv .venv_3_12x64
+
+.\.venv_3_8x86\scripts\activate
+python -m pip install -r requirements/3_8.txt
+
+.\.venv_3_8x64\scripts\activate
+python -m pip install -r requirements/3_8.txt
+
 .\.venv_3_12x64\scripts\activate
 python -m pip install -r requirements/3_12.txt
 python main.py
@@ -40,9 +49,8 @@ Detailed logs stores in "[minecraft_directory]/halloween_data/log" directory.
 
 ## Contributing
 If you want to make commits to the project, follow these steps:
-- Install pip-tools and pre-commit:
+- Install pre-commit:
 ```bash
-python -m pip install pip-tools
 python -m pip install pre-commit
 pre-commit install
 ```
@@ -51,6 +59,7 @@ pre-commit install
 - Write the module name and its version to the "requirements/dev.in" file.
 - Compile the requirements:
 ```bash
+.\.venv_3_12x64\scripts\activate
 pip-compile requirements/3_12.in
 ```
 
