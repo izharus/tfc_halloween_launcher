@@ -28,7 +28,7 @@ import win32console
 import win32gui
 from loguru import logger as log
 from qtpy import QtWidgets
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QPoint, Qt, QTimer
 from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import QFileDialog
 
@@ -81,6 +81,10 @@ class Window(QtWidgets.QMainWindow):
         super().__init__()
         self._ui_instance = Ui_MainWindow()
         self._launcher_config = LauncherConfig()
+
+        # For mouse events
+        self._mouse_click_pos: Optional[QPoint] = None
+
         logging_dir = self._launcher_config.logging_dir
         logging_dir += "/launcher_{time:YYYY-MM}.log"
         log.add(
@@ -215,6 +219,45 @@ class Window(QtWidgets.QMainWindow):
         )
 
         hide_console()
+
+    # pylint: disable=C0103
+    def mousePressEvent(self, event):
+        """
+        Handles the mouse button press event.
+
+        If the left mouse button is pressed, stores the position of the mouse
+        relative to the top-left corner of the widget's frame.
+        """
+        if event.button() == Qt.LeftButton:
+            self._mouse_click_pos = (
+                event.globalPos() - self.frameGeometry().topLeft()
+            )
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        """
+        Handles the mouse movement event.
+
+        If the left mouse button is pressed and a click position is stored,
+        moves the widget to the new position based on the current mouse
+        position.
+        """
+        if (
+            event.buttons() == Qt.LeftButton
+            and self._mouse_click_pos is not None
+        ):
+            self.move(event.globalPos() - self._mouse_click_pos)
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        """Handles the mouse button release event.
+
+        If the left mouse button is released, resets the stored click position
+        to None.
+        """
+        if event.button() == Qt.LeftButton:
+            self._mouse_click_pos = None
+            # event.accept()
 
     def show_config_error_message(self, error: Exception) -> None:
         """Show an error message box for config updating fail."""
