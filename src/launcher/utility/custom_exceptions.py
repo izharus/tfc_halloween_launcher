@@ -82,14 +82,60 @@ class CalculateHashFailed(RuntimeError):
         return "Ошибка вычисления хеш-суммы."
 
 
-class AuthorizationServiceUnavailable(RuntimeError):
-    """Raises if authorization service unavailable."""
+class AuthenticationError(Exception):
+    """Base class for all errors within authentication."""
 
-    def __init__(self, message="Authorization service unavailable.") -> None:
+
+class AuthenticationServiceUnavailable(AuthenticationError):
+    """Raises if authentication service unavailable."""
+
+    def __init__(
+        self, message: str = "Authentication service is unavailable."
+    ) -> None:
         super().__init__(message)
 
     def __str__(self):
         return "Сервер авторизации недоступен."
+
+
+class InvalidUserNameOrPassword(AuthenticationError):
+    """Raises if user name or password is invalid."""
+
+    def __init__(self, message: str = "Invalid username or password.") -> None:
+        super().__init__(message)
+
+    def __str__(self):
+        return "Пользователь не найден."
+
+
+class InternalAuthenticationError(AuthenticationError):
+    """
+    Raises if any error occurs due authentication operations.
+    """
+
+    def __init__(
+        self,
+        message: str = "An error occurred during authentication operation",
+    ) -> None:
+        super().__init__(message)
+
+    def __str__(self):
+        return "Ошибка #2."
+
+
+class InvalidAuthenticationResponse(AuthenticationError):
+    """
+    Raises if an invalid authentication response was received.
+    """
+
+    def __init__(
+        self,
+        message: str = "Invalid authentication response.",
+    ) -> None:
+        super().__init__(f"{message}")
+
+    def __str__(self):
+        return "Ошибка #1."
 
 
 class AuthDataNotSet(RuntimeError):
@@ -102,48 +148,6 @@ class AuthDataNotSet(RuntimeError):
 
     def __str__(self):
         return "Некорректный ответ от сервера #3."
-
-
-class UserAuthenticationError(Exception):
-    """Custom exception for user authentication failures."""
-
-    def __init__(self, message="Invalid username or password.") -> None:
-        super().__init__(message)
-
-    def __str__(self):
-        return "Неправильное имя пользователя или пароль."
-
-
-class InternalAuthenticationError(RuntimeError):
-    """
-    Custom exception raised for errors related to authentication operations.
-    """
-
-    def __init__(
-        self,
-        message="An error occurred during authentication operation",
-        error_code="500",
-    ) -> None:
-        super().__init__(f"{message}: {error_code}.")
-        self.error_code = error_code
-
-    def __str__(self):
-        return "Некорректный ответ от сервера #2."
-
-
-class InvalidAuthenticationResponseError(RuntimeError):
-    """
-    Custom exception for invalid authentication responses.
-    """
-
-    def __init__(
-        self,
-        message="Invalid authentication response.",
-    ) -> None:
-        super().__init__(f"{message}")
-
-    def __str__(self):
-        return "Некорректный ответ от сервера #1."
 
 
 class Base64ParsingError(RuntimeError):
