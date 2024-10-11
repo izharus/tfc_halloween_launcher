@@ -31,6 +31,7 @@ from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, Qt, QTimer
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QFileDialog
+from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
@@ -46,9 +47,10 @@ from .launcher_installer import InstallThread, MinecraftExecutorThread
 from .login_widget import LoginWidget
 from .utility.custom_exceptions import (
     ConfigDownloadError,
-    ConfigLoaderInitError,
     ConfigProcessingError,
+    DownloadServerHandshakeError,
 )
+from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.thread_data_utils import ThreadUiInputData
 
@@ -102,7 +104,7 @@ class Window(QtWidgets.QMainWindow):
         )
         self._validator = Validator(self.icon_file_path)
         self.msg_box = MessageBoxManager(self.icon_file_path)
-        self._install_thread = InstallThread()
+
         self.notif_widget = NotificationWidget(
             self._ui_instance.label_information_text
         )
@@ -110,18 +112,27 @@ class Window(QtWidgets.QMainWindow):
             self._ui_instance.pushButton_install_and_launch,
         )
 
-        self.input_data = self.get_input_data()
         try:
-            self.config_loader: ConfigLoader = ConfigLoader(
-                self._launcher_config
+            self.file_downloader = FileYOSDownloader(
+                aws_access_key_id=BOTO3_ACCESS_KEY,
+                aws_secret_access_key=BOTO3_SECRET_KEY,
+                bucket_name=LauncherConfig.BUCKET_NAME,
             )
-        except ConfigLoaderInitError as error:
+        except DownloadServerHandshakeError as error:
             log.critical(f"Failed to install boto3: {error}")
             self.msg_box.warn(
                 "Сетевая ошибка.",
                 str(error),
             )
             sys.exit()
+
+        self._install_thread = InstallThread(self.file_downloader)
+        self.config_loader: ConfigLoader = ConfigLoader(
+            self.file_downloader,
+            self._launcher_config,
+        )
+
+        self.input_data = self.get_input_data()
 
         self.config_getter: ConfigGetter
         # init self.config and config_loader here:
@@ -187,7 +198,6 @@ class Window(QtWidgets.QMainWindow):
         self.login_logic = LoginWidget(
             self._ui_instance, self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
         )
-
         self.setWindowTitle("TFC-Halloween 3.0.3")
 
         # pylint: disable = C0301
@@ -348,7 +358,6 @@ class Window(QtWidgets.QMainWindow):
             self.config_getter = ConfigGetter(
                 config_data,
                 self._launcher_config,
-                boto3_client=self.config_loader.boto3_client,
             )
         except pydantic.ValidationError as error:
             log.error(f"Invalid config: {error}")

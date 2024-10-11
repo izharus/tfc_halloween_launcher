@@ -10,23 +10,19 @@ import json
 import os
 import shelve
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import boto3
-import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
 from unidecode import unidecode
 
-from ..launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utility.custom_exceptions import (
     ConfigDownloadError,
-    ConfigLoaderInitError,
     ConfigProcessingError,
-    RequestDownloadError,
+    FiletDownloadError,
 )
-from .utility.file_downloader import FileDownloader
+from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
 
 
@@ -203,7 +199,11 @@ class ConfigLoader:
             containing configuration parameters.
     """
 
-    def __init__(self, launcher_config: LauncherConfig) -> None:
+    def __init__(
+        self,
+        file_downloader: FileDownloaderProtocol,
+        launcher_config: LauncherConfig,
+    ) -> None:
         """
         Initializes the ConfigLoader instance.
 
@@ -211,41 +211,9 @@ class ConfigLoader:
             launcher_config (LauncherConfig): An instance of LauncherConfig
                 containing modpacks configuration parameters.
 
-        Raises: ConfigLoaderInitError if failed to initialize
-            a boto3 instance.
         """
-        self._boto3_client: boto3.client
-        self._install_boto3_instance()
         self._launcher_config = launcher_config
-
-    def _install_boto3_instance(self):
-        """
-        Install boto3 client instance if not already installed.
-
-        Raises: ConfigLoaderInitError if failed to initialize
-            a boto3 instance.
-        """
-        try:
-            self._boto3_client = boto3.client(
-                "s3",
-                endpoint_url="https://storage.yandexcloud.net",
-                aws_access_key_id=BOTO3_ACCESS_KEY,
-                aws_secret_access_key=BOTO3_SECRET_KEY,
-            )
-        except boto3.exceptions.Boto3Error as error:
-            log.error(f"Failed to create an s3 instance: {error}")
-            raise ConfigLoaderInitError from error
-
-    @property
-    def boto3_client(self) -> Optional[boto3.client]:
-        """
-        Returns the boto3 client instance.
-
-        Returns:
-            Optional[boto3.client]: The boto3 client instance.
-        """
-        self._install_boto3_instance()
-        return self._boto3_client
+        self._file_downloader = file_downloader
 
     @staticmethod
     def _create_model_from_bytes(
@@ -271,28 +239,6 @@ class ConfigLoader:
             raise ConfigProcessingError from error
         return config
 
-    def get_from_url(
-        self,
-    ) -> Dict:
-        """
-        Retrieves configuration data from a URL.
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error
-                processing the configuration data.
-        """
-        try:
-            bytes_file_data = FileDownloader.download_file_from_url(
-                self._launcher_config.MAP_JSON_URL
-            )
-        except RequestDownloadError as error:
-            log.error("Failed to load a config file.")
-            raise ConfigDownloadError from error
-        return self._create_model_from_bytes(bytes_file_data)
-
     def get_from_yos(
         self,
     ) -> Dict:
@@ -307,12 +253,10 @@ class ConfigLoader:
                 the configuration data.
         """
         try:
-            bytes_file_data = FileDownloader.download_file_from_yos(
-                self._boto3_client,
-                self._launcher_config.BUCKET_NAME,
+            bytes_file_data = self._file_downloader.download_bytes(
                 self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
             )
-        except RequestDownloadError as error:
+        except FiletDownloadError as error:
             log.error(f"Failed to load a config file. {error}")
             raise ConfigDownloadError from error
         return self._create_model_from_bytes(bytes_file_data)
@@ -333,7 +277,6 @@ class ConfigGetter:
         self,
         config_data: Dict,
         launcher_config: LauncherConfig,
-        boto3_client: boto3.client,
     ):
         """
         Initializes the ConfigGetter instance.
@@ -341,7 +284,6 @@ class ConfigGetter:
         Args:
             config_data (Dict): Configuration data for the server.
             launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client: (boto3.client]: A boto3 client instance.
 
         Raises:
             ValidationError: If the config_data fails Pydantic validation.
@@ -358,7 +300,6 @@ class ConfigGetter:
         self._configs_map = dict(
             zip(self._display_names_list, map_json.modpacks.keys())
         )
-        self._boto3_client = boto3_client
 
     @property
     def active(self) -> "ServerConfig":
@@ -374,7 +315,6 @@ class ConfigGetter:
                 self._configs_map[self._active_config_display_name]
             ],
             self._launcher_config,
-            boto3_client=self._boto3_client,
         )
 
     @property
@@ -424,7 +364,6 @@ class ServerConfig(Modpack):
         internal_name: str,
         modpack_data: Dict,
         launcher_config: LauncherConfig,
-        boto3_client: boto3.client,
     ):
         """
         Initializes the ServerConfig instance.
@@ -433,17 +372,10 @@ class ServerConfig(Modpack):
             internal_name (str): Internal name for current config.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client (boto3.client): A boto3 instance.
         """
         super().__init__(**modpack_data, internal_name=internal_name)
         self._launcher_config = launcher_config
         self._minecraft_directory = self._generate_minecraft_directory()
-        self._boto3_client = boto3_client
-
-    @property
-    def boto3_client(self) -> boto3.client:
-        """Return a boto3_client instance if it exists."""
-        return self._boto3_client
 
     def _generate_minecraft_directory(self) -> str:
         """

@@ -1,14 +1,14 @@
 """A modules with custom exception classes"""
 
 
-class ConfigLoaderInitError(Exception):
-    """Raises if failed to initialize ConfigLoader"""
+class DownloadServerHandshakeError(Exception):
+    """Raised if failed to connect to the file store server."""
 
-    def __init__(self, message="Failed to initialize ConfigLoader."):
+    def __init__(self, message="File server handshake error."):
         super().__init__(message)
 
     def __str__(self):
-        return "Не удалось установить связь с сервером."
+        return "Файловый сервер недоступен."
 
 
 class MinecraftLauncherConfigNotSet(RuntimeError):
@@ -21,16 +21,14 @@ class MinecraftLauncherConfigNotSet(RuntimeError):
         return "Не установлен конфиг лаунчера."
 
 
-class RequestDownloadError(Exception):
-    """Raises in any HTTP errors that occur while downloading files."""
+class FiletDownloadError(Exception):
+    """Raises in any error occurs deu downloading files."""
 
-    def __init__(
-        self, message="HTTP request error in attempting to download a file."
-    ) -> None:
+    def __init__(self, message="Failed to download a file.") -> None:
         super().__init__(message)
 
     def __str__(self):
-        return "Ошибка во время загрузки файлов."
+        return "Ошибка во время загрузки файла."
 
 
 class ConfigDownloadError(Exception):

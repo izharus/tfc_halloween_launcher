@@ -7,11 +7,8 @@ import os
 import shelve
 from unittest.mock import MagicMock
 
-import boto3
-import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 import pytest
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from src.launcher.launcher_configs import (
     ConfigGetter,
     ConfigLoader,
@@ -20,11 +17,11 @@ from src.launcher.launcher_configs import (
 )
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
-    ConfigLoaderInitError,
     ConfigProcessingError,
-    RequestDownloadError,
+    FiletDownloadError,
 )
-from src.launcher.utility.file_downloader import FileDownloader
+
+# from src.launcher.utility.file_downloader import FileDownloader
 from src.test.conftest import (
     CONFIG_NAME_1,
     CONFIG_NAME_2,
@@ -51,110 +48,44 @@ def mock_window(
 class TestConfigLoader:
     """Unit tests for ConfigLoader."""
 
-    def test__install_boto3_instance_when_client_not_installed(self, mocker):
-        """
-        Test _install_boto3_instance method when boto3 client
-        is not installed.
-        """
-        # Create an instance of ConfigLoader
-        config_loader = ConfigLoader(MagicMock(spec=LauncherConfig))
-        config_loader._boto3_client = None
-        mock_boto3_instance = "mock_boto3_instance"
-        mock_client = MagicMock(return_value=mock_boto3_instance)
-        # Mock boto3.client to ensure it is called only if _boto3_client
-        # is None
-        with mocker.patch.object(boto3, "client", mock_client):
-            # Call the _install_boto3_instance method
-            config_loader._install_boto3_instance()
-
-        # Ensure that boto3.client was called only once
-        mock_client.assert_called_once_with(
-            "s3",
-            endpoint_url="https://storage.yandexcloud.net",
-            aws_access_key_id=BOTO3_ACCESS_KEY,
-            aws_secret_access_key=BOTO3_SECRET_KEY,
-        )
-        assert config_loader._boto3_client == mock_boto3_instance
-
-    def test_init_config_loader_failed(self, mocker):
-        """
-        Test ConfigLoader raise an exception if failed
-        to install the boto3_client.
-        """
-        # Create an instance of ConfigLoader
-        with mocker.patch.object(
-            boto3, "client", side_effect=boto3.exceptions.Boto3Error
-        ):
-            with pytest.raises(ConfigLoaderInitError):
-                ConfigLoader(MagicMock(spec=LauncherConfig))
-
-    def test_get_from_url_success(
-        self,
-        mocker,
-        mock_config_data,
-    ):
-        """Test get_from_url method with correct json data."""
-        mock_download_file = MagicMock()
-        mock_config = LauncherConfig()
-
-        config_loader = ConfigLoader(mock_config)
-        mock_download_file.return_value = json.dumps(mock_config_data)
-        with mocker.patch.object(
-            FileDownloader,
-            "download_file_from_url",
-            mock_download_file,
-        ):
-            config = config_loader.get_from_url()
-        assert config == mock_config_data
-        mock_download_file.assert_called_once_with(mock_config.MAP_JSON_URL)
-
-    def test_get_from_url_request_error(self, mocker):
-        """Test get_from_url method when download request fails."""
-        mock_config = LauncherConfig()
-        config_loader = ConfigLoader(mock_config)
-        with pytest.raises(ConfigDownloadError):
-            mocker.patch.object(
-                FileDownloader,
-                "download_file_from_url",
-                side_effect=RequestDownloadError,
-            )
-            config_loader.get_from_url()
-
     def test_get_from_yos_success(
         self,
         mocker,
         mock_config_data,
     ):
         """Test get_from_yos method with correct json data."""
-        mock_boto3 = MagicMock()
-        mock_response = MagicMock()
-        mock_response["body"] = MagicMock()
-        mock_response["body"].read.return_value = json.dumps(mock_config_data)
-        mock_get_object = MagicMock(return_value=mock_response)
 
         mock_config = LauncherConfig()
-        config_loader = ConfigLoader(mock_config)
-        config_loader._boto3_client = mock_boto3
 
-        with mocker.patch.object(mock_boto3, "get_object", mock_get_object):
+        mock_file_downloader = MagicMock()
+        config_loader = ConfigLoader(mock_file_downloader, mock_config)
+
+        mock_download_bytes = MagicMock(
+            return_value=json.dumps(mock_config_data)
+        )
+
+        with mocker.patch.object(
+            mock_file_downloader, "download_bytes", mock_download_bytes
+        ):
             config = config_loader.get_from_yos()
 
         assert config == mock_config_data
-        mock_get_object.assert_called_once_with(
-            Bucket=mock_config.BUCKET_NAME,
-            Key=mock_config.MAP_JSON_YOS_OBJ_KEY,
+        mock_download_bytes.assert_called_once_with(
+            mock_config.MAP_JSON_YOS_OBJ_KEY,
         )
 
     def test_get_from_yos_request_error(self, mocker):
         """Test get_from_yos method when get_object fails."""
         mock_config = LauncherConfig()
-        config_loader = ConfigLoader(mock_config)
-        config_loader._boto3_client = MagicMock()
+        mock_file_downloader = MagicMock()
+        mock_file_downloader.download_bytes = MagicMock()
+        config_loader = ConfigLoader(mock_file_downloader, mock_config)
+
         with pytest.raises(ConfigDownloadError):
             mocker.patch.object(
-                config_loader._boto3_client,
-                "get_object",
-                side_effect=boto3.exceptions.Boto3Error,
+                mock_file_downloader,
+                "download_bytes",
+                side_effect=FiletDownloadError,
             )
             config_loader.get_from_yos()
 
@@ -172,25 +103,6 @@ class TestConfigLoader:
         with pytest.raises(ConfigProcessingError):
             ConfigLoader._create_model_from_bytes("invalid_data")
 
-    def test_boto3_client_property(self, mocker):
-        """Test boto3_client property."""
-        # Create an instance of ConfigLoader
-        config_loader = ConfigLoader(LauncherConfig())
-
-        # Mock _install_boto3_instance method
-        mock_install_boto3_instance = mocker.patch.object(
-            config_loader, "_install_boto3_instance"
-        )
-
-        # Call the boto3_client property
-        boto3_client = config_loader.boto3_client
-
-        # Ensure that _install_boto3_instance method was called
-        mock_install_boto3_instance.assert_called_once()
-
-        # Ensure that the returned value is _boto3_client
-        assert boto3_client == config_loader._boto3_client
-
 
 class TestConfigGetter:
     """Unit tests for ConfigGetter"""
@@ -200,9 +112,7 @@ class TestConfigGetter:
         Test config_list method to ensure it returns a list of supported
         configuration names.
         """
-        server_config = ConfigGetter(
-            mock_config_data, LauncherConfig(), MagicMock()
-        )
+        server_config = ConfigGetter(mock_config_data, LauncherConfig())
         assert server_config.config_list == [DISPLAY_NAME_1, DISPLAY_NAME_2]
 
     def test_set_active_existing_config(self, mock_config_data):
@@ -213,14 +123,12 @@ class TestConfigGetter:
         server_config = ConfigGetter(
             mock_config_data,
             mock_launcher_config,
-            MagicMock(),
         )
         assert server_config._active_config_display_name == DISPLAY_NAME_1
         assert server_config.active == ServerConfig(
             CONFIG_NAME_1,
             mock_config_data["modpacks"][CONFIG_NAME_1],
             mock_launcher_config,
-            MagicMock(),
         )
 
         assert server_config.set_active(DISPLAY_NAME_2) is True
@@ -228,7 +136,6 @@ class TestConfigGetter:
             CONFIG_NAME_2,
             mock_config_data["modpacks"][CONFIG_NAME_2],
             mock_launcher_config,
-            MagicMock(),
         )
 
     def test_set_active_non_existing_config(self, mock_config_data):
@@ -239,7 +146,6 @@ class TestConfigGetter:
         server_config = ConfigGetter(
             mock_config_data,
             mock_launcher_config,
-            MagicMock(),
         )
         assert server_config.set_active("NonExistingConfig") is False
 
@@ -252,7 +158,6 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
-            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -269,7 +174,6 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
-            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -287,7 +191,6 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
-            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
@@ -305,7 +208,6 @@ class TestServerConfig:
         server_config = ConfigGetter(
             mock_config_data,
             LauncherConfig(),
-            MagicMock(),
         ).active
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
