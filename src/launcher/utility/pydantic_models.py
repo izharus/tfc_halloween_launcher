@@ -1,4 +1,5 @@
 """A module with Pydantic models."""
+
 from typing import Dict, List
 
 from pydantic import BaseModel, field_validator
@@ -89,3 +90,14 @@ class MapJson(BaseModel):
         if not modpacks:
             raise ValueError("modpacks dictionary could not be empty")
         return modpacks
+
+
+class AuthData(BaseModel):
+    """
+    Represents user credential data.
+    """
+
+    status: str
+    username: str
+    uuid: str
+    accessToken: str

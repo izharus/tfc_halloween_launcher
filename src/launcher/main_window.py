@@ -29,7 +29,7 @@ import win32gui
 from loguru import logger as log
 from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, Qt, QTimer
-from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QFileDialog
 
 from .data_validation import Validator
@@ -40,13 +40,10 @@ from .design.utility import (
     NotificationWidget,
     open_directory,
 )
-from .launcher_authorization import (
-    AuthorizationThread,
-    CapeUploaderThread,
-    SkinUploaderThread,
-)
+from .launcher_authorization import CapeUploaderThread, SkinUploaderThread
 from .launcher_configs import ConfigGetter, ConfigLoader, LauncherConfig
 from .launcher_installer import InstallThread, MinecraftExecutorThread
+from .login_widget import LoginWidget
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigLoaderInitError,
@@ -172,9 +169,7 @@ class Window(QtWidgets.QMainWindow):
         )
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
-        self._authorization_thread = AuthorizationThread(
-            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
-        )
+
         self._install_thread.progress_max.connect(
             lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
         )
@@ -187,10 +182,10 @@ class Window(QtWidgets.QMainWindow):
         self._install_thread.finished.connect(self._install_thread_finished)
 
         self._ui_instance.pushButton_install_and_launch.clicked.connect(
-            self._make_authorization
+            self._install_minecraft_multi_thread
         )
-        self._authorization_thread.finished.connect(
-            self._make_authorization_finished
+        self.login_logic = LoginWidget(
+            self._ui_instance, self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
         )
 
         self.setWindowTitle("TFC-Halloween 3.0.3")
@@ -211,14 +206,27 @@ class Window(QtWidgets.QMainWindow):
 
         self.setWindowIcon(QIcon(self.icon_file_path))
         self._executor: MinecraftExecutorThread
-        background_image_path = self.path_manager.get_image_path(
-            "background.jpg"
-        )
-        self._ui_instance.label_background.setPixmap(
-            QPixmap(background_image_path)
+        self._init_background()
+        hide_console()
+
+    def _init_background(self):
+        self.setWindowFlags(
+            Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint
         )
 
-        hide_console()
+        # remove frame
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        # make the main window transparent
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        self._ui_instance.stackedWidget.setStyleSheet(
+            """
+            #stackedWidget {
+            background-image: url(:/resources/background/main_back.jpg);
+            border-radius: 50px;
+            }
+            """
+        )
 
     # pylint: disable=C0103
     def mousePressEvent(self, event):
@@ -369,22 +377,6 @@ class Window(QtWidgets.QMainWindow):
         ui_data_file_path = self._launcher_config.ui_data_path
         return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
 
-    def _make_authorization(self) -> None:
-        if not self.update_config():
-            return
-        if not self.set_config_from_ui():
-            return
-        self.input_data.update_input_data_from_ui()
-        login = self.input_data.extract_element("lineEdit_nickname")
-        password = self.input_data.extract_element("lineEdit_password")
-        if not login or not password:
-            self.msg_box.warn(
-                "Не заполнен логин или пароль",
-            )
-            return
-        self._authorization_thread.set_auth_data(login, password)
-        self._authorization_thread.start()
-
     def _choose_skin_and_upload(self, directory: str) -> None:
         # Open a file dialog and get the selected file path
         if not os.path.exists(directory):
@@ -458,16 +450,6 @@ class Window(QtWidgets.QMainWindow):
             self.notif_widget.show_and_close("Операция завершена!")
             log.info("Операция завершена!")
 
-    def _make_authorization_finished(self) -> None:
-        if not self._authorization_thread.runtime_error:
-            self._install_minecraft_multi_thread()
-        else:
-            self.msg_box.warn(
-                "Ошибка авторизации.",
-                str(self._authorization_thread.runtime_error),
-            )
-            log.error(self._authorization_thread.runtime_error)
-
     def _install_minecraft_multi_thread(self) -> None:
         """
         Initiates the multi-threaded installation of Minecraft.
@@ -529,7 +511,7 @@ class Window(QtWidgets.QMainWindow):
         self.config_getter.active.is_minecraft_installed = True
         self.update_main_button_text()
         self.hide()
-        auth_data = self._authorization_thread.get_last_auth_data()
+        auth_data = self.login_logic.auth_data
         if not auth_data:
             self.msg_box.warn(
                 "Критическая ошибка",
@@ -537,8 +519,8 @@ class Window(QtWidgets.QMainWindow):
             )
             return
         nickname = self.input_data.extract_element("lineEdit_nickname")
-        uuid = auth_data["uuid"]
-        access_token = auth_data["accessToken"]
+        uuid = auth_data.uuid
+        access_token = auth_data.accessToken
         self._executor = MinecraftExecutorThread(
             nickname,
             uuid,
