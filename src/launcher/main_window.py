@@ -222,7 +222,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.stackedWidget.setStyleSheet(
             """
             #stackedWidget {
-            background-image: url(:/resources/background/main_back.jpg);
+            background-image: url(:/data/background/main_back.jpg);
             border-radius: 50px;
             }
             """
