@@ -10,24 +10,16 @@ from unittest.mock import MagicMock
 import minecraft_launcher_lib as mine_lib
 import pytest
 from src.launcher.launcher_configs import (
-    ConfigGetter,
-    ConfigLoader,
     LauncherConfig,
     ServerConfig,
+    ServerConfigManager,
 )
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     FiletDownloadError,
 )
-
-# from src.launcher.utility.file_downloader import FileDownloader
-from src.test.conftest import (
-    CONFIG_NAME_1,
-    CONFIG_NAME_2,
-    DISPLAY_NAME_1,
-    DISPLAY_NAME_2,
-)
+from src.launcher.utility.pydantic_models import MapJson
 
 
 @pytest.fixture(autouse=True)
@@ -45,120 +37,117 @@ def mock_window(
         yield
 
 
-class TestConfigLoader:
-    """Unit tests for ConfigLoader."""
+class TestServerConfigManager:
+    """Tests for ServerConfigManager."""
 
-    def test_get_from_yos_success(
+    def test_update_config_success(
         self,
         mocker,
         mock_config_data,
     ):
-        """Test get_from_yos method with correct json data."""
-
-        mock_config = LauncherConfig()
-
+        """Test update_config method with correct json data."""
+        object_key = "mock_object_key"
         mock_file_downloader = MagicMock()
-        config_loader = ConfigLoader(mock_file_downloader, mock_config)
-
         mock_download_bytes = MagicMock(
             return_value=json.dumps(mock_config_data)
         )
-
         with mocker.patch.object(
             mock_file_downloader, "download_bytes", mock_download_bytes
         ):
-            config = config_loader.get_from_yos()
-
-        assert config == mock_config_data
-        mock_download_bytes.assert_called_once_with(
-            mock_config.MAP_JSON_YOS_OBJ_KEY,
-        )
-
-    def test_get_from_yos_request_error(self, mocker):
-        """Test get_from_yos method when get_object fails."""
-        mock_config = LauncherConfig()
-        mock_file_downloader = MagicMock()
-        mock_file_downloader.download_bytes = MagicMock()
-        config_loader = ConfigLoader(mock_file_downloader, mock_config)
-
-        with pytest.raises(ConfigDownloadError):
-            mocker.patch.object(
+            config_manager = ServerConfigManager(
                 mock_file_downloader,
-                "download_bytes",
-                side_effect=FiletDownloadError,
+                object_key,
             )
-            config_loader.get_from_yos()
-
-    def test__create_model_from_bytes_valid_json_data(self):
-        """Test _create_model_from_bytes method with valid JSON data."""
-        valid_json_data = b'{"key": "value"}'
-        expected_result = {"key": "value"}
-
-        result = ConfigLoader._create_model_from_bytes(valid_json_data)
-
-        assert result == expected_result
-
-    def test__create_model_from_bytes_invalid_json_data(self):
-        """Test _create_model_from_bytes method when json data is invalid."""
-        with pytest.raises(ConfigProcessingError):
-            ConfigLoader._create_model_from_bytes("invalid_data")
-
-
-class TestConfigGetter:
-    """Unit tests for ConfigGetter"""
-
-    def test_config_list(self, mock_config_data):
-        """
-        Test config_list method to ensure it returns a list of supported
-        configuration names.
-        """
-        server_config = ConfigGetter(mock_config_data, LauncherConfig())
-        assert server_config.config_list == [DISPLAY_NAME_1, DISPLAY_NAME_2]
-
-    def test_set_active_existing_config(self, mock_config_data):
-        """
-        Test set_active method for an existing config name.
-        """
-        mock_launcher_config = LauncherConfig()
-        server_config = ConfigGetter(
-            mock_config_data,
-            mock_launcher_config,
-        )
-        assert server_config._active_config_display_name == DISPLAY_NAME_1
-        assert server_config.active == ServerConfig(
-            CONFIG_NAME_1,
-            mock_config_data["modpacks"][CONFIG_NAME_1],
-            mock_launcher_config,
+        assert config_manager.map_json == MapJson(**mock_config_data)
+        mock_download_bytes.assert_called_once_with(
+            object_key,
         )
 
-        assert server_config.set_active(DISPLAY_NAME_2) is True
-        assert server_config.active == ServerConfig(
-            CONFIG_NAME_2,
-            mock_config_data["modpacks"][CONFIG_NAME_2],
-            mock_launcher_config,
-        )
+    def test_update_config_download_error(
+        self,
+        mocker,
+    ):
+        """Test update_config method when download failed."""
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        with mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            side_effect=FiletDownloadError,
+        ):
+            with pytest.raises(ConfigDownloadError):
+                ServerConfigManager(
+                    mock_file_downloader,
+                    object_key,
+                )
 
-    def test_set_active_non_existing_config(self, mock_config_data):
-        """
-        Test set_active method for a non-existing config name.
-        """
-        mock_launcher_config = LauncherConfig()
-        server_config = ConfigGetter(
-            mock_config_data,
-            mock_launcher_config,
-        )
-        assert server_config.set_active("NonExistingConfig") is False
+    def test_update_config_with_invalid_json_data(
+        self,
+        mocker,
+    ):
+        """Test update_config method with valid JSON data."""
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        with mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            return_value=b'{"some_key": 1}',
+        ):
+            with pytest.raises(ConfigProcessingError):
+                ServerConfigManager(
+                    mock_file_downloader,
+                    object_key,
+                )
+
+    def test_update_config_with_invalid_json_data_type(
+        self,
+        mocker,
+    ):
+        """Test update_config method with valid JSON data."""
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        with mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            return_value="1",
+        ):
+            with pytest.raises(ConfigProcessingError):
+                ServerConfigManager(
+                    mock_file_downloader,
+                    object_key,
+                )
+
+    def test_update_config_with_incorrect_json(
+        self,
+        mocker,
+    ):
+        """Test update_config method with valid JSON data."""
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        with mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            return_value="{{{{1",
+        ):
+            with pytest.raises(ConfigProcessingError):
+                ServerConfigManager(
+                    mock_file_downloader,
+                    object_key,
+                )
 
 
 class TestServerConfig:
     """Unit tests for ServerConfig."""
 
-    def test_is_minecraft_installed_set_true(self, tmp_path, mock_config_data):
+    def test_is_minecraft_installed_set_true(
+        self, tmp_path, mock_modpack_data
+    ):
         """Test setting Minecraft installed flag to True."""
-        server_config = ConfigGetter(
-            mock_config_data,
+        server_config = ServerConfig(
+            "name",
+            mock_modpack_data,
             LauncherConfig(),
-        ).active
+        )
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
         )
@@ -168,13 +157,14 @@ class TestServerConfig:
         assert server_config._launcher_config.launcher_data[field] is True
 
     def test_sis_minecraft_installed_set_true_and_false(
-        self, tmp_path, mock_config_data
+        self, tmp_path, mock_modpack_data
     ):
         """Test setting Minecraft installed flag to True and False."""
-        server_config = ConfigGetter(
-            mock_config_data,
+        server_config = ServerConfig(
+            "name",
+            mock_modpack_data,
             LauncherConfig(),
-        ).active
+        )
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
         )
@@ -184,14 +174,15 @@ class TestServerConfig:
         field = f"{server_config.internal_name}_is_installed"
         assert server_config._launcher_config.launcher_data[field] is False
 
-    def test_is_minecraft_installed(self, tmp_path, mock_config_data):
+    def test_is_minecraft_installed(self, tmp_path, mock_modpack_data):
         """
         Test the is_minecraft_installed method of MinecraftLauncherConfig.
         """
-        server_config = ConfigGetter(
-            mock_config_data,
+        server_config = ServerConfig(
+            "name",
+            mock_modpack_data,
             LauncherConfig(),
-        ).active
+        )
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
         )
@@ -201,14 +192,15 @@ class TestServerConfig:
         server_config.is_minecraft_installed = True
         assert server_config.is_minecraft_installed
 
-    def test__update_launcher_data(self, tmp_path, mock_config_data):
+    def test__update_launcher_data(self, tmp_path, mock_modpack_data):
         """
         Test the _update_launcher_data method of MinecraftLauncherConfig.
         """
-        server_config = ConfigGetter(
-            mock_config_data,
+        server_config = ServerConfig(
+            "name",
+            mock_modpack_data,
             LauncherConfig(),
-        ).active
+        )
         server_config._launcher_config._launcher_data_path = os.path.join(
             tmp_path, "launcher_data.bin"
         )
