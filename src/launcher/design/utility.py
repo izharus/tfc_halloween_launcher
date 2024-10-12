@@ -6,13 +6,13 @@ from qtpy import QtGui, QtWidgets
 from qtpy.QtCore import Qt, QUrl
 from qtpy.QtGui import QDesktopServices, QFont, QPixmap
 from qtpy.QtWidgets import (
+    QGraphicsBlurEffect,
     QLabel,
     QLayout,
     QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QGraphicsBlurEffect,
 )
 
 from .styles import MainButtonData, ServerWidgetCSS
@@ -191,6 +191,25 @@ def open_directory(path_to_directory: str):
     """
     url = QUrl.fromLocalFile(path_to_directory)
     QDesktopServices.openUrl(url)
+
+
+def clear_layout(layout: QLayout) -> None:
+    """Recursively removes all widgets and layouts from the given layout.
+
+    Args:
+        layout (QLayout): The layout to clear.
+    """
+
+    while layout.count():
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.deleteLater()
+        else:
+            if item.layout() is not None:
+                clear_layout(item.layout())
+
+
 class BaseWidget:
     """
     A base class for creating a widget with blur effect and an info widget.
@@ -198,6 +217,7 @@ class BaseWidget:
     To change the info message, set new text to the `info_label`.
     To add a new widget, add it to the `info_widget`.
     """
+
     def __init__(self, widget: QWidget, widget_parent: QWidget):
         self._widget = widget
         self._widget_parent = widget_parent
@@ -206,7 +226,7 @@ class BaseWidget:
         # Create an info widget that will contain the info label
         self.info_widget = QWidget(self._widget_parent)
 
-         # Use QGridLayout for grid layout
+        # Use QGridLayout for grid layout
         self.layout = QVBoxLayout(self.info_widget)
         self.info_label = QLabel("Инициализация...", self._widget_parent)
         self.info_label.setAlignment(Qt.AlignCenter)
@@ -240,3 +260,75 @@ class BaseWidget:
         """Remove the blur effect from the login window."""
         self._widget.setGraphicsEffect(None)
 
+
+class ServerWidget(QPushButton):
+    """
+    Template widget for server data: Image, server information, play button.
+    """
+
+    # pylint: disable=R0913, R0917
+    def __init__(
+        self,
+        title: str,
+        subtitle: str,
+        cur_online: int = 0,
+        max_online: int = 0,
+        image_path: str = ":/data/background/server-icon.png",
+        parent: Optional[QWidget] = None,
+    ):
+        super().__init__(parent)
+
+        # Set widget size
+        self.setFixedSize(200, 300)
+        self.setStyleSheet(ServerWidgetCSS.main_widget)
+
+        # Main layout of the widget
+        layout = QVBoxLayout(self)
+
+        # Add an image
+        self.image_label = QLabel(self)
+        pixmap = QPixmap(image_path)
+        self.image_label.setPixmap(pixmap.scaled(180, 180, Qt.KeepAspectRatio))
+        layout.addWidget(self.image_label)
+
+        # Set server title
+        self.title_label = QLabel(title, self)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setBold(True)
+        self.title_label.setFont(font)
+        layout.addWidget(self.title_label)
+
+        # Set server subtitle
+        self.subtitle_label = QLabel(subtitle, self)
+        self.subtitle_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.subtitle_label)
+
+        # Progress bar for current server online status
+        self.progress_bar = QProgressBar(self)
+
+        self.progress_bar.setMinimum(0)
+        if cur_online and max_online:
+            self.progress_bar.setMaximum(max_online)
+            self.progress_bar.setValue(cur_online)
+            self.progress_bar.setFormat(f"{cur_online} В ИГРЕ")
+            self.progress_bar.setStyleSheet(
+                ServerWidgetCSS.progress_bar_online
+            )
+        else:
+            self.progress_bar.setMaximum(1)
+            self.progress_bar.setValue(1)
+            self.progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
+            self.progress_bar.setStyleSheet(
+                ServerWidgetCSS.progress_bar_offline
+            )
+
+        # Setting alignment to centre
+        self.progress_bar.setAlignment(Qt.AlignCenter)
+        self.progress_bar.setTextVisible(True)
+        layout.addWidget(self.progress_bar)
+
+        self.push_button = QPushButton("ИГРАТЬ", self)
+        self.push_button.setStyleSheet(ServerWidgetCSS.play_button)
+        layout.addWidget(self.push_button)
+        layout.addStretch()
