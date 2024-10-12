@@ -126,13 +126,13 @@ class TestLoginWidget:
 
         assert self.widget.auth_data == auth_data
         assert self.widget._ui.pushButton_error_info.isHidden()
-        assert self.widget._info_label.isHidden()
+        assert self.widget.info_widget.isHidden()
 
         assert self.widget._ui.stackedWidget.currentIndex() == 1
 
     def test_ui_elements_initialization(self, qtbot):
         """Test if all necessary UI elements are hidden initially."""
-        assert self.widget._info_label.isHidden()
+        assert self.widget.info_widget.isHidden()
         assert self.widget._ui.pushButton_error_info.isHidden()
 
     def test_login_button_disabled_on_invalid_input(self, qtbot):
@@ -150,7 +150,7 @@ class TestLoginWidget:
     def test_blur_effect_on_login(self, qtbot):
         """Test that blur effect is applied during login process."""
         self.widget.block_ui()  # Start the authentication process
-        assert self.widget._blur_effect is not None
+        assert self.widget._widget.graphicsEffect()
 
         self.widget.enable_ui()  # Complete the authentication
-        assert self.widget._blur_effect is None
+        assert not self.widget._widget.graphicsEffect()

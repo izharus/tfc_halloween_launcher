@@ -1,13 +1,21 @@
-"""Utillity module for creating and managing UI elements."""
+"""Utility module for creating and managing UI elements."""
 
 from typing import Any, Callable, Optional
 
 from qtpy import QtGui, QtWidgets
-from qtpy.QtCore import QUrl
-from qtpy.QtGui import QDesktopServices
-from qtpy.QtWidgets import QLabel, QPushButton, QWidget
+from qtpy.QtCore import Qt, QUrl
+from qtpy.QtGui import QDesktopServices, QFont, QPixmap
+from qtpy.QtWidgets import (
+    QLabel,
+    QLayout,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+    QGraphicsBlurEffect,
+)
 
-from .styles import MainButtonData
+from .styles import MainButtonData, ServerWidgetCSS
 
 
 class MessageBoxManager:
@@ -183,3 +191,52 @@ def open_directory(path_to_directory: str):
     """
     url = QUrl.fromLocalFile(path_to_directory)
     QDesktopServices.openUrl(url)
+class BaseWidget:
+    """
+    A base class for creating a widget with blur effect and an info widget.
+
+    To change the info message, set new text to the `info_label`.
+    To add a new widget, add it to the `info_widget`.
+    """
+    def __init__(self, widget: QWidget, widget_parent: QWidget):
+        self._widget = widget
+        self._widget_parent = widget_parent
+        self._blur_effect: QGraphicsBlurEffect
+
+        # Create an info widget that will contain the info label
+        self.info_widget = QWidget(self._widget_parent)
+
+         # Use QGridLayout for grid layout
+        self.layout = QVBoxLayout(self.info_widget)
+        self.info_label = QLabel("Инициализация...", self._widget_parent)
+        self.info_label.setAlignment(Qt.AlignCenter)
+        self.info_label.setStyleSheet("font-size: 24px; color: white;")
+
+        # Add info_label to the grid layout at row 0, column 0
+        self.layout.addWidget(self.info_label)
+
+        self.info_widget.setGeometry(self._widget_parent.geometry())
+        self.info_widget.hide()
+
+    def block_ui(self):
+        """Disable and blur widget."""
+        self._widget.setEnabled(False)
+        self._blur_window()
+        self.info_widget.show()
+
+    def enable_ui(self):
+        """Enable widget and disable blur.."""
+        self._widget.setEnabled(True)
+        self._remove_blur()
+        self.info_widget.hide()
+
+    def _blur_window(self):
+        """Apply a blur effect to the login window."""
+        self._blur_effect = QGraphicsBlurEffect()
+        self._blur_effect.setBlurRadius(15)
+        self._widget.setGraphicsEffect(self._blur_effect)
+
+    def _remove_blur(self):
+        """Remove the blur effect from the login window."""
+        self._widget.setGraphicsEffect(None)
+
