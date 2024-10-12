@@ -71,14 +71,6 @@ def mock_window(
     # fmt: on
 
 
-def test_get_config_loader_success(
-    mock_download_from_url, mock_config_data, mock_window
-):
-    """Test that the configuration loader is successfully initialized."""
-    window = mock_window
-    assert window.config_loader.get_from_url() == mock_config_data
-
-
 def test_update_server_type_combobox_with_updated_config_data(
     mock_boto3_client_get_object,
     mock_window,

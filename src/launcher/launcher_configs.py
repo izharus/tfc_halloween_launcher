@@ -10,23 +10,20 @@ import json
 import os
 import shelve
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import boto3
-import boto3.exceptions
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
+from pydantic import ValidationError
 from unidecode import unidecode
 
-from ..launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utility.custom_exceptions import (
     ConfigDownloadError,
-    ConfigLoaderInitError,
     ConfigProcessingError,
-    RequestDownloadError,
+    FiletDownloadError,
 )
-from .utility.file_downloader import FileDownloader
+from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
 
 
@@ -194,214 +191,89 @@ class LauncherConfig:
             log.debug(traceback.format_exc)
 
 
-class ConfigLoader:
+class ServerConfigManager:
     """
-    A class for loading modpacks configuration data.
-
-    Args:
-        launcher_config (LauncherConfig): An instance of LauncherConfig
-            containing configuration parameters.
-    """
-
-    def __init__(self, launcher_config: LauncherConfig) -> None:
-        """
-        Initializes the ConfigLoader instance.
-
-        Args:
-            launcher_config (LauncherConfig): An instance of LauncherConfig
-                containing modpacks configuration parameters.
-
-        Raises: ConfigLoaderInitError if failed to initialize
-            a boto3 instance.
-        """
-        self._boto3_client: boto3.client
-        self._install_boto3_instance()
-        self._launcher_config = launcher_config
-
-    def _install_boto3_instance(self):
-        """
-        Install boto3 client instance if not already installed.
-
-        Raises: ConfigLoaderInitError if failed to initialize
-            a boto3 instance.
-        """
-        try:
-            self._boto3_client = boto3.client(
-                "s3",
-                endpoint_url="https://storage.yandexcloud.net",
-                aws_access_key_id=BOTO3_ACCESS_KEY,
-                aws_secret_access_key=BOTO3_SECRET_KEY,
-            )
-        except boto3.exceptions.Boto3Error as error:
-            log.error(f"Failed to create an s3 instance: {error}")
-            raise ConfigLoaderInitError from error
-
-    @property
-    def boto3_client(self) -> Optional[boto3.client]:
-        """
-        Returns the boto3 client instance.
-
-        Returns:
-            Optional[boto3.client]: The boto3 client instance.
-        """
-        self._install_boto3_instance()
-        return self._boto3_client
-
-    @staticmethod
-    def _create_model_from_bytes(
-        bytes_file_data: bytes,
-    ) -> Dict:
-        """
-        Creates a MapJson model instance from bytes file data.
-
-        Args:
-            bytes_file_data (bytes): The bytes file data containing JSON data.
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error processing
-                the configuration data.
-        """
-        try:
-            config = json.loads(bytes_file_data)
-        except Exception as error:
-            log.error(f"Failed to load json from config file: {error}")
-            raise ConfigProcessingError from error
-        return config
-
-    def get_from_url(
-        self,
-    ) -> Dict:
-        """
-        Retrieves configuration data from a URL.
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error
-                processing the configuration data.
-        """
-        try:
-            bytes_file_data = FileDownloader.download_file_from_url(
-                self._launcher_config.MAP_JSON_URL
-            )
-        except RequestDownloadError as error:
-            log.error("Failed to load a config file.")
-            raise ConfigDownloadError from error
-        return self._create_model_from_bytes(bytes_file_data)
-
-    def get_from_yos(
-        self,
-    ) -> Dict:
-        """
-        Retrieves configuration data from YOS (Yandex Object Storage).
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error processing
-                the configuration data.
-        """
-        try:
-            bytes_file_data = FileDownloader.download_file_from_yos(
-                self._boto3_client,
-                self._launcher_config.BUCKET_NAME,
-                self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
-            )
-        except RequestDownloadError as error:
-            log.error(f"Failed to load a config file. {error}")
-            raise ConfigDownloadError from error
-        return self._create_model_from_bytes(bytes_file_data)
-
-
-class ConfigGetter:
-    """
-    A class for managing server configurations.
-
-    Attributes:
-        _launcher_config (LauncherConfig): The launcher configuration.
-        _modpacks_configs (Dict): A dictionary of modpack configurations.
-        _active_config_display_name (str): The name of the active modpack
-            configuration.
+    Manages server configurations, including downloading, validating,
+    and retrieving modpack data.
     """
 
     def __init__(
         self,
-        config_data: Dict,
-        launcher_config: LauncherConfig,
-        boto3_client: boto3.client,
+        file_downloader: FileDownloaderProtocol,
+        map_object_key: str,
     ):
         """
         Initializes the ConfigGetter instance.
 
         Args:
-            config_data (Dict): Configuration data for the server.
-            launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client: (boto3.client]: A boto3 client instance.
+            file_downloader (FileDownloaderProtocol): An instance of the class
+                for downloading files.
+            map_object_key (str): An object key of map.json in object_storage
 
         Raises:
-            ValidationError: If the config_data fails Pydantic validation.
+            ConfigProcessingError: If the config_data fails
+                Pydantic validation.
+            ConfigDownloadError: If failed to download config.
         """
-        self._launcher_config = launcher_config
-        map_json = MapJson(**config_data)
-        self._modpacks_configs = config_data["modpacks"]
 
-        self._display_names_list = list(
-            config.server_config.display_name
-            for config in map_json.modpacks.values()
-        )
-        self._active_config_display_name: str = self._display_names_list[0]
-        self._configs_map = dict(
-            zip(self._display_names_list, map_json.modpacks.keys())
-        )
-        self._boto3_client = boto3_client
+        self._file_downloader = file_downloader
+        self._object_key = map_object_key
+        self._map_json: MapJson
+
+        self.update_config()
+
+    def update_config(self):
+        """
+        Downloads and validates the configuration map JSON.
+
+        Downloads the file specified by the launcher config key, validates it
+        using the `MapJson` Pydantic model, and stores the validated data.
+
+        Raises:
+            ConfigDownloadError: If the file download fails.
+            ConfigProcessingError: If the file contents are invalid JSON or
+                                fail validation.
+        """
+        try:
+            bytes_file_data = self._file_downloader.download_bytes(
+                self._object_key,
+            )
+            self._map_json = MapJson.model_validate(
+                json.loads(bytes_file_data)
+            )
+        except FiletDownloadError as download_error:
+            log.error(f"Failed to download file for key: {self._object_key}")
+            raise ConfigDownloadError from download_error
+        except json.JSONDecodeError as json_error:
+            log.error(
+                "Invalid JSON received for key "
+                f"'{self._object_key}': {json_error}"
+            )
+            raise ConfigProcessingError("Invalid JSON format.") from json_error
+        except ValidationError as validation_error:
+            log.error(f"Validation failed for map JSON: {validation_error}")
+            raise ConfigProcessingError from validation_error
 
     @property
-    def active(self) -> "ServerConfig":
+    def map_json(self) -> "MapJson":
         """
-        Returns the active server configuration.
+        Returns the `MapJson` object containing
+        the configuration of all servers.
 
         Returns:
-            ServerConfig: The active server configuration.
+            MapJson: An MapJson instance with server configuration data.
         """
-        return ServerConfig(
-            self._configs_map[self._active_config_display_name],
-            self._modpacks_configs[
-                self._configs_map[self._active_config_display_name]
-            ],
-            self._launcher_config,
-            boto3_client=self._boto3_client,
-        )
+        return self._map_json
 
-    @property
-    def config_list(self) -> List[str]:
+    def get_config(self, config_name: str) -> Optional["Modpack"]:
         """
-        Returns the list of available server configurations.
+        Retrieves a specific modpack configuration by its name.
 
         Returns:
-            List[str]: The list of available server configurations.
+            Optional[Modpack]: The modpack configuration if found,
+                otherwise `None`.
         """
-        return list(self._display_names_list)
-
-    def set_active(self, display_name: str) -> bool:
-        """
-        Sets the active server configuration.
-
-        Args:
-            display_name (str): The name of the configuration to set as active.
-
-        Returns:
-            bool: True if the configuration was successfully set
-                as active, False otherwise.
-        """
-        if display_name in self._configs_map:
-            self._active_config_display_name = display_name
-            return True
-        return False
+        return self._map_json.modpacks.get(config_name, None)
 
 
 class ServerConfig(Modpack):
@@ -424,7 +296,6 @@ class ServerConfig(Modpack):
         internal_name: str,
         modpack_data: Dict,
         launcher_config: LauncherConfig,
-        boto3_client: boto3.client,
     ):
         """
         Initializes the ServerConfig instance.
@@ -433,17 +304,10 @@ class ServerConfig(Modpack):
             internal_name (str): Internal name for current config.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client (boto3.client): A boto3 instance.
         """
         super().__init__(**modpack_data, internal_name=internal_name)
         self._launcher_config = launcher_config
         self._minecraft_directory = self._generate_minecraft_directory()
-        self._boto3_client = boto3_client
-
-    @property
-    def boto3_client(self) -> boto3.client:
-        """Return a boto3_client instance if it exists."""
-        return self._boto3_client
 
     def _generate_minecraft_directory(self) -> str:
         """
