@@ -142,3 +142,33 @@ class TestLoginWidget:
 
         self.widget.enable_ui()  # Complete the authentication
         assert not self.widget._widget.graphicsEffect()
+
+    def test_if_ui_enables_after_failed_authentication(self, qtbot):
+        """Test if ui enables if authentication failed."""
+
+        self.widget._worker.set_auth_data("login", "pass")
+        with requests_mock.Mocker() as m:
+            m.post(
+                LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR,
+                status_code=500,  # Internal Server Error
+            )
+            self.widget._worker.run()
+        assert self.widget._widget.isEnabled()
+
+    def test_if_ui_disables_after_successful_authentication(
+        self, qtbot, mock_auth_data
+    ):
+        """Test if ui is disabled after successful authentication."""
+
+        self.widget._worker.set_auth_data("login", "pass")
+
+        # Simulate blocking ui after clicking on login button
+        self.widget.block_ui()
+        with requests_mock.Mocker() as m:
+            m.post(
+                LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR,
+                status_code=200,  # Internal Server Error
+                json=mock_auth_data,
+            )
+            self.widget._worker.run()
+        assert not self.widget._widget.isEnabled()

@@ -143,6 +143,7 @@ class LoginWidget(QObject, BaseWidget):
 
         self._worker.write_message.connect(self.info_label.setText)
         self._worker.error_message.connect(self.write_error)
+        self._worker.error_message.connect(self.enable_ui)
 
         self._worker.success.connect(self._complete_authentication)
 
