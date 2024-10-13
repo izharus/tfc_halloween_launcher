@@ -53,8 +53,8 @@
         background-attachment: fixed; /* Optional, to prevent scrolling with the content */
     }</string>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_3">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="minimumSize">
        <size>
@@ -69,12 +69,14 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true"/>
+       <string notr="true">#stackedWidget{
+background-image: url(:/data/background/main_back.jpg);
+}</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="page_1">
+      <widget class="QWidget" name="login_page">
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="2">
          <spacer name="horizontalSpacer">
@@ -406,233 +408,155 @@ QLabel:hover {
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="page_2">
+      <widget class="QWidget" name="choose_server_page">
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="bottomMargin">
+         <number>25</number>
+        </property>
         <item>
          <widget class="QWidget" name="widget" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout"/>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QWidget" name="widget_4" native="true"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_4">
+             <property name="minimumSize">
+              <size>
+               <width>64</width>
+               <height>64</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>64</width>
+               <height>64</height>
+              </size>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton {
+    background-image: url(:/data/background/settings.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none; /* Убираем границы */
+    border-radius: 10px; /* Скругляем углы кнопки */
+    padding: 10px; /* Добавляем внутренние отступы */
+    color: white; /* Устанавливаем цвет текста */
+    font-size: 16px; /* Устанавливаем размер шрифта */
+    font-weight: bold; /* Устанавливаем жирный шрифт */
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
+}
+</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>160</width>
+               <height>160</height>
+              </size>
+             </property>
+             <property name="flat">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
         <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="0">
-           <widget class="QComboBox" name="comboBox_server_type">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>60</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>60</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">/* Modern Style QLineEdit */
-.QComboBox {
-  border: 2px solid #ccc;
-  background-color: #f9f9f9;
-  color: #333;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 15px; /* Adjust the value to control the corner smoothness */
-
-}
-
-.QComboBox:focus {
-  outline: none;
-  border-color: #4287f5;
-  background-color: #fff;
-}
-
-.QComboBox::placeholder {
-  color: #999;
-}
-
-.QComboBox:hover {
-  border-color: #999;
-}
-
-QComboBox:editable {
-    background: white;
-}
-
-
-
-QComboBox:on { /* shift the text when the popup opens */
-    padding-top: 3px;
-    padding-left: 4px;
-}
-
-
-QComboBox:on { /* shift the text when the popup opens */
-    padding-top: 3px;
-    padding-left: 4px;
-}
-
-QComboBox:drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 15px;
-
-    border-left-width: 1px;
-    border-left-color: darkgray;
-    border-left-style: solid; /* just a single line */
-    border-top-right-radius: 3px; /* same radius as the QComboBox */
-    border-bottom-right-radius: 3px;
- border-radius: 15px; /* Adjust the value to control the corner smoothness */
-}
-
-
-</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>TFC Halloween</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>TFC Halloween TEST</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="pushButton_install_and_launch">
-            <property name="minimumSize">
-             <size>
-              <width>300</width>
-              <height>80</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
-  background-color: #3A92F7;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #303EF7;
-}
-
-
-QPushButton:pressed {
-  background-color: #1000F7;
-  border: 1px solid #00274D;
-}
-</string>
-            </property>
-            <property name="text">
-             <string>Запустить TFC-Halloween</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>200</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
-  background-color: #3A92F7;
-  border: none;
-  border-radius: 5px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #303EF7;
-}
-
-
-QPushButton:pressed {
-  background-color: #1000F7;
-  border: 1px solid #00274D;
-}
-</string>
-            </property>
-            <property name="text">
-             <string>Папка с игрой</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_information_text">
-            <property name="maximumSize">
-             <size>
-              <width>300</width>
-              <height>50</height>
-             </size>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::LayoutDirection::LeftToRight</enum>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">            background-color: #3498db;
-            color: #ecf0f1;
-            padding: 15px;
-            font-size: 18px;
-            border-radius: 20px;</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="scaledContents">
-             <bool>true</bool>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
          <widget class="QScrollArea" name="scrollArea">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>350</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>350</height>
+           </size>
+          </property>
           <property name="styleSheet">
            <string notr="true">#scrollArea, #scrollAreaWidgetContents{
 
 background-color: rgba(255, 255, 255, 0);  /* Полностью прозрачный фон */
 border: none; /* Убирает границу кнопки */
-}</string>
+}
+
+
+    QScrollBar:horizontal {
+        border: none; /* Убираем границы */
+        background: rgba(0, 51, 102, 200); /* Темно-синий фон для горизонтальной полосы */
+        height: 10px; /* Высота полосы прокрутки */
+        margin: 0px 22px; /* Отступы для управления кнопками */
+    }
+
+    QScrollBar::handle:horizontal {
+        background: rgba(0, 76, 153, 200); /* Более светлый темно-синий для ползунка */
+        min-width: 20px; /* Минимальная ширина ползунка */
+        border-radius: 5px; /* Скругление углов ползунка */
+    }
+
+    QScrollBar::handle:horizontal:hover {
+        background: rgba(0, 102, 204, 200); /* Светлый синий при наведении */
+    }
+
+    QScrollBar::add-line:horizontal,
+    QScrollBar::sub-line:horizontal {
+        background: none; /* Убираем фон для стрелок */
+        border: none; /* Убираем границы для стрелок */
+    }
+
+    QScrollBar::left-arrow:horizontal,
+    QScrollBar::right-arrow:horizontal {
+        background: none; /* Убираем фон для стрелок */
+        width: 0px; /* Убираем ширину стрелок */
+        height: 0px; /* Убираем высоту стрелок */
+    }
+
+    QScrollBar::add-page:horizontal,
+    QScrollBar::sub-page:horizontal {
+        background: none; /* Убираем фон для области прокрутки */
+    }</string>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignBottom|Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft</set>
           </property>
           <widget class="QWidget" name="scrollAreaWidgetContents">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>932</width>
-             <height>314</height>
+             <width>6180</width>
+             <height>340</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QPushButton" name="pushButton_2">
               <property name="minimumSize">
@@ -643,8 +567,8 @@ border: none; /* Убирает границу кнопки */
               </property>
               <property name="maximumSize">
                <size>
-                <width>150</width>
-                <height>200</height>
+                <width>200</width>
+                <height>300</height>
                </size>
               </property>
               <property name="text">
@@ -656,14 +580,14 @@ border: none; /* Убирает границу кнопки */
              <widget class="QPushButton" name="pushButton">
               <property name="minimumSize">
                <size>
-                <width>150</width>
+                <width>6000</width>
                 <height>200</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>150</width>
-                <height>200</height>
+                <width>6000</width>
+                <height>300</height>
                </size>
               </property>
               <property name="text">
@@ -691,7 +615,41 @@ border: none; /* Убирает границу кнопки */
           </widget>
          </widget>
         </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="server_settigns_page">
+       <widget class="QPushButton" name="pushButton_5">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>10</y>
+          <width>500</width>
+          <height>500</height>
+         </rect>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>500</width>
+          <height>500</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>ИГРАТЬ</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="page_3">
        <widget class="QPushButton" name="pushButton_delete_skin">
@@ -1108,6 +1066,90 @@ QCheckBox::indicator:checked:hover {
           </widget>
          </item>
         </layout>
+       </widget>
+       <widget class="QLabel" name="label_information_text">
+        <property name="geometry">
+         <rect>
+          <x>510</x>
+          <y>90</y>
+          <width>300</width>
+          <height>50</height>
+         </rect>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LayoutDirection::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">            background-color: #3498db;
+            color: #ecf0f1;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 20px;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
+        <property name="geometry">
+         <rect>
+          <x>300</x>
+          <y>40</y>
+          <width>200</width>
+          <height>46</height>
+         </rect>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+        </property>
+        <property name="text">
+         <string>Папка с игрой</string>
+        </property>
        </widget>
       </widget>
      </widget>

@@ -15,12 +15,12 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout,
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QProgressBar, QPushButton, QRadioButton,
-    QScrollArea, QSizePolicy, QSpacerItem, QStackedWidget,
-    QVBoxLayout, QWidget)
-from resources import  resources
+from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+    QProgressBar, QPushButton, QRadioButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QStackedWidget, QVBoxLayout,
+    QWidget)
+from resources import resources
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -42,16 +42,18 @@ class Ui_MainWindow(object):
 "        background-position: center;\n"
 "        background-attachment: fixed; /* Optional, to prevent scrolling with the content */\n"
 "    }")
-        self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.gridLayout = QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(u"gridLayout")
         self.stackedWidget = QStackedWidget(self.centralwidget)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.setMinimumSize(QSize(950, 500))
         self.stackedWidget.setMaximumSize(QSize(950, 500))
-        self.stackedWidget.setStyleSheet(u"")
-        self.page_1 = QWidget()
-        self.page_1.setObjectName(u"page_1")
-        self.gridLayout_3 = QGridLayout(self.page_1)
+        self.stackedWidget.setStyleSheet(u"#stackedWidget{\n"
+"background-image: url(:/data/background/main_back.jpg);\n"
+"}")
+        self.login_page = QWidget()
+        self.login_page.setObjectName(u"login_page")
+        self.gridLayout_3 = QGridLayout(self.login_page)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -61,7 +63,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
 
-        self.widget_login = QWidget(self.page_1)
+        self.widget_login = QWidget(self.login_page)
         self.widget_login.setObjectName(u"widget_login")
         self.widget_login.setMinimumSize(QSize(450, 0))
         self.widget_login.setMaximumSize(QSize(450, 16777215))
@@ -256,185 +258,123 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.widget_login, 0, 1, 1, 1)
 
-        self.stackedWidget.addWidget(self.page_1)
-        self.page_2 = QWidget()
-        self.page_2.setObjectName(u"page_2")
-        self.verticalLayout_2 = QVBoxLayout(self.page_2)
+        self.stackedWidget.addWidget(self.login_page)
+        self.choose_server_page = QWidget()
+        self.choose_server_page.setObjectName(u"choose_server_page")
+        self.verticalLayout_2 = QVBoxLayout(self.choose_server_page)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.widget = QWidget(self.page_2)
+        self.verticalLayout_2.setContentsMargins(-1, -1, -1, 25)
+        self.widget = QWidget(self.choose_server_page)
         self.widget.setObjectName(u"widget")
         self.horizontalLayout = QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.widget_4 = QWidget(self.widget)
+        self.widget_4.setObjectName(u"widget_4")
+
+        self.horizontalLayout.addWidget(self.widget_4)
+
+        self.pushButton_4 = QPushButton(self.widget)
+        self.pushButton_4.setObjectName(u"pushButton_4")
+        self.pushButton_4.setMinimumSize(QSize(64, 64))
+        self.pushButton_4.setMaximumSize(QSize(64, 64))
+        self.pushButton_4.setAutoFillBackground(False)
+        self.pushButton_4.setStyleSheet(u"QPushButton {\n"
+"    background-image: url(:/data/background/settings.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
+                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
+"}\n"
+"")
+        self.pushButton_4.setIconSize(QSize(160, 160))
+        self.pushButton_4.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.pushButton_4)
+
 
         self.verticalLayout_2.addWidget(self.widget)
 
-        self.gridLayout = QGridLayout()
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.comboBox_server_type = QComboBox(self.page_2)
-        self.comboBox_server_type.addItem("")
-        self.comboBox_server_type.addItem("")
-        self.comboBox_server_type.setObjectName(u"comboBox_server_type")
-        self.comboBox_server_type.setMinimumSize(QSize(0, 60))
-        self.comboBox_server_type.setMaximumSize(QSize(16777215, 60))
-        self.comboBox_server_type.setStyleSheet(u"/* Modern Style QLineEdit */\n"
-".QComboBox {\n"
-"  border: 2px solid #ccc;\n"
-"  background-color: #f9f9f9;\n"
-"  color: #333;\n"
-"  padding: 10px;\n"
-"  font-size: 16px;\n"
-"  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
-"\n"
-"}\n"
-"\n"
-".QComboBox:focus {\n"
-"  outline: none;\n"
-"  border-color: #4287f5;\n"
-"  background-color: #fff;\n"
-"}\n"
-"\n"
-".QComboBox::placeholder {\n"
-"  color: #999;\n"
-"}\n"
-"\n"
-".QComboBox:hover {\n"
-"  border-color: #999;\n"
-"}\n"
-"\n"
-"QComboBox:editable {\n"
-"    background: white;\n"
-"}\n"
-"\n"
-"\n"
-"\n"
-"QComboBox:on { /* shift the text when the popup opens */\n"
-"    padding-top: 3px;\n"
-"    padding-left: 4px;\n"
-"}\n"
-"\n"
-"\n"
-"QComboBox:on { /* shift the text when the popup opens */\n"
-"    padding-top: 3px;\n"
-"    padding-left: 4px;\n"
-"}\n"
-"\n"
-"QComboBox:drop-down {\n"
-"    subcontrol-origin: padding;\n"
-"    subcontrol-position: top right;\n"
-"    width: 15px;\n"
-"\n"
-"    border-left-width: 1px;\n"
-"    border-left-color: darkg"
-                        "ray;\n"
-"    border-left-style: solid; /* just a single line */\n"
-"    border-top-right-radius: 3px; /* same radius as the QComboBox */\n"
-"    border-bottom-right-radius: 3px;\n"
-" border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
-"}\n"
-"\n"
-"\n"
-"")
-
-        self.gridLayout.addWidget(self.comboBox_server_type, 0, 0, 1, 1)
-
-        self.pushButton_install_and_launch = QPushButton(self.page_2)
-        self.pushButton_install_and_launch.setObjectName(u"pushButton_install_and_launch")
-        self.pushButton_install_and_launch.setMinimumSize(QSize(300, 80))
-        self.pushButton_install_and_launch.setStyleSheet(u"QPushButton {\n"
-"  background-color: #3A92F7;\n"
-"  border: none;\n"
-"  border-radius: 30px;\n"
-"  padding: 12px 24px;\n"
-"  color: #FFFFFF;\n"
-"  font-weight: bold;\n"
-"  text-align: center;\n"
-"  text-decoration: none;\n"
-"  font-size: 16px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"  background-color: #303EF7;\n"
-"}\n"
-"\n"
-"\n"
-"QPushButton:pressed {\n"
-"  background-color: #1000F7;\n"
-"  border: 1px solid #00274D;\n"
-"}\n"
-"")
-
-        self.gridLayout.addWidget(self.pushButton_install_and_launch, 0, 1, 1, 1)
-
-        self.pushButton_minecraft_dir_disable_long_tern_save = QPushButton(self.page_2)
-        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(u"pushButton_minecraft_dir_disable_long_tern_save")
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(QSize(200, 0))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(200, 16777215))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(u"QPushButton {\n"
-"  background-color: #3A92F7;\n"
-"  border: none;\n"
-"  border-radius: 5px;\n"
-"  padding: 12px 24px;\n"
-"  color: #FFFFFF;\n"
-"  font-weight: bold;\n"
-"  text-align: center;\n"
-"  text-decoration: none;\n"
-"  font-size: 16px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"  background-color: #303EF7;\n"
-"}\n"
-"\n"
-"\n"
-"QPushButton:pressed {\n"
-"  background-color: #1000F7;\n"
-"  border: 1px solid #00274D;\n"
-"}\n"
-"")
-
-        self.gridLayout.addWidget(self.pushButton_minecraft_dir_disable_long_tern_save, 1, 0, 1, 1)
-
-        self.label_information_text = QLabel(self.page_2)
-        self.label_information_text.setObjectName(u"label_information_text")
-        self.label_information_text.setMaximumSize(QSize(300, 50))
-        self.label_information_text.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
-        self.label_information_text.setStyleSheet(u"            background-color: #3498db;\n"
-"            color: #ecf0f1;\n"
-"            padding: 15px;\n"
-"            font-size: 18px;\n"
-"            border-radius: 20px;")
-        self.label_information_text.setScaledContents(True)
-        self.label_information_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.label_information_text, 1, 1, 1, 1)
-
-
-        self.verticalLayout_2.addLayout(self.gridLayout)
-
-        self.scrollArea = QScrollArea(self.page_2)
+        self.scrollArea = QScrollArea(self.choose_server_page)
         self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setMinimumSize(QSize(0, 350))
+        self.scrollArea.setMaximumSize(QSize(16777215, 350))
         self.scrollArea.setStyleSheet(u"#scrollArea, #scrollAreaWidgetContents{\n"
 "\n"
 "background-color: rgba(255, 255, 255, 0);  /* \u041f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u043f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u044b\u0439 \u0444\u043e\u043d */\n"
 "border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u0442 \u0433\u0440\u0430\u043d\u0438\u0446\u0443 \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
-"}")
+"}\n"
+"\n"
+"\n"
+"    QScrollBar:horizontal {\n"
+"        border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"        background: rgba(0, 51, 102, 200); /* \u0422\u0435\u043c\u043d\u043e-\u0441\u0438\u043d\u0438\u0439 \u0444\u043e\u043d \u0434\u043b\u044f \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043f\u043e\u043b\u043e\u0441\u044b */\n"
+"        height: 10px; /* \u0412\u044b\u0441\u043e\u0442\u0430 \u043f\u043e\u043b\u043e\u0441\u044b \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u043a\u0438 */\n"
+"        margin: 0px 22px; /* \u041e\u0442"
+                        "\u0441\u0442\u0443\u043f\u044b \u0434\u043b\u044f \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043a\u043d\u043e\u043f\u043a\u0430\u043c\u0438 */\n"
+"    }\n"
+"\n"
+"    QScrollBar::handle:horizontal {\n"
+"        background: rgba(0, 76, 153, 200); /* \u0411\u043e\u043b\u0435\u0435 \u0441\u0432\u0435\u0442\u043b\u044b\u0439 \u0442\u0435\u043c\u043d\u043e-\u0441\u0438\u043d\u0438\u0439 \u0434\u043b\u044f \u043f\u043e\u043b\u0437\u0443\u043d\u043a\u0430 */\n"
+"        min-width: 20px; /* \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0448\u0438\u0440\u0438\u043d\u0430 \u043f\u043e\u043b\u0437\u0443\u043d\u043a\u0430 */\n"
+"        border-radius: 5px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u0435\u043d\u0438\u0435 \u0443\u0433\u043b\u043e\u0432 \u043f\u043e\u043b\u0437\u0443\u043d\u043a\u0430 */\n"
+"    }\n"
+"\n"
+"    QScrollBar::handle:horizontal:hover {\n"
+"        background: rgba(0, 102, 204, 200); /* \u0421\u0432\u0435\u0442\u043b\u044b\u0439 \u0441\u0438\u043d\u0438\u0439"
+                        " \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"    }\n"
+"\n"
+"    QScrollBar::add-line:horizontal,\n"
+"    QScrollBar::sub-line:horizontal {\n"
+"        background: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0444\u043e\u043d \u0434\u043b\u044f \u0441\u0442\u0440\u0435\u043b\u043e\u043a */\n"
+"        border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b \u0434\u043b\u044f \u0441\u0442\u0440\u0435\u043b\u043e\u043a */\n"
+"    }\n"
+"\n"
+"    QScrollBar::left-arrow:horizontal,\n"
+"    QScrollBar::right-arrow:horizontal {\n"
+"        background: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0444\u043e\u043d \u0434\u043b\u044f \u0441\u0442\u0440\u0435\u043b\u043e\u043a */\n"
+"        width: 0px; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0448\u0438\u0440\u0438\u043d\u0443 \u0441\u0442\u0440\u0435\u043b\u043e\u043a */\n"
+"        height: 0px; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0432\u044b\u0441\u043e"
+                        "\u0442\u0443 \u0441\u0442\u0440\u0435\u043b\u043e\u043a */\n"
+"    }\n"
+"\n"
+"    QScrollBar::add-page:horizontal,\n"
+"    QScrollBar::sub-page:horizontal {\n"
+"        background: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0444\u043e\u043d \u0434\u043b\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u0438 \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u043a\u0438 */\n"
+"    }")
         self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setAlignment(Qt.AlignmentFlag.AlignBottom|Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 932, 314))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 6180, 340))
         self.horizontalLayout_2 = QHBoxLayout(self.scrollAreaWidgetContents)
+        self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(-1, 0, -1, 0)
         self.pushButton_2 = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_2.setObjectName(u"pushButton_2")
         self.pushButton_2.setMinimumSize(QSize(150, 200))
-        self.pushButton_2.setMaximumSize(QSize(150, 200))
+        self.pushButton_2.setMaximumSize(QSize(200, 300))
 
         self.horizontalLayout_2.addWidget(self.pushButton_2)
 
         self.pushButton = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setMinimumSize(QSize(150, 200))
-        self.pushButton.setMaximumSize(QSize(150, 200))
+        self.pushButton.setMinimumSize(QSize(6000, 200))
+        self.pushButton.setMaximumSize(QSize(6000, 300))
         self.pushButton.setAutoRepeat(False)
 
         self.horizontalLayout_2.addWidget(self.pushButton)
@@ -447,7 +387,18 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.scrollArea)
 
-        self.stackedWidget.addWidget(self.page_2)
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_2.addItem(self.verticalSpacer_3)
+
+        self.stackedWidget.addWidget(self.choose_server_page)
+        self.server_settigns_page = QWidget()
+        self.server_settigns_page.setObjectName(u"server_settigns_page")
+        self.pushButton_5 = QPushButton(self.server_settigns_page)
+        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.pushButton_5.setGeometry(QRect(240, 10, 500, 500))
+        self.pushButton_5.setMinimumSize(QSize(500, 500))
+        self.stackedWidget.addWidget(self.server_settigns_page)
         self.page_3 = QWidget()
         self.page_3.setObjectName(u"page_3")
         self.pushButton_delete_skin = QPushButton(self.page_3)
@@ -728,9 +679,48 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.label)
 
+        self.label_information_text = QLabel(self.page_3)
+        self.label_information_text.setObjectName(u"label_information_text")
+        self.label_information_text.setGeometry(QRect(510, 90, 300, 50))
+        self.label_information_text.setMaximumSize(QSize(300, 50))
+        self.label_information_text.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.label_information_text.setStyleSheet(u"            background-color: #3498db;\n"
+"            color: #ecf0f1;\n"
+"            padding: 15px;\n"
+"            font-size: 18px;\n"
+"            border-radius: 20px;")
+        self.label_information_text.setScaledContents(True)
+        self.label_information_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.pushButton_minecraft_dir_disable_long_tern_save = QPushButton(self.page_3)
+        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(u"pushButton_minecraft_dir_disable_long_tern_save")
+        self.pushButton_minecraft_dir_disable_long_tern_save.setGeometry(QRect(300, 40, 200, 46))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(QSize(200, 0))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(200, 16777215))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(u"QPushButton {\n"
+"  background-color: #3A92F7;\n"
+"  border: none;\n"
+"  border-radius: 5px;\n"
+"  padding: 12px 24px;\n"
+"  color: #FFFFFF;\n"
+"  font-weight: bold;\n"
+"  text-align: center;\n"
+"  text-decoration: none;\n"
+"  font-size: 16px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"  background-color: #303EF7;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed {\n"
+"  background-color: #1000F7;\n"
+"  border: 1px solid #00274D;\n"
+"}\n"
+"")
         self.stackedWidget.addWidget(self.page_3)
 
-        self.verticalLayout_3.addWidget(self.stackedWidget)
+        self.gridLayout.addWidget(self.stackedWidget, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -750,14 +740,10 @@ class Ui_MainWindow(object):
         self.lineEdit_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
         self.label_creat_account.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442", None))
         self.pushButton_error_info.setText(QCoreApplication.translate("MainWindow", u"ERROR_BUTTON", None))
-        self.comboBox_server_type.setItemText(0, QCoreApplication.translate("MainWindow", u"TFC Halloween", None))
-        self.comboBox_server_type.setItemText(1, QCoreApplication.translate("MainWindow", u"TFC Halloween TEST", None))
-
-        self.pushButton_install_and_launch.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c TFC-Halloween", None))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
-        self.label_information_text.setText("")
+        self.pushButton_4.setText("")
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 2", None))
+        self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"\u0418\u0413\u0420\u0410\u0422\u042c", None))
         self.pushButton_delete_skin.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043a\u0438\u043d", None))
         self.pushButton_delete_cape.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043f\u043b\u0430\u0449", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0422\u0438\u043f \u0441\u043a\u0438\u043d\u0430", None))
@@ -768,5 +754,7 @@ class Ui_MainWindow(object):
         self.checkBox_is_install_shaders.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0448\u0435\u0439\u0434\u0435\u0440\u044b", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.label_information_text.setText("")
+        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
     # retranslateUi
 
