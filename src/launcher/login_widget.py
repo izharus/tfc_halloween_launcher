@@ -4,8 +4,10 @@ import time
 from typing import Optional
 
 from loguru import logger as log
-from PySide6.QtCore import QThread, QTimer, Signal, Slot
+from PySide6.QtCore import QObject, QThread, QTimer, Signal, Slot
+
 from .design.design import Ui_MainWindow
+from .design.utility import BaseWidget
 from .launcher_authorization import authenticate_user
 from .utility.custom_exceptions import (
     AuthDataNotSet,
@@ -13,7 +15,7 @@ from .utility.custom_exceptions import (
     InvalidUserNameOrPassword,
 )
 from .utility.pydantic_models import AuthData
-from .design.utility import BaseWidget
+
 
 class AuthenticationWorker(QThread):
     """
@@ -56,6 +58,7 @@ class AuthenticationWorker(QThread):
         self.write_message.emit("Авторизация...")
 
         try:
+            log.info("AuthenticationWorker started.")
             if self._login is None or self._password is None:
                 log.critical("Calling of set_auth_data is required.")
                 self.error_message.emit(str(AuthDataNotSet))
@@ -67,8 +70,8 @@ class AuthenticationWorker(QThread):
                 self._login,
                 self._password,
             )
-            self.write_message.emit("Обновление списка серверов...")
-            time.sleep(3)
+            log.info("Authentication completed.")
+            self.write_message.emit("Авторизация завершена...")
             self.success.emit()
         except InvalidUserNameOrPassword as error:
             time.sleep(3)
@@ -93,7 +96,7 @@ class AuthenticationWorker(QThread):
         return self._auth_data
 
 
-class LoginWidget(BaseWidget):
+class LoginWidget(QObject, BaseWidget):
     """
     A widget for user login interface.
 
@@ -102,6 +105,8 @@ class LoginWidget(BaseWidget):
     to the user through UI elements and manages the visibility of
     different UI components based on the authentication state.
     """
+
+    authentication_complete = Signal()
 
     def __init__(self, main_window: Ui_MainWindow, login_api_url: str):
         """
@@ -113,7 +118,10 @@ class LoginWidget(BaseWidget):
             login_api_url (str): The API URL for user authentication.
         """
 
-        super().__init__(main_window.login_page, main_window.stackedWidget)
+        super().__init__(
+            widget=main_window.login_page,
+            widget_parent=main_window.stackedWidget,
+        )
         self._ui = main_window
 
         self._error_timer: Optional[QTimer] = None
@@ -123,7 +131,7 @@ class LoginWidget(BaseWidget):
         self._init_ui()
 
         # Initialize the authentication worker.
-        self.worker = AuthenticationWorker(login_api_url)
+        self._worker = AuthenticationWorker(login_api_url)
 
         # Connect signals to their respective slots.
         self._connect_signals()
@@ -133,11 +141,10 @@ class LoginWidget(BaseWidget):
         self._ui.pushButton_login.clicked.connect(self.block_ui)
         self._ui.pushButton_login.clicked.connect(self._make_authorization)
 
-        self.worker.write_message.connect(self.info_label.setText)
-        self.worker.error_message.connect(self._write_error)
+        self._worker.write_message.connect(self.info_label.setText)
+        self._worker.error_message.connect(self.write_error)
 
-        self.worker.success.connect(self._complete_authentication)
-        self.worker.finished.connect(self.enable_ui)
+        self._worker.success.connect(self._complete_authentication)
 
         self._ui.lineEdit_nickname.textChanged.connect(
             self._validate_user_input
@@ -167,11 +174,10 @@ class LoginWidget(BaseWidget):
         )
 
     @Slot()
-    def _write_error(self, message: str):
+    def write_error(self, message: str):
         """Display an error message in the UI."""
         self._ui.pushButton_error_info.setText(message)
         self._ui.pushButton_error_info.show()
-
 
     @Slot()
     def _make_authorization(self) -> None:
@@ -179,24 +185,23 @@ class LoginWidget(BaseWidget):
         login = self._ui.lineEdit_nickname.text()
         password = self._ui.lineEdit_password.text()
 
-        self.worker.set_auth_data(login, password)
+        self._worker.set_auth_data(login, password)
 
-        self.worker.start()
+        self._worker.start()
         # self._authorization_thread.set_auth_data(login, password)
         # self._authorization_thread.start()
 
     @Slot()
     def _complete_authentication(self):
         """Handle successful authentication."""
-        self._auth_data = self.worker.auth_data
-        self._ui.stackedWidget.setCurrentIndex(1)
+        self._auth_data = self._worker.auth_data
+        self.authentication_complete.emit()
 
     @Slot()
     def block_ui(self):
         """Disable the login UI during the authentication process."""
         super().block_ui()
         self._ui.pushButton_error_info.hide()
-        
 
     @property
     def auth_data(self) -> Optional[AuthData]:

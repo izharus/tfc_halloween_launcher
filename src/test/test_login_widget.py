@@ -118,18 +118,6 @@ class TestLoginWidget:
         """Check if first page after app startup is login page."""
         assert self.widget._ui.stackedWidget.currentIndex() == 0
 
-    def test_page_switching_after_success_authentication(self, qtbot):
-        """Test if page switches to success after authentication."""
-        auth_data = "some_data"
-        self.widget.worker._auth_data = auth_data
-        self.widget.worker.success.emit()
-
-        assert self.widget.auth_data == auth_data
-        assert self.widget._ui.pushButton_error_info.isHidden()
-        assert self.widget.info_widget.isHidden()
-
-        assert self.widget._ui.stackedWidget.currentIndex() == 1
-
     def test_ui_elements_initialization(self, qtbot):
         """Test if all necessary UI elements are hidden initially."""
         assert self.widget.info_widget.isHidden()
