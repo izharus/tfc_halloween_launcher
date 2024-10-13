@@ -31,12 +31,12 @@ class FiletDownloadError(Exception):
         return "Ошибка во время загрузки файла."
 
 
-class ConfigDownloadError(Exception):
+class ConfigDownloadError(FiletDownloadError):
     """
-    Raises if any error occurs due loading a config file.
+    Raises if any error occurs due downloading a config file.
     """
 
-    def __init__(self, message="Failed to load a configuration file.") -> None:
+    def __init__(self, message="Failed to download a configuration file.") -> None:
         super().__init__(message)
 
     def __str__(self):
