@@ -1,118 +1,120 @@
 """Utility module for creating and managing UI elements."""
 
-from typing import Any, Callable, Optional
+from typing import Optional
 
-from qtpy import QtGui, QtWidgets
 from qtpy.QtCore import Qt, QUrl
 from qtpy.QtGui import QDesktopServices, QFont, QPixmap
 from qtpy.QtWidgets import (
+    QDialog,
     QGraphicsBlurEffect,
+    QHBoxLayout,
     QLabel,
     QLayout,
     QProgressBar,
     QPushButton,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from .styles import MainButtonData, ServerWidgetCSS
-
-
-class MessageBoxManager:
+from .styles import CUSTOM_MESSAGE_BOX_STYLE, MainButtonData, ServerWidgetCSS
+from ..launcher_configs import LauncherConfig
+import webbrowser
+class CustomMessageBox(QDialog):
     """
-    A utility class for creating message boxes in a PyQt application.
-
-    Args:
-        icon_file_path (str): The file path to the icon to be used in
-            message boxes.
+    A custom message box that displays a message
+    and allows the user to close it.
 
     Attributes:
-        icon_file_path (str): The file path to the icon used in message boxes.
+        widget (QWidget): The main container widget for the message box.
+        main_layout (QVBoxLayout): The main layout for the dialog.
+        close_button (QPushButton): The button to close the message box.
+        button_layout (QHBoxLayout): The layout for positioning
+            the close button.
+        _text_edit (QTextEdit): A text edit widget that displays the message.
     """
 
-    def __init__(self, icon_file_path: str):
-        self.icon_file_path = icon_file_path
-
-    # pylint: disable = R0913
-    def create_msg_box(
-        self,
-        msg_box_title: str,
-        msg_box_icon: QtWidgets.QMessageBox.Icon,
-        msg_box_info: str = "",
-        msg_box_window_title: str = "Ошибка",
-        callback: Optional[Callable[[], Any]] = None,
-    ) -> None:
+    def __init__(self):
+        """Initializes the CustomMessageBox with a translucent background
+        and a close button.
         """
-        Create and display a QMessageBox with customizable parameters.
-
-        Parameters:
-        - msg_box_title (str): The title of the QMessageBox.
-        - msg_box_icon (QtWidgets.QMessageBox.Icon): The icon to be
-            displayed in the QMessageBox.
-        - msg_box_info (str, optional): Additional information to be
-            displayed in the QMessageBox.
-        - msg_box_window_title (str, optional): The title of the QMessageBox
-            window.
-        - callback (Optional[Callable[[], None]], optional): A callback
-            function to be executed on button click.
-
-        Returns:
-        None
-        """
-        msg = QtWidgets.QMessageBox()
-        msg.setWindowTitle(msg_box_window_title)
-        msg.setIcon(msg_box_icon)
-        msg.setWindowIcon(QtGui.QIcon(self.icon_file_path))
-        msg.setText(msg_box_title)
-        msg.setInformativeText(msg_box_info)
-
-        if callback:
-            # Add custom buttons
-            ok_button = msg.addButton(
-                "OK",
-                QtWidgets.QMessageBox.ButtonRole.AcceptRole,
-            )
-            msg.addButton(
-                "Cancel",
-                QtWidgets.QMessageBox.ButtonRole.RejectRole,
-            )
-
-        msg.exec()
-
-        if callback is not None and msg.clickedButton() == ok_button:
-            callback()
-
-    def info(
-        self,
-        msg_box_title: str,
-        msg_box_info: str = "",
-        callback: Optional[Callable[[], Any]] = None,
-    ) -> None:
-        """Create an information message box"""
-        self.create_msg_box(
-            msg_box_title=msg_box_title,
-            msg_box_icon=QtWidgets.QMessageBox.Icon.Information,
-            msg_box_info=msg_box_info,
-            msg_box_window_title="Уведомление",
-            callback=callback,
+        super().__init__()
+        self.setWindowFlags(
+            Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         )
+        self.setAttribute(Qt.WA_TranslucentBackground)
 
-    def warn(
-        self,
-        msg_box_title: str,
-        msg_box_info: str = "",
-        callback: Optional[Callable[[], Any]] = None,
-    ) -> None:
-        """Create a warning message box."""
-        self.create_msg_box(
-            msg_box_title=msg_box_title,
-            msg_box_icon=QtWidgets.QMessageBox.Icon.Warning,
-            msg_box_info=msg_box_info,
-            msg_box_window_title="Ошибка",
-            callback=callback,
+        # Implement the custom widget to avoid visual bugs with border-radius
+        container_widget = QWidget()
+
+        self.widget = container_widget
+        # User copy-able textEdit.
+        self._text_edit = QTextEdit(self.widget)
+        self._text_edit.setText("Критическая ошибка!")
+        self._text_edit.setReadOnly(True)
+        self._text_edit.setFrameStyle(QTextEdit.NoFrame)
+        self._text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._text_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._text_edit.setAcceptRichText(False)
+        self._text_edit.setFixedSize(300, 150)
+
+        # Button for closing this widget
+        self.close_button = QPushButton("закрыть")
+        self.close_button.clicked.connect(self.accept)
+
+        # Adjust button size as its text
+        # Put button into the middle of widget
+        self.button_layout = QHBoxLayout()
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.close_button)
+        self.button_layout.addStretch()
+
+        # Create a button for opening logs
+        self._log_button = QPushButton(self.widget)
+        self._log_button.setText("папка с логами")
+        self.button_layout.addWidget(self._log_button)
+        self._log_button.clicked.connect(
+            lambda: webbrowser.open(LauncherConfig().logging_dir))
+        # Main widget's layout
+        layout = QVBoxLayout()
+        layout.addWidget(self._text_edit)
+        layout.addLayout(self.button_layout)
+
+        container_widget.setLayout(layout)
+
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.addWidget(container_widget)
+
+        self.setStyleSheet(CUSTOM_MESSAGE_BOX_STYLE)
+
+        self._widget = container_widget
+    @staticmethod
+    def _format_title(title: str) -> str:
+        return ("<h2 style='text-align: center;'>"
+                f"{title}</h2>\n"
         )
+    @staticmethod
+    def _format_msg(msg: str) -> str:
+        return ("<p style='text-align: center;'>"
+                f"{msg}</p>\n"
+        )
+    
+    def show_message(self, title: str, msg: str) -> None:
+        """Show message box."""
 
+        self._log_button.hide()
+        self._text_edit.setText(
+            self._format_title(title) + self._format_msg(msg)
+            )
+        self.exec()
+    def show_message_with_logs(self, title: str, msg: str) -> None:
+        """Show message box with button for opening logs."""
+        self._log_button.show()
+        self._text_edit.setText(
+            self._format_title(title) + self._format_msg(msg)
+            )
 
+        self.exec()
 class NotificationWidget(QWidget):
     """
     Custom widget for displaying notifications with optional animations.
@@ -228,7 +230,7 @@ class BaseWidget:
 
         # Use QGridLayout for grid layout
         self.layout = QVBoxLayout(self.info_widget)
-        self.info_label = QLabel("Инициализация...", self._widget_parent)
+        self.info_label = QLabel("", self._widget_parent)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 24px; color: white;")
 

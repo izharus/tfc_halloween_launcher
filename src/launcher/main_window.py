@@ -19,10 +19,8 @@ icon, and provides safety timers for updating input data from the UI.
 import os
 import sys
 import traceback
-import webbrowser
 from typing import Dict, Optional, Union
 
-import pydantic
 import win32con
 import win32console
 import win32gui
@@ -36,8 +34,7 @@ from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
 from .design.utility import (
-    MainButton,
-    MessageBoxManager,
+    CustomMessageBox,
     NotificationWidget,
     open_directory,
 )
@@ -102,14 +99,11 @@ class Window(QtWidgets.QMainWindow):
         self.icon_file_path = self.path_manager.get_current_root_path(
             "icon.ico"
         )
-        self._validator = Validator(self.icon_file_path)
-        self.msg_box = MessageBoxManager(self.icon_file_path)
+        self._validator = Validator()
+        self.msg_box = CustomMessageBox()
 
         self.notif_widget = NotificationWidget(
             self._ui_instance.label_information_text
-        )
-        self.main_button = MainButton(
-            self._ui_instance.pushButton_install_and_launch,
         )
 
         try:
@@ -120,17 +114,15 @@ class Window(QtWidgets.QMainWindow):
             )
         except DownloadServerHandshakeError as error:
             log.critical(f"Failed to install boto3: {error}")
-            self.msg_box.warn(
-                "Сетевая ошибка.",
-                str(error),
+            self.msg_box.close_button.setText("закрыть приложение")
+            self.msg_box.show_message_with_logs(
+                "Сетевая ошибка!",
+                "Не удалось связаться с сервером загрузки."
+
             )
-            sys.exit()
+            sys.exit(1)
 
         self._install_thread = InstallThread(self.file_downloader)
-        self.config_loader: ConfigLoader = ConfigLoader(
-            self.file_downloader,
-            self._launcher_config,
-        )
 
         self.input_data = self.get_input_data()
 
@@ -477,13 +469,14 @@ class Window(QtWidgets.QMainWindow):
             return
         if not self._validator.is_java_installed():
             java_install_url = self._launcher_config.JAVA_INSTALL_URL
-            install_java_link = f'<a href="{java_install_url}">\
-    Я хочу установить Java сейчас!</a> '
-            self.msg_box.warn(
-                "Не удалось найти Java в система.",
-                msg_box_info=install_java_link,
+            self.msg_box.close_button.setText("закрыть приложение")
+            self.msg_box.show_message(
+                "Ошибка Java",
+                "Загрузите последнюю версию Java.\n" + 
+                java_install_url
             )
-            return
+            # After installation user should restart app
+            sys.exit(1)
         self._ui_instance.progressBar.show()
         self.input_data.change_input_edit_status(bool_stop_edit=True)
 
@@ -508,12 +501,9 @@ class Window(QtWidgets.QMainWindow):
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
             log.error(msg_title)
-            self.msg_box.warn(
+            self.msg_box.show_message_with_logs(
                 msg_title,
-                "При нажатии 'Ок' откроется папка с логом. ",
-                callback=lambda: webbrowser.open(
-                    self._launcher_config.logging_dir,
-                ),
+                "Подробная информация в логе.",
             )
             self.input_data.change_input_edit_status(bool_stop_edit=False)
             return
@@ -522,11 +512,12 @@ class Window(QtWidgets.QMainWindow):
         self.hide()
         auth_data = self.login_logic.auth_data
         if not auth_data:
-            self.msg_box.warn(
+            self.msg_box.close_button.setText("закрыть приложение")
+            self.msg_box.show_message_with_logs(
                 "Критическая ошибка",
                 "Tокены авторизации не инициализированы.",
             )
-            return
+            sys.exit(1)
         nickname = self.input_data.extract_element("lineEdit_nickname")
         uuid = auth_data.uuid
         access_token = auth_data.accessToken
@@ -543,13 +534,10 @@ class Window(QtWidgets.QMainWindow):
 
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
-            self.msg_box.warn(
-                "Запуск игры завершился с ошибкой",
-                "При нажатии 'Ок' откроется папка с логом. ",
-                callback=lambda: webbrowser.open(
-                    self._launcher_config.logging_dir,
-                ),
-            )
+            self.msg_box.show_message_with_logs(
+                "Ошибка при запуске игры.",
+                "Подробная информация в логе.",
+                )
         self.show()
 
     # pylint: disable = C0103
@@ -575,22 +563,20 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
     Custom exception handler to catch all exceptions.
     """
+
+    config = LauncherConfig()
     log.critical("Exception occurred:")
     log.critical(exc_type)
     log.critical(exc_value)
     log.critical(" ".join(traceback.format_tb(exc_traceback)))
-    msg_box = MessageBoxManager("")
-
-    msg_box.warn(
+    msg_box = CustomMessageBox()
+    msg_box.close_button.setText("Закрыть приложение")
+    msg_box.show_message_with_logs(
         "Критическая ошибка!",
-        (
-            "Отправьте последний файл 'log.debug' разработчику. "
-            "При нажатии 'Ок' откроется папка с логом. "
-        ),
-        callback=lambda: webbrowser.open(LauncherConfig().logging_dir),
+        "Отправьте последний текстовый файл разработчику: " + 
+        f"{config.DEVELOPER_EMAIL}"
     )
     sys.exit(1)
-    # Handle the exception or log it as needed
 
 
 # Set the custom exception handler

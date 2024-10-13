@@ -85,3 +85,13 @@ class ServerWidgetCSS:
             border-radius: 10px;
         }
         """
+CUSTOM_MESSAGE_BOX_STYLE = """
+            QWidget {
+                background-color: rgba(26, 26, 64, 200);
+                border-radius: 20px;
+                font-size: 16px;
+            }
+            QTextEdit {
+                background-color: rgba(0, 0, 0, 0);
+            }
+            """ + ServerWidgetCSS.play_button
