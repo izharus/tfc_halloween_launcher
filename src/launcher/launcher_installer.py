@@ -35,15 +35,63 @@ from loguru import logger as log
 from minecraft_launcher_lib.types import MinecraftOptions
 from qtpy.QtCore import QThread, Signal
 
-from .launcher_configs import ServerConfig
+from .launcher_configs import ServerConfig, ServerConfigManager
 from .utility.custom_exceptions import (
     CalculateHashFailed,
+    ConfigDownloadError,
+    ConfigProcessingError,
     FilesSaveError,
     FiletDownloadError,
     MinecraftLauncherConfigNotSet,
 )
 from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
 from .utility.pydantic_models import FileInfo
+
+
+class ConfigInstallerThread(QThread):
+    """QThread for installing ServerConfigManager."""
+
+    success = Signal()
+    finished = Signal()
+    write_error = Signal(str)
+    write_info = Signal(str)
+
+    def __init__(
+        self,
+        file_downloader: FileDownloaderProtocol,
+        map_json_object_key: str,
+    ):
+
+        super().__init__()
+        self._config_manager: Optional[ServerConfigManager] = None
+        self._file_downloader = file_downloader
+        self._map_json_object_key = map_json_object_key
+
+    def run(self):
+        """Attempt to install ServerConfigManager."""
+        try:
+            log.info("ConfigInstallerThread stared.")
+            self.write_info.emit("Загружается список серверов...")
+            self._config_manager = ServerConfigManager(
+                self._file_downloader,
+                self._map_json_object_key,
+            )
+            log.info("ConfigInstallerThread completed successfully.")
+            self.write_info.emit("Список серверов загружен.")
+            self.success.emit()
+        except ConfigProcessingError as e:
+            log.critical(f"Failed to process config failed: {e}")
+            self.write_error.emit("Ошибка на моей стороне )=")
+        except ConfigDownloadError as e:
+            log.critical(f"Failed to download a config file: {e}")
+            self.write_error.emit("Обновление не удалось")
+        finally:
+            self.finished.emit()
+
+    @property
+    def config_manager(self) -> Optional[ServerConfigManager]:
+        """Return a ServerConfigManager instance or None."""
+        return self._config_manager
 
 
 class ModsInstaller(QThread):
