@@ -100,3 +100,20 @@ CUSTOM_MESSAGE_BOX_STYLE = (
             """
     + ServerWidgetCSS.play_button
 )
+
+INSTALL_PROGRESS_BAR = """
+            QProgressBar {
+                border: 2px solid #555;
+                border-radius: 15px;
+                text-align: center;
+                color: #FFFFFF;
+                background-color: #3C3F41;
+            }
+            QProgressBar::chunk {
+                border-radius: 15px;
+                background-color: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #66e, stop:1 #bbf
+                );
+            }
+        """

@@ -120,7 +120,7 @@ class LoginWidget(QObject, BaseWidget):
 
         super().__init__(
             widget=main_window.login_page,
-            widget_parent=main_window.widget_main_window,
+            parent_widget=main_window.widget_main_window,
         )
         self._ui = main_window
 
@@ -138,7 +138,9 @@ class LoginWidget(QObject, BaseWidget):
 
     def _connect_signals(self):
         """Connect UI elements to their respective slots."""
-        self._ui.pushButton_login.clicked.connect(self.block_ui)
+        self._ui.pushButton_login.clicked.connect(
+            lambda _: self.disable_ui(True, False)
+        )
         self._ui.pushButton_login.clicked.connect(self._make_authorization)
 
         self._worker.write_message.connect(self.info_label.setText)
@@ -199,9 +201,9 @@ class LoginWidget(QObject, BaseWidget):
         self.authentication_complete.emit()
 
     @Slot()
-    def block_ui(self):
+    def disable_ui(self, show_text: bool = True, show_progress: bool = True):
         """Disable the login UI during the authentication process."""
-        super().block_ui()
+        super().disable_ui(show_text, show_progress)
         self._ui.pushButton_error_info.hide()
 
     @property

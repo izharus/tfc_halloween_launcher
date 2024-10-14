@@ -1,5 +1,6 @@
 """Utility module for creating and managing UI elements."""
 
+import webbrowser
 from typing import Optional
 
 from qtpy.QtCore import Qt, QUrl
@@ -7,19 +8,28 @@ from qtpy.QtGui import QDesktopServices, QFont, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
     QGraphicsBlurEffect,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLayout,
     QProgressBar,
     QPushButton,
+    QSizePolicy,
+    QSpacerItem,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from .styles import CUSTOM_MESSAGE_BOX_STYLE, MainButtonData, ServerWidgetCSS
 from ..launcher_configs import LauncherConfig
-import webbrowser
+from .styles import (
+    CUSTOM_MESSAGE_BOX_STYLE,
+    INSTALL_PROGRESS_BAR,
+    MainButtonData,
+    ServerWidgetCSS,
+)
+
+
 class CustomMessageBox(QDialog):
     """
     A custom message box that displays a message
@@ -74,7 +84,8 @@ class CustomMessageBox(QDialog):
         self._log_button.setText("папка с логами")
         self.button_layout.addWidget(self._log_button)
         self._log_button.clicked.connect(
-            lambda: webbrowser.open(LauncherConfig().logging_dir))
+            lambda: webbrowser.open(LauncherConfig().logging_dir)
+        )
         # Main widget's layout
         layout = QVBoxLayout()
         layout.addWidget(self._text_edit)
@@ -88,33 +99,34 @@ class CustomMessageBox(QDialog):
         self.setStyleSheet(CUSTOM_MESSAGE_BOX_STYLE)
 
         self._widget = container_widget
+
     @staticmethod
     def _format_title(title: str) -> str:
-        return ("<h2 style='text-align: center;'>"
-                f"{title}</h2>\n"
-        )
+        return "<h2 style='text-align: center;'>" f"{title}</h2>\n"
+
     @staticmethod
     def _format_msg(msg: str) -> str:
-        return ("<p style='text-align: center;'>"
-                f"{msg}</p>\n"
-        )
-    
+        return "<p style='text-align: center;'>" f"{msg}</p>\n"
+
     def show_message(self, title: str, msg: str) -> None:
         """Show message box."""
 
         self._log_button.hide()
         self._text_edit.setText(
             self._format_title(title) + self._format_msg(msg)
-            )
+        )
         self.exec()
+
     def show_message_with_logs(self, title: str, msg: str) -> None:
         """Show message box with button for opening logs."""
         self._log_button.show()
         self._text_edit.setText(
             self._format_title(title) + self._format_msg(msg)
-            )
+        )
 
         self.exec()
+
+
 class NotificationWidget(QWidget):
     """
     Custom widget for displaying notifications with optional animations.
@@ -216,41 +228,118 @@ class BaseWidget:
     """
     A base class for creating a widget with blur effect and an info widget.
 
-    To change the info message, set new text to the `info_label`.
-    To add a new widget, add it to the `info_widget`.
+    To change the info message, set new text to the `_info_label`.
+    To add a new widget, add it to the `_info_widget`.
     """
 
-    def __init__(self, widget: QWidget, widget_parent: QWidget):
+    def __init__(self, widget: QWidget, parent_widget: QWidget):
         self._widget = widget
-        self._widget_parent = widget_parent
+        self._parent_widget = parent_widget
         self._blur_effect: QGraphicsBlurEffect
 
-        # Create an info widget that will contain the info label
-        self.info_widget = QWidget(self._widget_parent)
+        # Create a label to display information
+        self._info_label = QLabel("", self._parent_widget)
+        self._info_label.setAlignment(Qt.AlignCenter)
+        self._info_label.setStyleSheet("font-size: 24px; color: white;")
 
-        # Use QGridLayout for grid layout
-        self.layout = QVBoxLayout(self.info_widget)
-        self.info_label = QLabel("", self._widget_parent)
-        self.info_label.setAlignment(Qt.AlignCenter)
-        self.info_label.setStyleSheet("font-size: 24px; color: white;")
+        # Create a stylish progress bar
+        self._progress_bar = InstallProgressBar(self._parent_widget)
+        self._progress_bar.setFixedSize(400, 50)
 
-        # Add info_label to the grid layout at row 0, column 0
-        self.layout.addWidget(self.info_label)
+        # Main widget for all info widgets
+        self._info_widget = QWidget(self._parent_widget)
+        # Set the geometry of the info widget
+        self._info_widget.setGeometry(self._parent_widget.geometry())
 
-        self.info_widget.setGeometry(self._widget_parent.geometry())
-        self.info_widget.hide()
+        internal_widget = QWidget(self._info_widget)
 
-    def block_ui(self):
+        # Use QVBoxLayout for vertical stacking of elements
+        vertical_layout = QVBoxLayout(self._info_widget)
+        vertical_layout.addWidget(self._info_label)
+        vertical_layout.addWidget(self._progress_bar)
+        internal_widget.setLayout(vertical_layout)
+
+        # Create a QGridLayout for arranging elements
+        grid_layout = QGridLayout(self._info_widget)
+
+        # Add a spacer at the top
+        grid_layout.addItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding),
+            0,
+            1,
+        )
+
+        # Add a spacer on the left
+        grid_layout.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum),
+            1,
+            0,
+        )
+
+        # Add the internal widget (label and progress bar) to the center
+        grid_layout.addWidget(internal_widget, 1, 1)
+
+        # Add a spacer on the right
+        grid_layout.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum),
+            1,
+            2,
+        )
+
+        # Add a spacer at the bottom
+        grid_layout.addItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding),
+            2,
+            1,
+        )
+
+        # Set the layout for the info widget
+        self._info_widget.setLayout(grid_layout)
+
+        # Hide the info widget initially
+        self._info_widget.hide()
+        self._info_label.hide()
+        self._progress_bar.hide()
+
+    def disable_ui(self, show_text: bool = True, show_progress: bool = False):
         """Disable and blur widget."""
         self._widget.setEnabled(False)
         self._blur_window()
-        self.info_widget.show()
+        self._info_widget.show()
+
+        self.show_widget(self._info_label, show_text)
+        self.show_widget(self._progress_bar, show_progress)
 
     def enable_ui(self):
         """Enable widget and disable blur.."""
         self._widget.setEnabled(True)
         self._remove_blur()
-        self.info_widget.hide()
+        self._info_widget.hide()
+
+    @property
+    def info_label(self) -> QLabel:
+        """Return info label for signals."""
+        return self._info_label
+
+    @property
+    def progress_bar(self) -> QProgressBar:
+        """Return progress bar for signals."""
+        return self._progress_bar
+
+    @staticmethod
+    def show_widget(target_widget: QWidget, should_show: bool) -> None:
+        """
+        Show or hide a specified widget.
+
+        Args:
+            target_widget (QWidget): The widget to show or hide.
+            should_show (bool): A flag indicating whether to show the widget
+                (`True`) or hide it (`False`).
+
+        Returns:
+            None
+        """
+        (target_widget.show if should_show else target_widget.hide)()
 
     def _blur_window(self):
         """Apply a blur effect to the login window."""
@@ -307,30 +396,47 @@ class ServerWidget(QPushButton):
         layout.addWidget(self.subtitle_label)
 
         # Progress bar for current server online status
-        self.progress_bar = QProgressBar(self)
+        self._progress_bar = QProgressBar(self)
 
-        self.progress_bar.setMinimum(0)
+        self._progress_bar.setMinimum(0)
         if cur_online and max_online:
-            self.progress_bar.setMaximum(max_online)
-            self.progress_bar.setValue(cur_online)
-            self.progress_bar.setFormat(f"{cur_online} В ИГРЕ")
-            self.progress_bar.setStyleSheet(
+            self._progress_bar.setMaximum(max_online)
+            self._progress_bar.setValue(cur_online)
+            self._progress_bar.setFormat(f"{cur_online} В ИГРЕ")
+            self._progress_bar.setStyleSheet(
                 ServerWidgetCSS.progress_bar_online
             )
         else:
-            self.progress_bar.setMaximum(1)
-            self.progress_bar.setValue(1)
-            self.progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
-            self.progress_bar.setStyleSheet(
+            self._progress_bar.setMaximum(1)
+            self._progress_bar.setValue(1)
+            self._progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
+            self._progress_bar.setStyleSheet(
                 ServerWidgetCSS.progress_bar_offline
             )
 
         # Setting alignment to centre
-        self.progress_bar.setAlignment(Qt.AlignCenter)
-        self.progress_bar.setTextVisible(True)
-        layout.addWidget(self.progress_bar)
+        self._progress_bar.setAlignment(Qt.AlignCenter)
+        self._progress_bar.setTextVisible(True)
+        layout.addWidget(self._progress_bar)
 
         self.push_button = QPushButton("ИГРАТЬ", self)
         self.push_button.setStyleSheet(ServerWidgetCSS.play_button)
         layout.addWidget(self.push_button)
         layout.addStretch()
+
+
+class InstallProgressBar(QProgressBar):
+    """A progress bar for installation process."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        # Создание прогресс-бара
+        self.setMinimum(0)
+        self.setMaximum(100)
+        self.setValue(0)
+        self.setTextVisible(True)
+        self.setFormat("%p%")
+
+        # Применение стилей
+        self.setStyleSheet(INSTALL_PROGRESS_BAR)

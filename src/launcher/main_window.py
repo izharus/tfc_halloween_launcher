@@ -201,17 +201,7 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.progressBar.hide()
         self._ui_instance.progressBar.setTextVisible(True)
 
-        self._install_thread.progress_max.connect(
-            lambda maximum: self._ui_instance.progressBar.setMaximum(maximum)
-        )
-        self._install_thread.progress.connect(
-            lambda value: self._ui_instance.progressBar.setValue(value)
-        )
-        self._install_thread.text.connect(
-            lambda text: self._ui_instance.progressBar.setFormat(text)
-        )
         self._install_thread.finished.connect(self._install_thread_finished)
-
         self.setWindowTitle("TFC-Halloween 3.0.3")
         self._ui_instance.pushButton_close_app.clicked.connect(self.close)
         self._ui_instance.pushButton_collapse_app.clicked.connect(
@@ -266,6 +256,18 @@ class Window(QtWidgets.QMainWindow):
         )
         self._ui_instance.stackedWidget.setCurrentWidget(
             self._ui_instance.choose_server_page
+        )
+
+        self._install_thread.progress_max.connect(
+            lambda maximum: self._choose_server.progress_bar.setMaximum(
+                maximum
+            )
+        )
+        self._install_thread.progress.connect(
+            lambda value: self._choose_server.progress_bar.setValue(value)
+        )
+        self._install_thread.text.connect(
+            lambda text: self._choose_server.progress_bar.setFormat(text)
         )
 
     # pylint: disable=C0103
@@ -403,7 +405,8 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-        self._choose_server.block_ui()
+        self._choose_server.info_label.setText("Получение обновлений...")
+        self._choose_server.disable_ui(show_progress=True)
 
         try:
             self.config_manager.update_config()
@@ -469,7 +472,6 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
-        self._ui_instance.progressBar.hide()
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
             log.error(msg_title)
