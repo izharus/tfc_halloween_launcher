@@ -305,6 +305,7 @@ class BaseWidget:
         """Disable and blur widget."""
         self._widget.setEnabled(False)
         self._blur_window()
+        self._info_widget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self._info_widget.show()
 
         self.show_widget(self._info_label, show_text)
