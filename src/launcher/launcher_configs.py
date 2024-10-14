@@ -32,6 +32,7 @@ class LauncherConfig:
     Configuration settings for the Minecraft launcher.
 
     Attributes:
+        DEVELOPER_EMAIL (str): Complain about bugs here.
         LAUNCHER_NAME (str): The name of the Minecraft launcher.
         DATA_DIR (str): The directory for storing launcher data.
         SERVERS_DIR (str): The directory where server configurations
@@ -45,10 +46,11 @@ class LauncherConfig:
         minecraft_cape_directory = (str): Dir for choosing user capes.
     """
 
+    DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
     LAUNCHER_NAME = "tfc_halloween"
     DATA_DIR = "halloween_data"
     SERVERS_DIR = "servers"
-    JAVA_INSTALL_URL = "https://java-for-minecraft.com/ru/"
+    JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
