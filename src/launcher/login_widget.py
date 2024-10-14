@@ -4,11 +4,10 @@ import time
 from typing import Optional
 
 from loguru import logger as log
-from PySide6.QtCore import Qt, QThread, QTimer, Signal, Slot
-from PySide6.QtWidgets import QLabel
-from qtpy.QtWidgets import QGraphicsBlurEffect
+from PySide6.QtCore import QObject, QThread, QTimer, Signal, Slot
 
 from .design.design import Ui_MainWindow
+from .design.utility import BaseWidget
 from .launcher_authorization import authenticate_user
 from .utility.custom_exceptions import (
     AuthDataNotSet,
@@ -59,6 +58,7 @@ class AuthenticationWorker(QThread):
         self.write_message.emit("Авторизация...")
 
         try:
+            log.info("AuthenticationWorker started.")
             if self._login is None or self._password is None:
                 log.critical("Calling of set_auth_data is required.")
                 self.error_message.emit(str(AuthDataNotSet))
@@ -70,8 +70,8 @@ class AuthenticationWorker(QThread):
                 self._login,
                 self._password,
             )
-            self.write_message.emit("Обновление списка серверов...")
-            time.sleep(3)
+            log.info("Authentication completed.")
+            self.write_message.emit("Авторизация завершена...")
             self.success.emit()
         except InvalidUserNameOrPassword as error:
             time.sleep(3)
@@ -96,7 +96,7 @@ class AuthenticationWorker(QThread):
         return self._auth_data
 
 
-class LoginWidget:
+class LoginWidget(QObject, BaseWidget):
     """
     A widget for user login interface.
 
@@ -105,6 +105,8 @@ class LoginWidget:
     to the user through UI elements and manages the visibility of
     different UI components based on the authentication state.
     """
+
+    authentication_complete = Signal()
 
     def __init__(self, main_window: Ui_MainWindow, login_api_url: str):
         """
@@ -115,10 +117,13 @@ class LoginWidget:
                 which this widget is attached.
             login_api_url (str): The API URL for user authentication.
         """
+
+        super().__init__(
+            widget=main_window.login_page,
+            widget_parent=main_window.stackedWidget,
+        )
         self._ui = main_window
 
-        self._info_label: QLabel
-        self._blur_effect: Optional[QGraphicsBlurEffect] = None
         self._error_timer: Optional[QTimer] = None
         self._auth_data: Optional[AuthData] = None
 
@@ -126,7 +131,7 @@ class LoginWidget:
         self._init_ui()
 
         # Initialize the authentication worker.
-        self.worker = AuthenticationWorker(login_api_url)
+        self._worker = AuthenticationWorker(login_api_url)
 
         # Connect signals to their respective slots.
         self._connect_signals()
@@ -136,11 +141,11 @@ class LoginWidget:
         self._ui.pushButton_login.clicked.connect(self.block_ui)
         self._ui.pushButton_login.clicked.connect(self._make_authorization)
 
-        self.worker.write_message.connect(self._info_label.setText)
-        self.worker.error_message.connect(self._write_error)
+        self._worker.write_message.connect(self.info_label.setText)
+        self._worker.error_message.connect(self.write_error)
+        self._worker.error_message.connect(self.enable_ui)
 
-        self.worker.success.connect(self._complete_authentication)
-        self.worker.finished.connect(self.enable_ui)
+        self._worker.success.connect(self._complete_authentication)
 
         self._ui.lineEdit_nickname.textChanged.connect(
             self._validate_user_input
@@ -159,12 +164,6 @@ class LoginWidget:
 
         self._validate_user_input()
 
-        self._info_label = QLabel("Please wait...", self._ui.stackedWidget)
-        self._info_label.setAlignment(Qt.AlignCenter)
-        self._info_label.setStyleSheet("font-size: 24px; color: white;")
-        self._info_label.setGeometry(self._ui.stackedWidget.geometry())
-        self._info_label.hide()
-
     @Slot()
     def _validate_user_input(self):
         """Validate user input for login fields."""
@@ -176,21 +175,10 @@ class LoginWidget:
         )
 
     @Slot()
-    def _write_error(self, message: str):
+    def write_error(self, message: str):
         """Display an error message in the UI."""
         self._ui.pushButton_error_info.setText(message)
         self._ui.pushButton_error_info.show()
-
-    def _blur_window(self):
-        """Apply a blur effect to the login window."""
-        self._blur_effect = QGraphicsBlurEffect()
-        self._blur_effect.setBlurRadius(15)
-        self._ui.widget_login.setGraphicsEffect(self._blur_effect)
-
-    def _remove_blur(self):
-        """Remove the blur effect from the login window."""
-        self._ui.widget_login.setGraphicsEffect(None)
-        self._blur_effect = None
 
     @Slot()
     def _make_authorization(self) -> None:
@@ -198,36 +186,23 @@ class LoginWidget:
         login = self._ui.lineEdit_nickname.text()
         password = self._ui.lineEdit_password.text()
 
-        self.worker.set_auth_data(login, password)
+        self._worker.set_auth_data(login, password)
 
-        self.worker.start()
+        self._worker.start()
         # self._authorization_thread.set_auth_data(login, password)
         # self._authorization_thread.start()
 
     @Slot()
     def _complete_authentication(self):
         """Handle successful authentication."""
-        self._auth_data = self.worker.auth_data
-        self._ui.stackedWidget.setCurrentIndex(1)
+        self._auth_data = self._worker.auth_data
+        self.authentication_complete.emit()
 
     @Slot()
     def block_ui(self):
         """Disable the login UI during the authentication process."""
-        self._ui.widget_login.setEnabled(False)
-        if self._error_timer:
-            self._error_timer.stop()
-            self._ui.pushButton_error_info.hide()
-        self._blur_window()
+        super().block_ui()
         self._ui.pushButton_error_info.hide()
-        self._info_label.show()
-        self._info_label.setText("Инициализация...")
-
-    @Slot()
-    def enable_ui(self):
-        """Re-enable the login UI after the authentication process."""
-        self._ui.widget_login.setEnabled(True)
-        self._remove_blur()
-        self._info_label.hide()
 
     @property
     def auth_data(self) -> Optional[AuthData]:

@@ -1,4 +1,5 @@
 """Pytest conftest."""
+
 import pytest
 
 CONFIG_NAME_1 = "TestModpack1"
@@ -79,4 +80,15 @@ def mock_modpack_data():
             }
         ],
         "client_additional_data": {},
+    }
+
+
+@pytest.fixture
+def mock_auth_data():
+    """Mock auth data."""
+    return {
+        "status": "status",
+        "username": "username",
+        "uuid": "uuid",
+        "accessToken": "accessToken",
     }

@@ -1,6 +1,8 @@
 <RCC>
   <qresource prefix="/">
+    <file>data/background/server-icon.png</file>
     <file>data/background/login_back.jpg</file>
+    <file>data/background/settings.png</file>
     <file>data/background/main_back.jpg</file>
   </qresource>
 </RCC>
