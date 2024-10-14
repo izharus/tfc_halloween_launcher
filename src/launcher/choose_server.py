@@ -32,8 +32,8 @@ class ChoseServer(QObject, BaseWidget):
                 for the server settings.
         """
         super().__init__(
-            widget=main_window.choose_server_page,
-            parent_widget=main_window.widget_main_window,
+            widget=main_window.stackedWidget,
+            parent_widget=main_window.widget_main_window_child,
         )
         self._ui = main_window
         self._config_manager = config_manager

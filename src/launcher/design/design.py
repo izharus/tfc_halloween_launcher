@@ -51,9 +51,78 @@ class Ui_MainWindow(object):
 "#stackedWidget {\n"
 "background-image: url(:/data/background/main_back.jpg);\n"
 "}")
-        self.gridLayout = QGridLayout(self.widget_main_window)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.stackedWidget = QStackedWidget(self.widget_main_window)
+        self.verticalLayout_3 = QVBoxLayout(self.widget_main_window)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.widget_main_window_child = QWidget(self.widget_main_window)
+        self.widget_main_window_child.setObjectName(u"widget_main_window_child")
+        self.verticalLayout = QVBoxLayout(self.widget_main_window_child)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout_top_menu = QHBoxLayout()
+        self.horizontalLayout_top_menu.setObjectName(u"horizontalLayout_top_menu")
+        self.horizontalLayout_top_menu.setContentsMargins(-1, 10, 10, -1)
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_top_menu.addItem(self.horizontalSpacer_6)
+
+        self.pushButton_collapse_app = QPushButton(self.widget_main_window_child)
+        self.pushButton_collapse_app.setObjectName(u"pushButton_collapse_app")
+        self.pushButton_collapse_app.setMaximumSize(QSize(32, 32))
+        self.pushButton_collapse_app.setStyleSheet(u"QPushButton {\n"
+"    background-image: url(:/data/background/collapse_icon.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
+                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
+"}\n"
+"")
+
+        self.horizontalLayout_top_menu.addWidget(self.pushButton_collapse_app)
+
+        self.pushButton_close_app = QPushButton(self.widget_main_window_child)
+        self.pushButton_close_app.setObjectName(u"pushButton_close_app")
+        self.pushButton_close_app.setMinimumSize(QSize(32, 32))
+        self.pushButton_close_app.setMaximumSize(QSize(32, 32))
+        self.pushButton_close_app.setStyleSheet(u"QPushButton {\n"
+"    background-image: url(:/data/background/close_icon.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
+                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
+"}\n"
+"")
+
+        self.horizontalLayout_top_menu.addWidget(self.pushButton_close_app)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_top_menu)
+
+        self.stackedWidget = QStackedWidget(self.widget_main_window_child)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.setMinimumSize(QSize(0, 0))
         self.stackedWidget.setMaximumSize(QSize(10000, 10000))
@@ -727,72 +796,10 @@ class Ui_MainWindow(object):
 "")
         self.stackedWidget.addWidget(self.page_3)
 
-        self.gridLayout.addWidget(self.stackedWidget, 2, 0, 1, 1)
-
-        self.horizontalLayout_top_menu = QHBoxLayout()
-        self.horizontalLayout_top_menu.setObjectName(u"horizontalLayout_top_menu")
-        self.horizontalLayout_top_menu.setContentsMargins(-1, 10, 10, -1)
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_top_menu.addItem(self.horizontalSpacer_6)
-
-        self.pushButton_collapse_app = QPushButton(self.widget_main_window)
-        self.pushButton_collapse_app.setObjectName(u"pushButton_collapse_app")
-        self.pushButton_collapse_app.setMaximumSize(QSize(32, 32))
-        self.pushButton_collapse_app.setStyleSheet(u"QPushButton {\n"
-"    background-image: url(:/data/background/collapse_icon.png);\n"
-"    background-position: center;\n"
-"    background-repeat: no-repeat;\n"
-"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
-"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
-"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
-"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
-"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
-"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
-                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
-"}\n"
-"")
-
-        self.horizontalLayout_top_menu.addWidget(self.pushButton_collapse_app)
-
-        self.pushButton_close_app = QPushButton(self.widget_main_window)
-        self.pushButton_close_app.setObjectName(u"pushButton_close_app")
-        self.pushButton_close_app.setMinimumSize(QSize(32, 32))
-        self.pushButton_close_app.setMaximumSize(QSize(32, 32))
-        self.pushButton_close_app.setStyleSheet(u"QPushButton {\n"
-"    background-image: url(:/data/background/close_icon.png);\n"
-"    background-position: center;\n"
-"    background-repeat: no-repeat;\n"
-"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
-"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
-"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
-"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
-"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
-"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
-                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
-"}\n"
-"")
-
-        self.horizontalLayout_top_menu.addWidget(self.pushButton_close_app)
+        self.verticalLayout.addWidget(self.stackedWidget)
 
 
-        self.gridLayout.addLayout(self.horizontalLayout_top_menu, 0, 0, 1, 1)
+        self.verticalLayout_3.addWidget(self.widget_main_window_child)
 
 
         self.gridLayout_5.addWidget(self.widget_main_window, 0, 0, 1, 1)
@@ -809,6 +816,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.pushButton_collapse_app.setText("")
+        self.pushButton_close_app.setText("")
         self.pushButton_login.setText(QCoreApplication.translate("MainWindow", u"\u0412\u041e\u0419\u0422\u0418", None))
         self.label_reset_password.setText(QCoreApplication.translate("MainWindow", u"\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0430\u0440\u043e\u043b\u044c", None))
         self.lineEdit_password.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u0440\u043e\u043b\u044c", None))
@@ -831,7 +840,5 @@ class Ui_MainWindow(object):
         self.label.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label_information_text.setText("")
         self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
-        self.pushButton_collapse_app.setText("")
-        self.pushButton_close_app.setText("")
     # retranslateUi
 

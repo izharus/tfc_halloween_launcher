@@ -70,6 +70,7 @@ class AuthenticationWorker(QThread):
                 self._login,
                 self._password,
             )
+
             log.info("Authentication completed.")
             self.write_message.emit("Авторизация завершена...")
             self.success.emit()
@@ -119,7 +120,7 @@ class LoginWidget(QObject, BaseWidget):
         """
 
         super().__init__(
-            widget=main_window.login_page,
+            widget=main_window.stackedWidget,
             parent_widget=main_window.widget_main_window,
         )
         self._ui = main_window
