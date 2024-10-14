@@ -213,7 +213,10 @@ class Window(QtWidgets.QMainWindow):
         self._install_thread.finished.connect(self._install_thread_finished)
 
         self.setWindowTitle("TFC-Halloween 3.0.3")
-
+        self._ui_instance.pushButton_close_app.clicked.connect(self.close)
+        self._ui_instance.pushButton_collapse_app.clicked.connect(
+            self.showMinimized
+        )
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
             lambda: open_directory(
@@ -243,9 +246,9 @@ class Window(QtWidgets.QMainWindow):
         # make the main window transparent
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self._ui_instance.stackedWidget.setStyleSheet(
+        self._ui_instance.widget_main_window.setStyleSheet(
             """
-            #stackedWidget {
+            #widget_main_window {
             background-image: url(:/data/background/main_back.jpg);
             border-radius: 50px;
             }

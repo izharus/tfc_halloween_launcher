@@ -120,7 +120,7 @@ class LoginWidget(QObject, BaseWidget):
 
         super().__init__(
             widget=main_window.login_page,
-            widget_parent=main_window.stackedWidget,
+            widget_parent=main_window.widget_main_window,
         )
         self._ui = main_window
 
