@@ -26,7 +26,7 @@ import win32console
 import win32gui
 from loguru import logger as log
 from qtpy import QtWidgets
-from qtpy.QtCore import QPoint, Qt, QTimer, Slot
+from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QFileDialog
 from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
@@ -34,6 +34,7 @@ from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from .choose_server import ChoseServer
 from .data_validation import Validator
 from .design.design import Ui_MainWindow
+from .design.thread_data_utils import SettingsManager
 from .design.utility import (
     CustomMessageBox,
     NotificationWidget,
@@ -54,7 +55,6 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
-from .utility.thread_data_utils import ThreadUiInputData
 
 OFFLINE_MAP_JSON: Dict = {
     "ОБНОВИТЬ": {},
@@ -128,7 +128,12 @@ class Window(QtWidgets.QMainWindow):
 
         self._install_thread = InstallThread(self.file_downloader)
 
-        self.input_data = self.get_input_data()
+        self._settings = SettingsManager(
+            ui_instance=self._ui_instance.centralwidget,
+            company_name="IzharusTest",
+            app_name="TestApp",
+        )
+        self._settings.update_ui_signal.connect(self._settings.set_value_to_ui)
         self._skin_uploader_thread = SkinUploaderThread(
             self._launcher_config.API_URL_PUSH_SKIN,
         )
@@ -214,12 +219,6 @@ class Window(QtWidgets.QMainWindow):
             )
         )
         self.is_working = True
-        self.safe_inputs_timer = QTimer()
-        self.safe_inputs_timer.timeout.connect(
-            self.input_data.update_input_data_from_ui
-        )
-        self.safe_inputs_timer.setInterval(self.input_data.time_delay)
-        self.safe_inputs_timer.start()
 
         self.setWindowIcon(QIcon(self.icon_file_path))
         self._executor: MinecraftExecutorThread
@@ -309,27 +308,16 @@ class Window(QtWidgets.QMainWindow):
             self._mouse_click_pos = None
             # event.accept()
 
-    def get_input_data(self):
-        """
-        Returns a class instance of ThreadUiInputData with
-        values of all fields in frontend inputs.
-
-        Returns:
-            ThreadUiInputData : an instance of ThreadUiInputData class
-        """
-        ui_data_file_path = self._launcher_config.ui_data_path
-        return ThreadUiInputData(self._ui_instance, str_path=ui_data_file_path)
-
     def _choose_skin_and_upload(self, directory: str) -> None:
         # Open a file dialog and get the selected file path
         if not os.path.exists(directory):
             os.makedirs(directory)
-        username = self.input_data.extract_element("lineEdit_nickname")
-        password = self.input_data.extract_element("lineEdit_password")
+        username = self._settings.get_ui_value("lineEdit_nickname")
+        password = self._settings.get_ui_value("lineEdit_password")
         skin_file_path, _ = QFileDialog.getOpenFileName(
             self, "Open File", directory
         )
-        is_skin_slim = self.input_data.extract_element("radioButton_female")
+        is_skin_slim = self._settings.get_ui_value("radioButton_female")
         if not skin_file_path:
             self.notif_widget.show_and_close("Файл скина не выбран.")
             return
@@ -345,8 +333,8 @@ class Window(QtWidgets.QMainWindow):
     def _delete_user_texture(
         self, worker_thread: Union[SkinUploaderThread, CapeUploaderThread]
     ) -> None:
-        username = self.input_data.extract_element("lineEdit_nickname")
-        password = self.input_data.extract_element("lineEdit_password")
+        username = self._settings.get_ui_value("lineEdit_nickname")
+        password = self._settings.get_ui_value("lineEdit_password")
 
         worker_thread.set_data(
             username=username,
@@ -368,8 +356,8 @@ class Window(QtWidgets.QMainWindow):
         # Open a file dialog and get the selected file path
         if not os.path.exists(directory):
             os.makedirs(directory)
-        username = self.input_data.extract_element("lineEdit_nickname")
-        password = self.input_data.extract_element("lineEdit_password")
+        username = self._settings.get_ui_value("lineEdit_nickname")
+        password = self._settings.get_ui_value("lineEdit_password")
         cape_file_path, _ = QFileDialog.getOpenFileName(
             self, "Open File", directory
         )
@@ -442,7 +430,6 @@ class Window(QtWidgets.QMainWindow):
             self._launcher_config,
         )
         self._install_thread.set_config(self._server_config)
-        self.input_data.update_input_data_from_ui()
 
         if not self._validator.is_java_installed():
             java_install_url = self._launcher_config.JAVA_INSTALL_URL
@@ -455,7 +442,7 @@ class Window(QtWidgets.QMainWindow):
             sys.exit(1)
         self._ui_instance.progressBar.show()
 
-        is_install_shaders = self.input_data.extract_element(
+        is_install_shaders = self._settings.get_ui_value(
             "checkBox_is_install_shaders"
         )
         self._install_thread.change_install_shaders_status(is_install_shaders)
@@ -491,7 +478,7 @@ class Window(QtWidgets.QMainWindow):
                 "Tокены авторизации не инициализированы.",
             )
             sys.exit(1)
-        nickname = self.input_data.extract_element("lineEdit_nickname")
+        nickname = self._settings.get_ui_value("lineEdit_nickname")
         uuid = auth_data.uuid
         access_token = auth_data.accessToken
         self._executor = MinecraftExecutorThread(
@@ -526,7 +513,6 @@ class Window(QtWidgets.QMainWindow):
             None
         """
         log.debug("closeEvent entry")
-        self.input_data.update_input_data_from_ui()
         self.is_working = False
         event.accept()
 
