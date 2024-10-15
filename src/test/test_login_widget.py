@@ -120,7 +120,7 @@ class TestLoginWidget:
 
     def test_ui_elements_initialization(self, qtbot):
         """Test if all necessary UI elements are hidden initially."""
-        assert self.widget.info_widget.isHidden()
+        assert self.widget._info_widget.isHidden()
         assert self.widget._ui.pushButton_error_info.isHidden()
 
     def test_login_button_disabled_on_invalid_input(self, qtbot):
@@ -137,7 +137,7 @@ class TestLoginWidget:
 
     def test_blur_effect_on_login(self, qtbot):
         """Test that blur effect is applied during login process."""
-        self.widget.block_ui()  # Start the authentication process
+        self.widget.disable_ui()  # Start the authentication process
         assert self.widget._widget.graphicsEffect()
 
         self.widget.enable_ui()  # Complete the authentication
@@ -163,7 +163,7 @@ class TestLoginWidget:
         self.widget._worker.set_auth_data("login", "pass")
 
         # Simulate blocking ui after clicking on login button
-        self.widget.block_ui()
+        self.widget.disable_ui()
         with requests_mock.Mocker() as m:
             m.post(
                 LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR,

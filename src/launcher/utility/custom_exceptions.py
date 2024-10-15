@@ -36,7 +36,9 @@ class ConfigDownloadError(FiletDownloadError):
     Raises if any error occurs due downloading a config file.
     """
 
-    def __init__(self, message="Failed to download a configuration file.") -> None:
+    def __init__(
+        self, message="Failed to download a configuration file."
+    ) -> None:
         super().__init__(message)
 
     def __str__(self):
@@ -161,3 +163,19 @@ class Base64ParsingError(RuntimeError):
 
     def __str__(self):
         return "Не удалось прочитать файл."
+
+
+class WidgetValueAssignmentError(Exception):
+    """Custom exception for errors during value assignment to UI elements."""
+
+    def __init__(self, message: str = ""):
+        self.message = message
+        super().__init__(self.message)
+
+
+class WidgetNotFound(Exception):
+    """Exception raised when a specified widget cannot be found."""
+
+    def __init__(self, message: str = ""):
+        self.message = message
+        super().__init__(self.message)
