@@ -36,7 +36,8 @@ from .data_validation import Validator
 from .design.design import Ui_MainWindow
 from .design.thread_data_utils import SettingsManager
 from .design.utility import (
-    CustomMessageBox,
+    LogMessageBox,
+    MessageBox,
     NotificationWidget,
     open_directory,
 )
@@ -105,8 +106,8 @@ class Window(QtWidgets.QMainWindow):
             "icon.ico"
         )
         self._validator = Validator()
-        self.msg_box = CustomMessageBox()
-
+        self.msg_box = MessageBox(self._ui_instance.widget_main_window)
+        self.log_msg_box = LogMessageBox(self._ui_instance.widget_main_window)
         self.notif_widget = NotificationWidget(
             self._ui_instance.label_information_text
         )
@@ -117,12 +118,12 @@ class Window(QtWidgets.QMainWindow):
                 aws_secret_access_key=BOTO3_SECRET_KEY,
                 bucket_name=LauncherConfig.BUCKET_NAME,
             )
-
         except DownloadServerHandshakeError as error:
             log.critical(f"Failed to install boto3: {error}")
-            self.msg_box.close_button.setText("закрыть приложение")
-            self.msg_box.show_message_with_logs(
-                "Сетевая ошибка!", "Не удалось связаться с сервером загрузки."
+            self.log_msg_box.show_message(
+                title="Сетевая ошибка!",
+                msg="Не удалось связаться с сервером загрузки.",
+                close_button_text="закрыть приложение",
             )
             sys.exit(1)
 
@@ -144,7 +145,8 @@ class Window(QtWidgets.QMainWindow):
         # This widget connects signals in _connect_signals
         self._login_widget = LoginWidget(
             self._ui_instance,
-            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR,
+            self._launcher_config,
+            settings=self._settings,
         )
         self._config_installer_thread = ConfigInstallerThread(
             file_downloader=self.file_downloader,
@@ -399,10 +401,11 @@ class Window(QtWidgets.QMainWindow):
 
         try:
             self.config_manager.update_config()
+            raise ConfigProcessingError
         except ConfigProcessingError:
-            self.msg_box.show_message_with_logs(
-                "Ошибка на нашей стороне!",
-                "Не удалось обработать конфиг обновления. "
+            self.log_msg_box.show_message(
+                title="Ошибка на нашей стороне!",
+                msg="Не удалось обработать конфиг обновления. "
                 "Отправьте лог разработчику.",
             )
             # TODO: context manager or other solution
@@ -410,8 +413,8 @@ class Window(QtWidgets.QMainWindow):
             return
         except ConfigDownloadError:
             self.msg_box.show_message(
-                "Не удалось получить обновления.",
-                "Проверьте соединение с сетью.",
+                title="Не удалось получить обновления.",
+                msg="Проверьте соединение с сетью.",
             )
             self._choose_server.enable_ui()
             return
@@ -419,7 +422,8 @@ class Window(QtWidgets.QMainWindow):
         if not modpack_model:
 
             self.msg_box.show_message(
-                "Получены обновления", "Попробуйте запустить игру снова."
+                title="Получены обновления",
+                msg="Попробуйте запустить игру снова.",
             )
 
             self._choose_server.enable_ui()
@@ -435,10 +439,10 @@ class Window(QtWidgets.QMainWindow):
 
         if not self._validator.is_java_installed():
             java_install_url = self._launcher_config.JAVA_INSTALL_URL
-            self.msg_box.close_button.setText("закрыть приложение")
             self.msg_box.show_message(
-                "Ошибка Java",
-                "Загрузите последнюю версию Java.\n" + java_install_url,
+                title="Ошибка Java",
+                msg="Загрузите последнюю версию Java.\n" + java_install_url,
+                close_button_text="закрыть приложение",
             )
             # After installation user should restart app
             sys.exit(1)
@@ -464,9 +468,9 @@ class Window(QtWidgets.QMainWindow):
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
             log.error(msg_title)
-            self.msg_box.show_message_with_logs(
-                msg_title,
-                "Подробная информация в логе.",
+            self.log_msg_box.show_message(
+                title=msg_title,
+                msg="Подробная информация в логе.",
             )
             self._choose_server.enable_ui()
             return
@@ -474,10 +478,10 @@ class Window(QtWidgets.QMainWindow):
         self.hide()
         auth_data = self._login_widget.auth_data
         if not auth_data:
-            self.msg_box.close_button.setText("закрыть приложение")
-            self.msg_box.show_message_with_logs(
-                "Критическая ошибка",
-                "Tокены авторизации не инициализированы.",
+            self.log_msg_box.show_message(
+                title="Критическая ошибка",
+                msg="Tокены авторизации не инициализированы.",
+                close_button_text="закрыть приложение",
             )
             sys.exit(1)
         nickname = self._settings.get_ui_value("lineEdit_nickname")
@@ -494,9 +498,9 @@ class Window(QtWidgets.QMainWindow):
 
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
-            self.msg_box.show_message_with_logs(
-                "Ошибка при запуске игры.",
-                "Подробная информация в логе.",
+            self.log_msg_box(
+                title="Ошибка при запуске игры.",
+                msg="Подробная информация в логе.",
             )
         self._choose_server.enable_ui()
         self.show()
@@ -529,12 +533,12 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     log.critical(exc_type)
     log.critical(exc_value)
     log.critical(" ".join(traceback.format_tb(exc_traceback)))
-    msg_box = CustomMessageBox()
-    msg_box.close_button.setText("Закрыть приложение")
-    msg_box.show_message_with_logs(
-        "Критическая ошибка!",
-        "Отправьте последний текстовый файл разработчику: "
+    msg_box = LogMessageBox()
+    msg_box.show_message(
+        title="Критическая ошибка!",
+        msg="Отправьте последний текстовый файл разработчику: "
         + f"{config.DEVELOPER_EMAIL}",
+        close_button_text="закрыть приложение",
     )
     sys.exit(1)
 

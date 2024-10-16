@@ -30,25 +30,20 @@ from .styles import (
 )
 
 
-class CustomMessageBox(QDialog):
+class MessageBox(QDialog):
     """
     A custom message box that displays a message
     and allows the user to close it.
 
     Attributes:
-        widget (QWidget): The main container widget for the message box.
-        main_layout (QVBoxLayout): The main layout for the dialog.
-        close_button (QPushButton): The button to close the message box.
-        button_layout (QHBoxLayout): The layout for positioning
-            the close button.
-        _text_edit (QTextEdit): A text edit widget that displays the message.
+        button_layout (QHBoxLayout): The layout for adding new custom buttons.
     """
 
-    def __init__(self):
+    def __init__(self, parent: QWidget):
         """Initializes the CustomMessageBox with a translucent background
         and a close button.
         """
-        super().__init__()
+        super().__init__(parent)
         self.setWindowFlags(
             Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         )
@@ -57,9 +52,9 @@ class CustomMessageBox(QDialog):
         # Implement the custom widget to avoid visual bugs with border-radius
         container_widget = QWidget()
 
-        self.widget = container_widget
+        self._widget = container_widget
         # User copy-able textEdit.
-        self._text_edit = QTextEdit(self.widget)
+        self._text_edit = QTextEdit(self._widget)
         self._text_edit.setText("Критическая ошибка!")
         self._text_edit.setReadOnly(True)
         self._text_edit.setFrameStyle(QTextEdit.NoFrame)
@@ -69,32 +64,29 @@ class CustomMessageBox(QDialog):
         self._text_edit.setFixedSize(300, 150)
 
         # Button for closing this widget
-        self.close_button = QPushButton("закрыть")
-        self.close_button.clicked.connect(self.accept)
+        self._close_button = QPushButton("закрыть")
+        self._close_button.clicked.connect(self.accept)
 
-        # Adjust button size as its text
+        main_button_layout = QHBoxLayout()
+        main_button_layout.addStretch()
+
         # Put button into the middle of widget
         self.button_layout = QHBoxLayout()
-        self.button_layout.addStretch()
-        self.button_layout.addWidget(self.close_button)
-        self.button_layout.addStretch()
+        self.button_layout.setSpacing(50)
+        self.button_layout.addWidget(self._close_button)
 
-        # Create a button for opening logs
-        self._log_button = QPushButton(self.widget)
-        self._log_button.setText("папка с логами")
-        self.button_layout.addWidget(self._log_button)
-        self._log_button.clicked.connect(
-            lambda: webbrowser.open(LauncherConfig().logging_dir)
-        )
+        main_button_layout.addLayout(self.button_layout)
+        main_button_layout.addStretch()
+
         # Main widget's layout
         layout = QVBoxLayout()
         layout.addWidget(self._text_edit)
-        layout.addLayout(self.button_layout)
+        layout.addLayout(main_button_layout)
 
         container_widget.setLayout(layout)
 
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.addWidget(container_widget)
+        self._main_layout = QVBoxLayout(self)
+        self._main_layout.addWidget(container_widget)
 
         self.setStyleSheet(CUSTOM_MESSAGE_BOX_STYLE)
 
@@ -108,23 +100,31 @@ class CustomMessageBox(QDialog):
     def _format_msg(msg: str) -> str:
         return "<p style='text-align: center;'>" f"{msg}</p>\n"
 
-    def show_message(self, title: str, msg: str) -> None:
+    def show_message(
+        self, title: str, msg: str = "", close_button_text: str = "закрыть"
+    ) -> None:
         """Show message box."""
-
-        self._log_button.hide()
+        self._close_button.setText(close_button_text)
         self._text_edit.setText(
             self._format_title(title) + self._format_msg(msg)
         )
         self.exec()
 
-    def show_message_with_logs(self, title: str, msg: str) -> None:
-        """Show message box with button for opening logs."""
-        self._log_button.show()
-        self._text_edit.setText(
-            self._format_title(title) + self._format_msg(msg)
-        )
 
-        self.exec()
+class LogMessageBox(MessageBox):
+    """
+    A custom message box that displays a message, and a log button
+    for opening the log dir.
+    """
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self._log_button = QPushButton(self._widget)
+        self._log_button.setText("папка с логами")
+        self.button_layout.addWidget(self._log_button)
+        self._log_button.clicked.connect(
+            lambda: webbrowser.open(LauncherConfig().logging_dir)
+        )
 
 
 class NotificationWidget(QWidget):
