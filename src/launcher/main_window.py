@@ -143,7 +143,8 @@ class Window(QtWidgets.QMainWindow):
         self._server_config: ServerConfig
         # This widget connects signals in _connect_signals
         self._login_widget = LoginWidget(
-            self._ui_instance, self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
+            self._ui_instance,
+            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR,
         )
         self._config_installer_thread = ConfigInstallerThread(
             file_downloader=self.file_downloader,
@@ -426,8 +427,9 @@ class Window(QtWidgets.QMainWindow):
 
         self._server_config = ServerConfig(
             config_name,
-            modpack_model.model_dump(),
+            modpack_model,
             self._launcher_config,
+            self._settings,
         )
         self._install_thread.set_config(self._server_config)
 

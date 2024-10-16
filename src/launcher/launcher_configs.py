@@ -8,9 +8,7 @@ launcher and managing server configurations.
 
 import json
 import os
-import shelve
-import traceback
-from typing import Any, Dict, Optional
+from typing import Final, Optional
 
 import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
@@ -18,6 +16,7 @@ from pydantic import ValidationError
 from unidecode import unidecode
 
 from .boto3_cred import BOTO3_BUCKET_NAME
+from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -44,6 +43,9 @@ class LauncherConfig:
         API_URL_PUSH_CAPE (str): The API URL for pushing user cape.
         minecraft_skin_directory = (str): Dir for choosing user skins.
         minecraft_cape_directory = (str): Dir for choosing user capes.
+        IS_AUTHENTICATED_KEY (str): A key for SettingsManager, 1 if user
+            was authenticated, 0 otherwise
+
     """
 
     DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
@@ -76,121 +78,39 @@ class LauncherConfig:
         )
 
         os.makedirs(self._minecraft_root_directory, exist_ok=True)
-        self._ui_data_path = os.path.join(
-            self._minecraft_root_directory,
-            self.DATA_DIR,
-            "ui_inputs_data",
-            "input_data",
-        )
-        os.makedirs(os.path.dirname(self._ui_data_path), exist_ok=True)
-        self._launcher_data_path = os.path.join(
-            self._minecraft_root_directory, self.DATA_DIR, "launcher_data.bin"
-        )
 
         self._logging_dir = os.path.join(
             self._minecraft_root_directory, self.DATA_DIR, "logs"
         )
         os.makedirs(self._logging_dir, exist_ok=True)
-        self._launcher_data = self._get_launcher_data()
-        self.minecraft_skin_directory = os.path.join(
+        self._minecraft_skin_directory = os.path.join(
             self.minecraft_root_directory,
             "skins",
         )
-        self.minecraft_cape_directory = os.path.join(
+        self._minecraft_cape_directory = os.path.join(
             self.minecraft_root_directory,
             "capes",
         )
 
     @property
     def minecraft_root_directory(self) -> str:
-        """
-        Get the Minecraft root directory.
-        """
-
+        """Get the Minecraft root directory."""
         return self._minecraft_root_directory
 
     @property
-    def ui_data_path(self) -> str:
-        """
-        Get the UI data path.
-        """
-
-        return self._ui_data_path
-
-    @property
-    def launcher_data_path(self) -> str:
-        """Get the path to the launcher data file."""
-
-        return self._launcher_data_path
-
-    @property
     def logging_dir(self) -> str:
-        """
-        Get the logging directory.
-        """
-
+        """Get the logging directory."""
         return self._logging_dir
 
     @property
-    def launcher_data(self) -> Dict:
-        """Get the launcher data."""
-        return self._launcher_data
+    def minecraft_skin_directory(self) -> str:
+        """Get the directory with user skins."""
+        return self._minecraft_skin_directory
 
-    def set_launcher_data_value(
-        self,
-        data_key: str,
-        data_value: Any,
-    ) -> None:
-        """
-        Set a value in the launcher data.
-
-        Args:
-            data_key: The key of the data to set.
-            data_value: The value to set.
-        """
-        self._launcher_data[data_key] = data_value
-        self._update_launcher_data()
-
-    def get_launcher_data_value(
-        self,
-        data_key: str,
-    ) -> Any:
-        """
-        Get a value from the launcher data.
-
-        Args:
-            data_key: The key of the data to get.
-        """
-        value = self._launcher_data.get(data_key, None)
-        if not value:
-            log.debug(f"Failed to get '{data_key}' from launcher_data.")
-        return value
-
-    def _get_launcher_data(self) -> Dict:
-        """
-        Get launcher data from the file.
-
-        Returns:
-            dict: The launcher data.
-        """
-        try:
-            with shelve.open(self._launcher_data_path) as launcher_data:
-                return dict(launcher_data)
-        except Exception as error:
-            log.error(f"Failed to get launcher_data: {error}")
-            log.debug(traceback.format_exc)
-            return {}
-
-    def _update_launcher_data(self) -> None:
-        """
-        Update launcher data in the file.
-        """
-        try:
-            with shelve.open(self._launcher_data_path) as launcher_data:
-                launcher_data.update(self._launcher_data)
-        except Exception as error:
-            log.error(f"Failed to update launcher_data: {error}")
-            log.debug(traceback.format_exc)
+    @property
+    def minecraft_cape_directory(self) -> str:
+        """Get the directory with user capes."""
+        return self._minecraft_cape_directory
 
 
 class ServerConfigManager:
@@ -278,38 +198,39 @@ class ServerConfigManager:
         return self._map_json.modpacks.get(config_name, None)
 
 
-class ServerConfig(Modpack):
+class ServerConfig:
     """
     Represents a Minecraft server configuration.
-
-    Inherits from Modpack.
-
-    Attributes:
-        _launcher_config (LauncherConfig): The launcher configuration.
-        _minecraft_directory (str): The directory where Minecraft server
-            data is stored.
-        internal_name (str): Internal name for current config.
     """
 
-    internal_name: str
-
+    # pylint: disable=R0902
     def __init__(
         self,
         internal_name: str,
-        modpack_data: Dict,
+        modpack: Modpack,
         launcher_config: LauncherConfig,
+        settings: SettingsManager,
     ):
         """
         Initializes the ServerConfig instance.
 
         Args:
             internal_name (str): Internal name for current config.
+            modpack (Modpack): An instance of Modpack class with modpack data.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
         """
-        super().__init__(**modpack_data, internal_name=internal_name)
+        self.main_data: Final = modpack.main_data
+        self.client_additional_data: Final = modpack.client_additional_data
+        self.server_config: Final = modpack.server_config
+        self.internal_name: Final = internal_name
         self._launcher_config = launcher_config
-        self._minecraft_directory = self._generate_minecraft_directory()
+        self.minecraft_directory: Final = self._generate_minecraft_directory()
+        self._settings = settings
+
+        self._is_minecraft_installed_key: Final = "/".join(
+            [self.internal_name, "is_installed"]
+        )
 
     def _generate_minecraft_directory(self) -> str:
         """
@@ -325,39 +246,17 @@ class ServerConfig(Modpack):
         )
 
     @property
-    def minecraft_directory(self) -> str:
-        """
-        Returns the Minecraft directory for the current configuration.
-
-        Returns:
-            str: The Minecraft directory.
-        """
-        return self._minecraft_directory
-
-    @property
     def is_minecraft_installed(
         self,
     ) -> bool:
-        """
-        Checks if Minecraft is already installed for the current configuration.
-
-        Returns:
-            bool: True if Minecraft is installed, False otherwise.
-        """
+        """True if current minecraft server is installed, False otherwise."""
         return bool(
-            self._launcher_config.get_launcher_data_value(
-                f"{self.internal_name}_is_installed"
-            )
+            self._settings.get_user_value(self._is_minecraft_installed_key)
         )
 
     @is_minecraft_installed.setter
     def is_minecraft_installed(self, other: bool) -> None:
-        """
-        Sets the flag indicating whether Minecraft is installed
-        for the current configuration.
-
-        Args:
-            other (bool, optional): The value to set for the flag.
-        """
-        key = f"{self.internal_name}_is_installed"
-        self._launcher_config.set_launcher_data_value(key, other)
+        """Change _is_minecraft_installed state for current server."""
+        self._settings.set_user_value(
+            self._is_minecraft_installed_key, int(other)
+        )

@@ -3,17 +3,11 @@
 # pylint:disable = E0401
 # pylint: disable=W0212
 import json
-import os
-import shelve
 from unittest.mock import MagicMock
 
 import minecraft_launcher_lib as mine_lib
 import pytest
-from src.launcher.launcher_configs import (
-    LauncherConfig,
-    ServerConfig,
-    ServerConfigManager,
-)
+from src.launcher.launcher_configs import ServerConfigManager
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -134,90 +128,3 @@ class TestServerConfigManager:
                     mock_file_downloader,
                     object_key,
                 )
-
-
-class TestServerConfig:
-    """Unit tests for ServerConfig."""
-
-    def test_is_minecraft_installed_set_true(
-        self, tmp_path, mock_modpack_data
-    ):
-        """Test setting Minecraft installed flag to True."""
-        server_config = ServerConfig(
-            "name",
-            mock_modpack_data,
-            LauncherConfig(),
-        )
-        server_config._launcher_config._launcher_data_path = os.path.join(
-            tmp_path, "launcher_data.bin"
-        )
-
-        server_config.is_minecraft_installed = True
-        field = f"{server_config.internal_name}_is_installed"
-        assert server_config._launcher_config.launcher_data[field] is True
-
-    def test_sis_minecraft_installed_set_true_and_false(
-        self, tmp_path, mock_modpack_data
-    ):
-        """Test setting Minecraft installed flag to True and False."""
-        server_config = ServerConfig(
-            "name",
-            mock_modpack_data,
-            LauncherConfig(),
-        )
-        server_config._launcher_config._launcher_data_path = os.path.join(
-            tmp_path, "launcher_data.bin"
-        )
-
-        server_config.is_minecraft_installed = True
-        server_config.is_minecraft_installed = False
-        field = f"{server_config.internal_name}_is_installed"
-        assert server_config._launcher_config.launcher_data[field] is False
-
-    def test_is_minecraft_installed(self, tmp_path, mock_modpack_data):
-        """
-        Test the is_minecraft_installed method of MinecraftLauncherConfig.
-        """
-        server_config = ServerConfig(
-            "name",
-            mock_modpack_data,
-            LauncherConfig(),
-        )
-        server_config._launcher_config._launcher_data_path = os.path.join(
-            tmp_path, "launcher_data.bin"
-        )
-        assert not server_config.is_minecraft_installed
-
-        # Set the flag to True and check again
-        server_config.is_minecraft_installed = True
-        assert server_config.is_minecraft_installed
-
-    def test__update_launcher_data(self, tmp_path, mock_modpack_data):
-        """
-        Test the _update_launcher_data method of MinecraftLauncherConfig.
-        """
-        server_config = ServerConfig(
-            "name",
-            mock_modpack_data,
-            LauncherConfig(),
-        )
-        server_config._launcher_config._launcher_data_path = os.path.join(
-            tmp_path, "launcher_data.bin"
-        )
-        data_to_save = {"stored_data_key": "stored_data_value"}
-        server_config._launcher_config._launcher_data_path = os.path.join(
-            tmp_path, "launcher_data.bin"
-        )
-        # Create a sample stored data
-        server_config._launcher_config._launcher_data = data_to_save
-
-        # Update stored data in the file
-        server_config._launcher_config._update_launcher_data()
-
-        with shelve.open(
-            server_config._launcher_config._launcher_data_path
-        ) as data:
-            save_data = dict(data)
-
-        # Check if the stored data matches the original data
-        assert save_data == data_to_save
