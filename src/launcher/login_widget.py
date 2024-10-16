@@ -5,16 +5,33 @@ from typing import Optional
 
 from loguru import logger as log
 from PySide6.QtCore import QObject, QThread, QTimer, Signal, Slot
+from qtpy.QtWidgets import QPushButton
 
 from .design.design import Ui_MainWindow
-from .design.utility import BaseWidget
+from .design.thread_data_utils import SettingsManager
+from .design.utility import BaseWidget, MessageBox
 from .launcher_authorization import authenticate_user
+from .launcher_configs import LauncherConfig
 from .utility.custom_exceptions import (
     AuthDataNotSet,
     AuthenticationError,
     InvalidUserNameOrPassword,
 )
 from .utility.pydantic_models import AuthData
+
+
+class LogoutMessageBox(MessageBox):
+    """A logout message box."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logout_button = QPushButton(self)
+        self.logout_button.setText("выйти")
+        self.logout_button.clicked.connect(self.accept)
+        self.button_layout.addWidget(self.logout_button)
+        self.button_layout.addStretch()
+        self._msg = self._format_title("Вы точно хотите выйти?")
+        self._text_edit.setFixedHeight(75)
 
 
 class AuthenticationWorker(QThread):
@@ -109,33 +126,72 @@ class LoginWidget(QObject, BaseWidget):
 
     authentication_complete = Signal()
 
-    def __init__(self, main_window: Ui_MainWindow, login_api_url: str):
+    def __init__(
+        self,
+        main_window: Ui_MainWindow,
+        launcher_config: LauncherConfig,
+        settings: SettingsManager,
+    ):
         """
         Initialize the LoginWidget.
 
         Args:
             main_window (Ui_MainWindow): The main window UI instance to
                 which this widget is attached.
-            login_api_url (str): The API URL for user authentication.
+            launcher_config (LauncherConfig): An instance of LauncherConfig
+                class.
+            settings (SettingsManager): An instance of SettingsManager.
         """
 
         super().__init__(
             widget=main_window.stackedWidget,
             parent_widget=main_window.widget_main_window,
         )
-        self._ui = main_window
 
+        self._ui = main_window
+        self._logout_accept = LogoutMessageBox(self._ui.widget_main_window)
+        self._launcher_config = launcher_config
         self._error_timer: Optional[QTimer] = None
         self._auth_data: Optional[AuthData] = None
+        self._settings = settings
 
         # Initialize UI components and settings.
         self._init_ui()
 
         # Initialize the authentication worker.
-        self._worker = AuthenticationWorker(login_api_url)
+        self._worker = AuthenticationWorker(
+            self._launcher_config.MINECRAFT_LAUNCHER_IP_ADDR
+        )
 
         # Connect signals to their respective slots.
         self._connect_signals()
+
+        if self._settings.get_user_value("is_authenticated"):
+            self._ui.pushButton_login.clicked.emit()
+
+    @Slot()
+    def disable_ui(self, show_text: bool = True, show_progress: bool = True):
+        """Disable the login UI during the authentication process."""
+        super().disable_ui(show_text, show_progress)
+        self._ui.pushButton_error_info.hide()
+
+    @property
+    def auth_data(self) -> Optional[AuthData]:
+        """Return the authentication data.
+
+        This property provides access to the authentication
+            data retrieved from the worker.
+
+        Returns:
+            Optional[AuthData]: The current authentication data or None.
+        """
+        return self._auth_data
+
+    @Slot()
+    def write_error(self, message: str):
+        """Display an error message in the UI."""
+        self._ui.pushButton_error_info.setText(message)
+        self._ui.pushButton_error_info.show()
 
     def _connect_signals(self):
         """Connect UI elements to their respective slots."""
@@ -160,12 +216,33 @@ class LoginWidget(QObject, BaseWidget):
         self._ui.pushButton_error_info.clicked.connect(
             self._ui.pushButton_error_info.hide
         )
+        self._ui.pushButton_logout.clicked.connect(super().disable_ui)
+        self._ui.pushButton_logout.clicked.connect(
+            lambda: self._logout_accept.show_message(
+                title="Вы точно хотите выйти из аккаунта?",
+                close_button_text="не хочу",
+            )
+        )
+
+        self._logout_accept.logout_button.clicked.connect(self._logout_user)
+        self._logout_accept.accepted.connect(self.enable_ui)
 
     def _init_ui(self):
         """Initialize the user interface components."""
         self._ui.pushButton_error_info.hide()
 
         self._validate_user_input()
+
+    @Slot()
+    def _logout_user(self):
+        self._settings.set_user_value(
+            self._launcher_config.IS_AUTHENTICATED_KEY,
+            0,
+        )
+        self._settings.set_ui_value("lineEdit_nickname", "")
+        self._settings.set_ui_value("lineEdit_password", "")
+        self._erase_auth_data()
+        self._ui.stackedWidget.setCurrentWidget(self._ui.login_page)
 
     @Slot()
     def _validate_user_input(self):
@@ -176,12 +253,6 @@ class LoginWidget(QObject, BaseWidget):
                 and len(self._ui.lineEdit_password.text()) > 3
             )
         )
-
-    @Slot()
-    def write_error(self, message: str):
-        """Display an error message in the UI."""
-        self._ui.pushButton_error_info.setText(message)
-        self._ui.pushButton_error_info.show()
 
     @Slot()
     def _make_authorization(self) -> None:
@@ -198,23 +269,13 @@ class LoginWidget(QObject, BaseWidget):
     @Slot()
     def _complete_authentication(self):
         """Handle successful authentication."""
+        self._settings.set_user_value(
+            self._launcher_config.IS_AUTHENTICATED_KEY,
+            1,
+        )
         self._auth_data = self._worker.auth_data
         self.authentication_complete.emit()
 
-    @Slot()
-    def disable_ui(self, show_text: bool = True, show_progress: bool = True):
-        """Disable the login UI during the authentication process."""
-        super().disable_ui(show_text, show_progress)
-        self._ui.pushButton_error_info.hide()
-
-    @property
-    def auth_data(self) -> Optional[AuthData]:
-        """Return the authentication data.
-
-        This property provides access to the authentication
-            data retrieved from the worker.
-
-        Returns:
-            Optional[AuthData]: The current authentication data or None.
-        """
-        return self._auth_data
+    def _erase_auth_data(self) -> None:
+        """Erase authentication data before logout."""
+        self._auth_data = None

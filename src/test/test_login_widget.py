@@ -1,6 +1,9 @@
 """Tests for src.launcher.login_widget.py."""
 
+from unittest.mock import MagicMock
+
 import requests_mock
+from src.launcher.design.thread_data_utils import SettingsManager
 from src.launcher.launcher_configs import LauncherConfig
 from src.launcher.login_widget import AuthenticationWorker, LoginWidget
 from src.launcher.main_window import Window
@@ -110,8 +113,21 @@ class TestLoginWidget:
 
     def setup_method(self):
         """Init testing app."""
+        mock_launcher_config = MagicMock()
+        mock_launcher_config.MINECRAFT_LAUNCHER_IP_ADDR = (
+            LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
+        )
+
+        window = get_app()
+        settings = SettingsManager(
+            window._ui_instance.centralwidget,
+            "IzharusTest",
+            "TestApp",
+        )
         self.widget = LoginWidget(
-            get_app()._ui_instance, LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
+            window._ui_instance,
+            mock_launcher_config,
+            settings,
         )
 
     def test_login_page_is_visible(self, qtbot):
@@ -155,13 +171,19 @@ class TestLoginWidget:
             self.widget._worker.run()
         assert self.widget._widget.isEnabled()
 
-    def test_if_ui_disables_after_successful_authentication(
-        self, qtbot, mock_auth_data
+    def test_successful_authentication(
+        self,
+        qtbot,
+        mock_auth_data,
+        mocker,
     ):
-        """Test if ui is disabled after successful authentication."""
+        """Test successful authentication."""
 
         self.widget._worker.set_auth_data("login", "pass")
-
+        mock_set_user_data = MagicMock()
+        mocker.patch.object(
+            self.widget._settings, "set_user_value", mock_set_user_data
+        )
         # Simulate blocking ui after clicking on login button
         self.widget.disable_ui()
         with requests_mock.Mocker() as m:
@@ -172,3 +194,32 @@ class TestLoginWidget:
             )
             self.widget._worker.run()
         assert not self.widget._widget.isEnabled()
+        mock_set_user_data.assert_called_once_with(
+            self.widget._launcher_config.IS_AUTHENTICATED_KEY,
+            1,
+        )
+
+    def test_auto_reconnect(
+        self,
+        qtbot,
+        mocker,
+    ):
+        """Test reconnect logic."""
+        window = get_app()
+
+        settings = SettingsManager(
+            window._ui_instance.centralwidget,
+            "IzharusTest",
+            "TestApp",
+        )
+        mock_get_user_data = MagicMock(return_value=1)
+        mocker.patch.object(settings, "get_user_value", mock_get_user_data)
+        mocker.patch.object(settings, "set_user_value", MagicMock())
+        with qtbot.wait_signal(window._ui_instance.pushButton_login.clicked):
+            LoginWidget(
+                window._ui_instance,
+                MagicMock(),
+                settings,
+            )
+        # FIXME:
+        qtbot.wait(5000)

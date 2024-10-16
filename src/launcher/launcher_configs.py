@@ -59,6 +59,7 @@ class LauncherConfig:
     MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json"  # pylint: disable=C0301
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
+    IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
 
     def __init__(self):
         """

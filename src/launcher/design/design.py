@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
     QWidget)
 from resources import resources
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -349,12 +350,40 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.widget_4)
 
-        self.pushButton_4 = QPushButton(self.widget)
-        self.pushButton_4.setObjectName(u"pushButton_4")
-        self.pushButton_4.setMinimumSize(QSize(64, 64))
-        self.pushButton_4.setMaximumSize(QSize(64, 64))
-        self.pushButton_4.setAutoFillBackground(False)
-        self.pushButton_4.setStyleSheet(u"QPushButton {\n"
+        self.pushButton_logout = QPushButton(self.widget)
+        self.pushButton_logout.setObjectName(u"pushButton_logout")
+        self.pushButton_logout.setMinimumSize(QSize(64, 64))
+        self.pushButton_logout.setMaximumSize(QSize(64, 64))
+        self.pushButton_logout.setStyleSheet(u"QPushButton {\n"
+"    background-image: url(:/data/background/logout.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432"
+                        "\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
+"}\n"
+"")
+
+        self.horizontalLayout.addWidget(self.pushButton_logout)
+
+        self.pushButton_settings = QPushButton(self.widget)
+        self.pushButton_settings.setObjectName(u"pushButton_settings")
+        self.pushButton_settings.setMinimumSize(QSize(64, 64))
+        self.pushButton_settings.setMaximumSize(QSize(64, 64))
+        self.pushButton_settings.setAutoFillBackground(False)
+        self.pushButton_settings.setStyleSheet(u"QPushButton {\n"
 "    background-image: url(:/data/background/settings.png);\n"
 "    background-position: center;\n"
 "    background-repeat: no-repeat;\n"
@@ -375,10 +404,10 @@ class Ui_MainWindow(object):
 "    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
 "}\n"
 "")
-        self.pushButton_4.setIconSize(QSize(160, 160))
-        self.pushButton_4.setFlat(True)
+        self.pushButton_settings.setIconSize(QSize(160, 160))
+        self.pushButton_settings.setFlat(True)
 
-        self.horizontalLayout.addWidget(self.pushButton_4)
+        self.horizontalLayout.addWidget(self.pushButton_settings)
 
 
         self.verticalLayout_2.addWidget(self.widget)
@@ -824,7 +853,8 @@ class Ui_MainWindow(object):
         self.lineEdit_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
         self.label_creat_account.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442", None))
         self.pushButton_error_info.setText(QCoreApplication.translate("MainWindow", u"ERROR_BUTTON", None))
-        self.pushButton_4.setText("")
+        self.pushButton_logout.setText("")
+        self.pushButton_settings.setText("")
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 2", None))
         self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"\u0418\u0413\u0420\u0410\u0422\u042c", None))

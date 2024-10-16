@@ -540,7 +540,48 @@ QLabel:hover {
                   <widget class="QWidget" name="widget_4" native="true"/>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_4">
+                  <widget class="QPushButton" name="pushButton_logout">
+                   <property name="minimumSize">
+                    <size>
+                     <width>64</width>
+                     <height>64</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>64</width>
+                     <height>64</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+    background-image: url(:/data/background/logout.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none; /* Убираем границы */
+    border-radius: 10px; /* Скругляем углы кнопки */
+    padding: 10px; /* Добавляем внутренние отступы */
+    color: white; /* Устанавливаем цвет текста */
+    font-size: 16px; /* Устанавливаем размер шрифта */
+    font-weight: bold; /* Устанавливаем жирный шрифт */
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
+}
+</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_settings">
                    <property name="minimumSize">
                     <size>
                      <width>64</width>
