@@ -791,7 +791,7 @@ border: none; /* Убирает границу кнопки */
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="server_settigns_page">
+            <widget class="QWidget" name="server_settings_page">
              <widget class="QPushButton" name="pushButton_5">
               <property name="geometry">
                <rect>
@@ -812,7 +812,7 @@ border: none; /* Убирает границу кнопки */
               </property>
              </widget>
             </widget>
-            <widget class="QWidget" name="page_3">
+            <widget class="QWidget" name="launcher_settings_page">
              <widget class="QPushButton" name="pushButton_delete_skin">
               <property name="geometry">
                <rect>
@@ -1196,37 +1196,7 @@ QCheckBox::indicator:checked:hover {
                 <height>240</height>
                </rect>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_4">
-               <item>
-                <widget class="QPushButton" name="pushButton_3">
-                 <property name="minimumSize">
-                  <size>
-                   <width>150</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>150</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>PushButton</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>TextLabel</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayout_4"/>
              </widget>
              <widget class="QLabel" name="label_information_text">
               <property name="geometry">
@@ -1266,8 +1236,8 @@ QCheckBox::indicator:checked:hover {
              <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
               <property name="geometry">
                <rect>
-                <x>300</x>
-                <y>40</y>
+                <x>220</x>
+                <y>80</y>
                 <width>200</width>
                 <height>46</height>
                </rect>
@@ -1310,6 +1280,53 @@ QPushButton:pressed {
               </property>
               <property name="text">
                <string>Папка с игрой</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="pushButton_back_arrow">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>10</y>
+                <width>64</width>
+                <height>64</height>
+               </rect>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>64</width>
+                <height>64</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>64</width>
+                <height>64</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    background-image: url(:/data/background/back_arrow.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none; /* Убираем границы */
+    border-radius: 10px; /* Скругляем углы кнопки */
+    padding: 10px; /* Добавляем внутренние отступы */
+    color: white; /* Устанавливаем цвет текста */
+    font-size: 16px; /* Устанавливаем размер шрифта */
+    font-weight: bold; /* Устанавливаем жирный шрифт */
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
+}
+</string>
+              </property>
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </widget>

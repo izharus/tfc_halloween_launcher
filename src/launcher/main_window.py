@@ -49,6 +49,7 @@ from .launcher_installer import (
     MinecraftExecutorThread,
 )
 from .login_widget import LoginWidget
+from .settings_widget import SettingsWidget
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -142,6 +143,12 @@ class Window(QtWidgets.QMainWindow):
         self.config_manager: ServerConfigManager
         self._choose_server: ChoseServer
         self._server_config: ServerConfig
+
+        self._settings_widget = SettingsWidget(
+            self._ui_instance,
+            self._launcher_config,
+            settings=self._settings,
+        )
         # This widget connects signals in _connect_signals
         self._login_widget = LoginWidget(
             self._ui_instance,
