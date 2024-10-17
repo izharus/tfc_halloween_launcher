@@ -21,10 +21,8 @@ from typing import Optional
 import requests
 from loguru import logger as log
 from pydantic import ValidationError
-from qtpy.QtCore import QThread
 
 from .utility.custom_exceptions import (
-    AuthDataNotSet,
     AuthenticationServiceUnavailable,
     Base64ParsingError,
     InternalAuthenticationError,
@@ -88,21 +86,32 @@ def authenticate_user(
         raise InternalAuthenticationError(f"Unexpected response code: {code}")
 
 
-# pylint: disable = R0902
-class SkinUploaderThread(QThread):
+class SkinUploader:
     """
-    A thread class for uploading Minecraft skins.
+    A thread class for uploading Minecraft skins and capes.
     """
 
-    def __init__(self, push_skin_api_url: str) -> None:
-        QThread.__init__(self)
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        push_skin_api_url: str,
+        push_cape_api_url: str,
+    ) -> None:
+        """
+        Initializes the user credentials and API URLs for pushing
+        skins and capes.
+
+        Args:
+            username (str): The username of the user.
+            password (str): The password associated with the username.
+            push_skin_api_url (str): The API URL for pushing skins.
+            push_cape_api_url (str): The API URL for pushing capes.
+        """
         self._push_skin_api_url = push_skin_api_url
-        self._username: Optional[str] = None
-        self._password: Optional[str] = None
-        self._selected_skin_path: Optional[str] = None
-        self._is_skin_slim: bool = False
-        self._is_data_inited: bool = False
-        self.runtime_error: Optional[Exception] = None
+        self._push_cape_api_url = push_cape_api_url
+        self._username = username
+        self._password = password
 
     @staticmethod
     def get_base64_string_from_file(filepath: Optional[str]) -> Optional[str]:
@@ -122,31 +131,16 @@ class SkinUploaderThread(QThread):
             log.debug(traceback.format_exc)
             raise Base64ParsingError() from error
 
-    # pylint: disable = R0913
-    def set_data(
-        self,
-        username: str,
-        password: str,
-        selected_skin_path: Optional[str] = None,
-        is_skin_slim: bool = False,
-    ) -> None:
-        """
-        Set data for the skin upload.
-        """
-
-        self._username = username
-        self._password = password
-        self._selected_skin_path = selected_skin_path
-        self._is_data_inited = True
-        self._is_skin_slim = is_skin_slim
-
-    def _make_json_response(self, base64_img: Optional[str] = None):
+    def _make_json_response(
+        self, base64_img: Optional[str] = None, is_skin_slim: bool = False
+    ):
         """
         Create a JSON response for the skin upload API.
 
         Args:
             base64_img (Optional, str): The base64-encoded string of
                 the user's skin.
+            is_skin_slim (bool): True is skin is slim, False otherwise.
 
         Returns:
             dict: A dictionary representing the JSON response.
@@ -156,25 +150,49 @@ class SkinUploaderThread(QThread):
             "username": self._username,
             "password": self._password,
             "base64_image": base64_img,
-            "is_skin_slim": self._is_skin_slim,
+            "is_skin_slim": is_skin_slim,
         }
 
-    def _push_skin(
+    def _push_img(
         self,
-        base64_img: Optional[str] = None,
+        api_url: str,
+        selected_skin_path: Optional[str] = None,
+        is_skin_slim: bool = False,
     ) -> None:
         """
-        Push the user's skin to the Minecraft server.
+        Pushes a skin image to the specified API URL.
 
         Args:
-            base64_img (Optional, str): The base64-encoded
-                string of the user's skin.
+            api_url (str): The URL of the API to which the skin image
+                should be pushed.
+            selected_skin_path (Optional[str], optional): The file path
+                of the skin image. If None, the behavior will depend on
+                the implementation of `get_base64_string_from_file`.
+                Defaults to None.
+            is_skin_slim (bool, optional): Indicates whether the skin is
+                slim (True) or regular (False). Defaults to False.
 
+        Raises:
+            Base64ParsingError: If there is an error parsing the image
+                file into a Base64 string.
+            AuthenticationServiceUnavailable: If the request to the API
+                fails due to an unavailable authentication service.
+            InvalidUserNameOrPassword: If the response status code is
+                401, indicating invalid credentials.
+            InternalAuthenticationError: If the response status code is
+                500 or any other unexpected status code.
         """
+
+        base64_img = self.get_base64_string_from_file(
+            filepath=selected_skin_path,
+        )
         try:
             response = requests.post(
-                self._push_skin_api_url,
-                json=self._make_json_response(base64_img),
+                api_url,
+                json=self._make_json_response(
+                    base64_img=base64_img,
+                    is_skin_slim=is_skin_slim,
+                ),
                 timeout=10,
             )
         except Exception as error:
@@ -196,84 +214,65 @@ class SkinUploaderThread(QThread):
             )
             raise InternalAuthenticationError(f"{response.status_code}")
 
-    def run(self):
-        """
-        Entry point for QT start() method.
-
-        This method is called when the thread starts running.
-        """
-        self.runtime_error = None
-        if not self._is_data_inited:
-            self.runtime_error = AuthDataNotSet()
-            return
-        try:
-            # Call get_auth_data within the thread
-            base64_string = self.get_base64_string_from_file(
-                self._selected_skin_path
-            )
-            self._push_skin(base64_string)
-            # if not self.is_response_valid()
-
-        except (
-            AuthenticationServiceUnavailable,
-            InvalidUserNameOrPassword,
-            InternalAuthenticationError,
-            Base64ParsingError,
-        ) as error:
-            # Handle the AuthorizationServiceUnavailable exception
-            self.runtime_error = error
-
-
-class CapeUploaderThread(SkinUploaderThread):
-    """
-    A thread class for uploading Minecraft capes. Extends
-    the functionality of the SkinUploaderThread class to
-    handle cape-specific operations.
-    """
-
-    def set_data(
+    def push_skin(
         self,
-        username: str,
-        password: str,
         selected_skin_path: Optional[str] = None,
         is_skin_slim: bool = False,
     ) -> None:
         """
-        Set data for the cape upload.
+        Pushes a skin image to the configured skin API URL.
 
         Args:
-            username (str): The username associated with the cape.
-            password (str): The password for authentication.
-            selected_skin_path (Optional[str]): The file path to the
-                selected cape skin.
-            is_skin_slim (bool, optional): Flag indicating whether
-                the cape skin is slim. It dont uses in the current class, only
-                in super() class.
+            selected_skin_path (Optional[str], optional): The file path
+                of the skin image to be pushed. If None, the behavior
+                will depend on the implementation of `_push_img`.
+                Defaults to None.
+            is_skin_slim (bool, optional): Indicates whether the skin
+                is slim (True) or regular (False). Defaults to False.
 
-        Returns:
-            None
+        Raises:
+            Base64ParsingError: If there is an error parsing the image
+                file into a Base64 string.
+            AuthenticationServiceUnavailable: If the request to the API
+                fails due to an unavailable authentication service.
+            InvalidUserNameOrPassword: If the response status code is
+                401, indicating invalid credentials.
+            InternalAuthenticationError: If the response status code
+                is 500 or any other unexpected status code.
         """
+        self._push_img(
+            api_url=self._push_skin_api_url,
+            selected_skin_path=selected_skin_path,
+            is_skin_slim=is_skin_slim,
+        )
 
-        self._username = username
-        self._password = password
-        self._selected_skin_path = selected_skin_path
-        self._is_skin_slim = is_skin_slim
-        self._is_data_inited = True
-
-    def _make_json_response(self, base64_img: Optional[str] = None):
+    def push_cape(
+        self,
+        selected_skin_path: Optional[str] = None,
+        is_skin_slim: bool = False,
+    ) -> None:
         """
-        Create a JSON response for the cape upload API.
+        Pushes a cape image to the configured cape API URL.
 
         Args:
-            base64_img (Optional, str): The base64-encoded
-                string of the user's cape.
-
-        Returns:
-            dict: A dictionary representing the JSON response.
-
+            selected_skin_path (Optional[str], optional): The file path
+                of the cape image to be pushed. If None, the behavior
+                will depend on the implementation of `_push_img`.
+                Defaults to None.
+            is_skin_slim (bool, optional): Indicates whether the skin
+                is slim (True) or regular (False). Defaults to False.
+        Raises:
+            Base64ParsingError: If there is an error parsing the image
+                file into a Base64 string.
+            AuthenticationServiceUnavailable: If the request to the API
+                fails due to an unavailable authentication service.
+            InvalidUserNameOrPassword: If the response status code is
+                401, indicating invalid credentials.
+            InternalAuthenticationError: If the response status code
+                is 500 or any other unexpected status code.
         """
-        return {
-            "username": self._username,
-            "password": self._password,
-            "base64_image": base64_img,
-        }
+        self._push_img(
+            api_url=self._push_cape_api_url,
+            selected_skin_path=selected_skin_path,
+            is_skin_slim=is_skin_slim,
+        )
