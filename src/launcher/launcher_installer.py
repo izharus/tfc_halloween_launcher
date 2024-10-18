@@ -48,6 +48,8 @@ from .utility.custom_exceptions import (
 from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
 from .utility.pydantic_models import FileInfo
 
+MAX_WORKERS = (os.cpu_count() or 4) * 4
+
 
 class ConfigInstallerThread(QThread):
     """QThread for installing ServerConfigManager."""
@@ -188,7 +190,7 @@ class ModsInstaller(QThread):
             return None
 
         count = 0
-        with ThreadPoolExecutor(max_workers=64) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = [
                 executor.submit(install_file, file_info)
                 for file_info in self.files_info_list
