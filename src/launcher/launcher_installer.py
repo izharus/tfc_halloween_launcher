@@ -28,6 +28,7 @@ launching a customized Minecraft environment.
 import os
 import subprocess
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Dict, List, Optional
 
 import minecraft_launcher_lib as mine_lib
@@ -160,44 +161,54 @@ class ModsInstaller(QThread):
         """
         if callback:
             callback["setMax"](len(self.files_info_list))
-            progress_bar_index = 0
-        for file_info in self.files_info_list:
+
+        def install_file(file_info: FileInfo) -> None:
             file_name = file_info.file_name
             dist_file_path = file_info.dist_file_path
             file_path = os.path.join(self.minecraft_directory, dist_file_path)
             if callback:
-                callback["setProgress"](progress_bar_index)
                 callback["setStatus"](f"Checking file hash: {file_name}...")
-                progress_bar_index += 1
             if os.path.exists(file_path):
-                try:
-                    file_hash = calculate_hash(file_path)
-                except CalculateHashFailed:
-                    log.error(f"Failed to calculate hash for: {file_name}.")
-                    return False
+                file_hash = calculate_hash(file_path)
+
                 if file_hash == file_info.hash:
                     # log.info(f"File hash correct: {file_name}")
-                    continue
+                    return None
                 log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
 
-            try:
+            self._file_downloader.download_file(
+                file_info.yan_obj_storage,
+                file_path,
+            )
+            log.info(
+                "File was downloaded from object storage: " f"{file_name}"
+            )
+            return None
 
-                self._file_downloader.download_file(
-                    file_info.yan_obj_storage,
-                    file_path,
-                )
-                log.info(
-                    "File was downloaded from object storage: " f"{file_name}"
-                )
-                continue
-            except (FiletDownloadError, FilesSaveError) as error:
-                log.error(
-                    "Failed to download file from object storage: " f"{error}"
-                )
-                return False
+        count = 0
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            futures = [
+                executor.submit(install_file, file_info)
+                for file_info in self.files_info_list
+            ]
 
+            for future in futures:
+                try:
+                    future.result()
+                except CalculateHashFailed as error:
+                    log.error(f"Failed to calculate hash for: {error}.")
+                    return False
+                except (FiletDownloadError, FilesSaveError) as error:
+                    log.error(
+                        "Failed to download file from object storage: "
+                        f"{error}"
+                    )
+                    return False
+                if callback:
+                    count += 1
+                    callback["setProgress"](count)
         return True
 
 
