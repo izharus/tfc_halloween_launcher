@@ -119,7 +119,7 @@ class Window(QtWidgets.QMainWindow):
         self._settings = SettingsManager(
             ui_instance=self._ui_instance.centralwidget,
             company_name="IzharusTest",
-            app_name="TestApp",
+            app_name="TestProdApp",
         )
         self._settings.update_ui_signal.connect(self._settings.set_value_to_ui)
         self.config_manager: ServerConfigManager
