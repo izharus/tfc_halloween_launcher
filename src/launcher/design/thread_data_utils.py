@@ -48,17 +48,15 @@ class SettingsStorage:
 
     def __init__(
         self,
-        company_name: str,
-        app_name: str,
+        settings: QSettings,
     ) -> None:
         """
         Initialize SettingsStorage with the company and application names.
 
         Args:
-            company_name: The name of the company.
-            app_name: The name of the application.
+            settings (QSettings): QSettings with app data.
         """
-        self._storage = QSettings(company_name, app_name)
+        self._settings = settings
         self._mutex_manager = QMutexContextManager()
 
     def get_value(
@@ -83,8 +81,8 @@ class SettingsStorage:
         with self._mutex_manager.lock():
             try:
                 if return_type:
-                    return self._storage.value(key, type=return_type)
-                return self._storage.value(key)
+                    return self._settings.value(key, type=return_type)
+                return self._settings.value(key)
             except Exception as error:
                 log.error(f"Failed to parse key '{key}': {error}")
                 return default_value
@@ -102,7 +100,7 @@ class SettingsStorage:
             value: The value to be stored.
         """
         with self._mutex_manager.lock():
-            return self._storage.setValue(key, value)
+            return self._settings.setValue(key, value)
 
 
 class UIManager:
@@ -274,8 +272,7 @@ class SettingsManager(QObject):
     def __init__(
         self,
         ui_instance: QWidget,
-        company_name: str,
-        app_name: str,
+        settings: QSettings,
         excluded_widgets: Optional[List[str]] = None,
     ) -> None:
         """
@@ -283,7 +280,7 @@ class SettingsManager(QObject):
 
         Args:
             ui_instance (QWidget): The main UI instance containing the widgets.
-            company_name (str): The name of the company for settings storage.
+            settings (QSettings): QSettings with app data.
             app_name (str): The name of the application for settings storage.
             excluded_widgets (Optional[List[str]]): A list of widget
                 object names to exclude from settings management.
@@ -291,10 +288,7 @@ class SettingsManager(QObject):
         super().__init__()
         if not excluded_widgets:
             excluded_widgets = []
-        self._settings = SettingsStorage(
-            company_name=company_name,
-            app_name=app_name,
-        )
+        self._settings = SettingsStorage(settings=settings)
         self._ui_manager = UIManager(
             ui_instance=ui_instance,
             excluded_widgets=excluded_widgets,

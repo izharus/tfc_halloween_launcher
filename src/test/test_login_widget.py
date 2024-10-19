@@ -1,11 +1,12 @@
 """Tests for src.launcher.login_widget.py."""
 
+# pylint: disable=W0201, W0212, W0613, E0401
+
 from unittest.mock import MagicMock
 
 import requests_mock
-from src.launcher.design.thread_data_utils import SettingsManager
 from src.launcher.launcher_configs import LauncherConfig
-from src.launcher.login_widget import AuthenticationWorker, LoginWidget
+from src.launcher.login_widget import AuthenticationWorker
 from src.launcher.main_window import Window
 from src.launcher.utility.pydantic_models import AuthData
 
@@ -17,12 +18,6 @@ VALID_AUTH_JSON_DATA = {
 }
 
 
-def get_app():
-    """Return testing app/"""
-    return Window()
-
-
-# pylint: disable=W0201, W0212, W0613
 class TestAuthenticationWorker:
     """Tests for AuthenticationWorker class."""
 
@@ -111,91 +106,83 @@ class TestAuthenticationWorker:
 class TestLoginWidget:
     """Tests for LoginWidget."""
 
-    def setup_method(self):
-        """Init testing app."""
-        mock_launcher_config = MagicMock()
-        mock_launcher_config.MINECRAFT_LAUNCHER_IP_ADDR = (
-            LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR
-        )
-
-        window = get_app()
-        settings = SettingsManager(
-            window._ui_instance.centralwidget,
-            "IzharusTest",
-            "TestApp",
-        )
-        self.widget = LoginWidget(
-            window._ui_instance,
-            mock_launcher_config,
-            settings,
-        )
-
-    def test_login_page_is_visible(self, qtbot):
+    def test_login_page_is_visible(self, main_window: Window, qtbot):
         """Check if first page after app startup is login page."""
-        assert self.widget._ui.stackedWidget.currentIndex() == 0
+        widget = main_window._login_widget
+        assert widget._ui.stackedWidget.currentIndex() == 0
 
-    def test_ui_elements_initialization(self, qtbot):
+    def test_ui_elements_initialization(self, main_window: Window, qtbot):
         """Test if all necessary UI elements are hidden initially."""
-        assert self.widget._info_widget.isHidden()
-        assert self.widget._ui.pushButton_error_info.isHidden()
+        widget = main_window._login_widget
+        assert widget._info_widget.isHidden()
+        assert widget._ui.pushButton_error_info.isHidden()
 
-    def test_login_button_disabled_on_invalid_input(self, qtbot):
+    def test_login_button_disabled_on_invalid_input(
+        self, main_window: Window, qtbot
+    ):
         """Test that the login button is disabled with invalid input."""
-        self.widget._ui.lineEdit_nickname.setText("abc")
-        self.widget._ui.lineEdit_password.setText("123")
-        self.widget._validate_user_input()  # Call method directly
-        assert not self.widget._ui.pushButton_login.isEnabled()
+        widget = main_window._login_widget
+        widget._ui.lineEdit_nickname.setText("abc")
+        widget._ui.lineEdit_password.setText("123")
+        widget._validate_user_input()  # Call method directly
+        assert not widget._ui.pushButton_login.isEnabled()
 
-        self.widget._ui.lineEdit_nickname.setText("abcd")
-        self.widget._ui.lineEdit_password.setText("1234")
-        self.widget._validate_user_input()
-        assert self.widget._ui.pushButton_login.isEnabled()
+        widget._ui.lineEdit_nickname.setText("abcd")
+        widget._ui.lineEdit_password.setText("1234")
+        widget._validate_user_input()
+        assert widget._ui.pushButton_login.isEnabled()
 
-    def test_blur_effect_on_login(self, qtbot):
+    def test_blur_effect_on_login(self, main_window: Window, qtbot):
         """Test that blur effect is applied during login process."""
-        self.widget.disable_ui()  # Start the authentication process
-        assert self.widget._widget.graphicsEffect()
+        widget = main_window._login_widget
+        widget.disable_ui()  # Start the authentication process
+        assert widget._widget.graphicsEffect()
 
-        self.widget.enable_ui()  # Complete the authentication
-        assert not self.widget._widget.graphicsEffect()
+        widget.enable_ui()  # Complete the authentication
+        assert not widget._widget.graphicsEffect()
 
-    def test_if_ui_enables_after_failed_authentication(self, qtbot):
+    def test_if_ui_enables_after_failed_authentication(
+        self, main_window: Window, qtbot
+    ):
         """Test if ui enables if authentication failed."""
 
-        self.widget._worker.set_auth_data("login", "pass")
+        widget = main_window._login_widget
+        widget._worker.set_auth_data("login", "pass")
         with requests_mock.Mocker() as m:
             m.post(
                 LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR,
                 status_code=500,  # Internal Server Error
             )
-            self.widget._worker.run()
-        assert self.widget._widget.isEnabled()
+            widget._worker.run()
+        assert widget._widget.isEnabled()
 
     def test_successful_authentication(
         self,
+        main_window: Window,
         qtbot,
         mock_auth_data,
         mocker,
     ):
         """Test successful authentication."""
 
-        self.widget._worker.set_auth_data("login", "pass")
+        widget = main_window._login_widget
+        widget._worker.set_auth_data("login", "pass")
         mock_set_user_data = MagicMock()
         mocker.patch.object(
-            self.widget._settings, "set_user_value", mock_set_user_data
+            widget._settings, "set_user_value", mock_set_user_data
         )
         # Simulate blocking ui after clicking on login button
-        self.widget.disable_ui()
+        widget.disable_ui()
         with requests_mock.Mocker() as m:
             m.post(
                 LauncherConfig.MINECRAFT_LAUNCHER_IP_ADDR,
                 status_code=200,  # Internal Server Error
                 json=mock_auth_data,
             )
-            self.widget._worker.run()
-        assert not self.widget._widget.isEnabled()
+            widget._worker.run()
+        assert not widget._widget.isEnabled()
         mock_set_user_data.assert_called_once_with(
-            self.widget._launcher_config.IS_AUTHENTICATED_KEY,
+            widget._launcher_config.IS_AUTHENTICATED_KEY,
             1,
         )
 
@@ -205,21 +192,14 @@ class TestLoginWidget:
         mocker,
     ):
         """Test reconnect logic."""
-        window = get_app()
 
-        settings = SettingsManager(
-            window._ui_instance.centralwidget,
-            "IzharusTest",
-            "TestApp",
-        )
+        settings = MagicMock()
         mock_get_user_data = MagicMock(return_value=1)
-        mocker.patch.object(settings, "get_user_value", mock_get_user_data)
-        mocker.patch.object(settings, "set_user_value", MagicMock())
-        with qtbot.wait_signal(window._ui_instance.pushButton_login.clicked):
-            LoginWidget(
-                window._ui_instance,
-                MagicMock(),
-                settings,
-            )
+        mocker.patch.object(settings, "value", mock_get_user_data)
+        mocker.patch.object(settings, "ser_value", MagicMock())
+
+        window = Window(settings=settings)
+        qtbot.wait_signal(window._ui_instance.pushButton_login.clicked)
+
         # FIXME:
         qtbot.wait(5000)

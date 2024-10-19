@@ -1,6 +1,7 @@
 """Pytest conftest."""
 
 import pytest
+from src.launcher.main_window import Window
 
 CONFIG_NAME_1 = "TestModpack1"
 CONFIG_NAME_2 = "TestModpack2"
@@ -92,3 +93,26 @@ def mock_auth_data():
         "uuid": "uuid",
         "accessToken": "accessToken",
     }
+
+
+@pytest.fixture
+def mock_settings():
+    """Mock QSettings instance"""
+
+    # pylint: disable=C0415
+    from qtpy.QtCore import QSettings
+
+    company_name = "IzharusTest"
+    app_name = "TestApp"
+
+    settings = QSettings(company_name, app_name)
+    settings.clear()
+
+    return settings
+
+
+@pytest.fixture
+def main_window(mock_settings):
+    """Mock main window."""
+    window = Window(settings=mock_settings)
+    return window

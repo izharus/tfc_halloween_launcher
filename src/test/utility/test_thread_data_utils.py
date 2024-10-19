@@ -69,8 +69,8 @@ class TestSettingsManager:
 
     def setup_method(self):
         """Clean existing settings."""
-        settings = QSettings(self.company_name, self.app_name)
-        settings.clear()
+        self.settings = QSettings(self.company_name, self.app_name)
+        self.settings.clear()
 
     def test__setup_settings_loading_valid_line_edit(self, widget):
         """
@@ -79,7 +79,7 @@ class TestSettingsManager:
         to the UI element.
         """
         expected_value = "new_line_edit_text"
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid value in the settings for line_edit
         settings._settings.set_value(
@@ -100,7 +100,7 @@ class TestSettingsManager:
         line_edit_text = "line_edit_text"
         widget.line_edit.setText(line_edit_text)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting type for line_edit
         settings._settings.set_value(
@@ -122,7 +122,7 @@ class TestSettingsManager:
         to the UI element.
         """
         expected_value = "new_text_edit_text"
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid value in the settings for text_edit
         settings._settings.set_value(
@@ -143,7 +143,7 @@ class TestSettingsManager:
         text_edit_text = "text_edit_text"
         widget.text_edit.setText(text_edit_text)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting type for text_edit
         settings._settings.set_value(
@@ -165,7 +165,7 @@ class TestSettingsManager:
         to the UI element.
         """
         expected_value = 20
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid value in the settings for spin_box
         settings._settings.set_value(
@@ -186,7 +186,7 @@ class TestSettingsManager:
         spin_box_val = 10
         widget.spin_box.setValue(spin_box_val)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting type for spin_box
         settings._settings.set_value(
@@ -207,7 +207,7 @@ class TestSettingsManager:
         to the UI element.
         """
         expected_value = 1
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid value in the settings for check_box
         settings._settings.set_value(
@@ -228,7 +228,7 @@ class TestSettingsManager:
         check_box_state = 0
         widget.check_box.setChecked(check_box_state)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting type for check_box
         settings._settings.set_value(
@@ -253,7 +253,7 @@ class TestSettingsManager:
         expected_index = 1
         widget.combo_box.addItems(combo_box_lines)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid index in the settings for combo_box
         settings._settings.set_value(
@@ -276,7 +276,7 @@ class TestSettingsManager:
         widget.combo_box.addItems(combo_box_lines)
         widget.combo_box.setCurrentIndex(combo_box_index)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting (index out of bounds) for combo_box
         settings._settings.set_value(
@@ -299,7 +299,7 @@ class TestSettingsManager:
         to the UI element.
         """
         expected_value = 1
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Set a valid value in the settings for radio_button
         settings._settings.set_value(
@@ -320,7 +320,7 @@ class TestSettingsManager:
         radio_button_state = 0
         widget.radio_button.setChecked(radio_button_state)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         # Simulate invalid setting type for radio_button
         settings._settings.set_value(
@@ -342,7 +342,7 @@ class TestSettingsManager:
         """
         new_line_edit = QLineEdit(widget)
 
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         new_line_edit.setObjectName("new_line_edit")
         new_line_edit.setText("new_line_edit")
@@ -356,7 +356,7 @@ class TestSettingsManager:
         by SettingsManager after updating UI inputs.
         """
         widget.line_edit.setText("line_edit")
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
         new_line_edit = QLineEdit(widget)
         new_line_edit.setObjectName("new_line_edit")
         new_line_edit.setText("new_line_edit")
@@ -372,7 +372,7 @@ class TestSettingsManager:
         Test that SettingsManager raises WidgetNotFound for
         a non-existent object key.
         """
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
         with pytest.raises(WidgetNotFound):
             settings.get_ui_value("non_exists")
 
@@ -384,7 +384,7 @@ class TestSettingsManager:
         Test that SettingsManager correctly retrieves
         an existing user value by key.
         """
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
         key = "secret"
         data = {"super-secret": 1234}
         settings._settings.set_value(settings._get_user_key("secret"), data)
@@ -399,7 +399,7 @@ class TestSettingsManager:
         Test that SettingsManager returns None when
         a user value does not exist.
         """
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
 
         assert settings.get_user_value("non_exists") is None
 
@@ -411,7 +411,7 @@ class TestSettingsManager:
         Test that SettingsManager returns a falsy value
         when the stored type does not match the requested type.
         """
-        settings = SettingsManager(widget, self.company_name, self.app_name)
+        settings = SettingsManager(widget, settings=self.settings)
         key = "secret"
         data = "non_digit"
         settings._settings.set_value(settings._get_user_key("secret"), data)

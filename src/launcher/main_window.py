@@ -26,7 +26,7 @@ import win32console
 import win32gui
 from loguru import logger as log
 from qtpy import QtWidgets
-from qtpy.QtCore import QPoint, Qt, Slot
+from qtpy.QtCore import QPoint, QSettings, Qt, Slot
 from qtpy.QtGui import QIcon
 from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
@@ -68,7 +68,7 @@ class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
     # pylint: disable = R0902
-    def __init__(self) -> None:
+    def __init__(self, settings: QSettings) -> None:
         log.debug("Window class __init__ entered.")
         super().__init__()
         self._ui_instance = Ui_MainWindow()
@@ -118,8 +118,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._settings = SettingsManager(
             ui_instance=self._ui_instance.centralwidget,
-            company_name="IzharusTest",
-            app_name="TestProdApp",
+            settings=settings,
         )
         self._settings.update_ui_signal.connect(self._settings.set_value_to_ui)
         self.config_manager: ServerConfigManager
@@ -435,7 +434,7 @@ def main():
     """Start application main loot"""
     app = QtWidgets.QApplication(sys.argv)
 
-    w = Window()
+    w = Window(settings=QSettings("IzharusTest", "TestProdApp"))
     w.show()
 
     sys.exit(app.exec())
