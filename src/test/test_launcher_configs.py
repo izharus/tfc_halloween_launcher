@@ -9,7 +9,11 @@ from unittest.mock import MagicMock
 import minecraft_launcher_lib as mine_lib
 import pytest
 from pytest_mock import MockerFixture
-from src.launcher.launcher_configs import ServerConfig, ServerConfigManager
+from src.launcher.launcher_configs import (
+    LauncherConfig,
+    ServerConfig,
+    ServerConfigManager,
+)
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -31,6 +35,30 @@ def mock_window(
         mine_lib.utils, "get_minecraft_directory", return_value=str(tmpdir)
     ):
         yield
+
+
+class TestLauncherConfig:
+    """Tests for LauncherConfig."""
+
+    def test__create_general_dirs(
+        self,
+        mocker: MockerFixture,
+        tmp_path: Path,
+    ):
+        """
+        Tests if is_minecraft_installed returns correct value when
+        the game directory is non-exists.
+        """
+        with mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=str(tmp_path),
+        ):
+            launcher_config = LauncherConfig()
+        for dirname in launcher_config._GENERAL_DIR_NAMES:
+            assert Path(
+                launcher_config.general_lib_directory, dirname
+            ).exists()
 
 
 class TestServerConfigManager:

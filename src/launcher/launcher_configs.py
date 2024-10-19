@@ -61,6 +61,14 @@ class LauncherConfig:
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
     IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
+    # Directory with "assets", "runtime", "libraries", "versions"
+    _GENERAL_DIR: Final = "general_libs"
+    _GENERAL_DIR_NAMES: Final = [
+        "assets",
+        "libraries",
+        "runtime",
+        "versions",
+    ]
 
     def __init__(self):
         """
@@ -97,10 +105,26 @@ class LauncherConfig:
         self._minecraft_skin_directory.mkdir(exist_ok=True)
         self._minecraft_cape_directory.mkdir(exist_ok=True)
 
+        self._general_lib_directory = Path(
+            self._minecraft_root_directory,
+            self._GENERAL_DIR,
+        )
+
+        self._general_lib_directory = Path(
+            self._minecraft_root_directory,
+            self._GENERAL_DIR,
+        )
+        self._create_general_dirs()
+
     @property
     def minecraft_root_directory(self) -> Path:
         """Get the Minecraft root directory."""
         return self._minecraft_root_directory
+
+    @property
+    def general_lib_directory(self) -> Path:
+        """Get the path to general directory."""
+        return self._general_lib_directory
 
     @property
     def logging_dir(self) -> Path:
@@ -116,6 +140,13 @@ class LauncherConfig:
     def minecraft_cape_directory(self) -> Path:
         """Get the directory with user capes."""
         return self._minecraft_cape_directory
+
+    def _create_general_dirs(self) -> None:
+        for dirname in self._GENERAL_DIR_NAMES:
+            (self.general_lib_directory / dirname).mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
 
 class ServerConfigManager:
