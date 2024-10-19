@@ -200,6 +200,3 @@ class TestLoginWidget:
 
         window = Window(settings=settings)
         qtbot.wait_signal(window._ui_instance.pushButton_login.clicked)
-
-        # FIXME:
-        qtbot.wait(5000)

@@ -2,6 +2,7 @@
 
 import os
 import time
+from pathlib import Path
 from typing import Callable, Optional
 
 from loguru import logger as log
@@ -181,12 +182,12 @@ class SettingsWidget(QObject, BaseWidget):
         self._msg_box.accepted.connect(self.enable_ui)
 
     @Slot(str)
-    def _choose_and_upload(self, directory: str, is_skin: bool) -> None:
+    def _choose_and_upload(self, directory: Path, is_skin: bool) -> None:
         self.disable_ui()
         if not os.path.exists(directory):
             os.makedirs(directory)
         file_path, _ = QFileDialog.getOpenFileName(
-            self._ui.stackedWidget, "Open File", directory
+            self._ui.stackedWidget, "Open File", str(directory)
         )
         if not file_path:
             self.enable_ui()

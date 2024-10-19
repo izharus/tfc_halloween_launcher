@@ -8,6 +8,7 @@ launcher and managing server configurations.
 
 import json
 import os
+from pathlib import Path
 from typing import Final, Optional
 
 import minecraft_launcher_lib as mine_lib
@@ -33,16 +34,16 @@ class LauncherConfig:
     Attributes:
         DEVELOPER_EMAIL (str): Complain about bugs here.
         LAUNCHER_NAME (str): The name of the Minecraft launcher.
-        DATA_DIR (str): The directory for storing launcher data.
-        SERVERS_DIR (str): The directory where server configurations
+        DATA_DIR (Path): The directory for storing launcher data.
+        SERVERS_DIR (Path): The directory where server configurations
             are stored.
         JAVA_INSTALL_URL (str): The URL for Java installation.
         MINECRAFT_LAUNCHER_IP_ADDR (str): The API URL for accessing UUID
             and access token.
         API_URL_PUSH_SKIN (str): The API URL for pushing user skin.
         API_URL_PUSH_CAPE (str): The API URL for pushing user cape.
-        minecraft_skin_directory = (str): Dir for choosing user skins.
-        minecraft_cape_directory = (str): Dir for choosing user capes.
+        minecraft_skin_directory = (Path): Dir for choosing user skins.
+        minecraft_cape_directory = (Path): Dir for choosing user capes.
         IS_AUTHENTICATED_KEY (str): A key for SettingsManager, 1 if user
             was authenticated, 0 otherwise
 
@@ -50,8 +51,8 @@ class LauncherConfig:
 
     DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
     LAUNCHER_NAME = "tfc_halloween"
-    DATA_DIR = "halloween_data"
-    SERVERS_DIR = "servers"
+    DATA_DIR = Path("halloween_data")
+    SERVERS_DIR = Path("servers")
     JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
@@ -72,44 +73,47 @@ class LauncherConfig:
             "Original minecraft_root_directory: "
             f"{_minecraft_root_directory}"
         )
-        self._minecraft_root_directory = unidecode(_minecraft_root_directory)
+        self._minecraft_root_directory = Path(
+            unidecode(_minecraft_root_directory)
+        )
         log.info(
             "Current minecraft_root_directory: "
             f"{self._minecraft_root_directory}"
         )
 
-        os.makedirs(self._minecraft_root_directory, exist_ok=True)
+        self._minecraft_root_directory.mkdir(parents=True, exist_ok=True)
 
-        self._logging_dir = os.path.join(
-            self._minecraft_root_directory, self.DATA_DIR, "logs"
+        self._logging_dir = (
+            self._minecraft_root_directory / self.DATA_DIR / "logs"
         )
-        os.makedirs(self._logging_dir, exist_ok=True)
-        self._minecraft_skin_directory = os.path.join(
-            self.minecraft_root_directory,
-            "skins",
+        self._logging_dir.mkdir(parents=True, exist_ok=True)
+
+        self._minecraft_skin_directory = (
+            self._minecraft_root_directory / "skins"
         )
-        self._minecraft_cape_directory = os.path.join(
-            self.minecraft_root_directory,
-            "capes",
+        self._minecraft_cape_directory = (
+            self._minecraft_root_directory / "capes"
         )
+        self._minecraft_skin_directory.mkdir(exist_ok=True)
+        self._minecraft_cape_directory.mkdir(exist_ok=True)
 
     @property
-    def minecraft_root_directory(self) -> str:
+    def minecraft_root_directory(self) -> Path:
         """Get the Minecraft root directory."""
         return self._minecraft_root_directory
 
     @property
-    def logging_dir(self) -> str:
+    def logging_dir(self) -> Path:
         """Get the logging directory."""
         return self._logging_dir
 
     @property
-    def minecraft_skin_directory(self) -> str:
+    def minecraft_skin_directory(self) -> Path:
         """Get the directory with user skins."""
         return self._minecraft_skin_directory
 
     @property
-    def minecraft_cape_directory(self) -> str:
+    def minecraft_cape_directory(self) -> Path:
         """Get the directory with user capes."""
         return self._minecraft_cape_directory
 
