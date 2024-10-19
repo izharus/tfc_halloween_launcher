@@ -251,6 +251,9 @@ class ServerConfig:
         self,
     ) -> bool:
         """True if current minecraft server is installed, False otherwise."""
+        if not os.path.exists(self.minecraft_directory):
+            self.is_minecraft_installed = False
+            return False
         return bool(
             self._settings.get_user_value(self._is_minecraft_installed_key)
         )

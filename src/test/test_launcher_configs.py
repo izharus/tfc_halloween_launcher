@@ -3,11 +3,13 @@
 # pylint:disable = E0401
 # pylint: disable=W0212
 import json
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import minecraft_launcher_lib as mine_lib
 import pytest
-from src.launcher.launcher_configs import ServerConfigManager
+from pytest_mock import MockerFixture
+from src.launcher.launcher_configs import ServerConfig, ServerConfigManager
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -128,3 +130,56 @@ class TestServerConfigManager:
                     mock_file_downloader,
                     object_key,
                 )
+
+
+class TestServerConfig:
+    """Test for ServerCOnfig."""
+
+    @pytest.mark.parametrize("install_status", (True, False))
+    def test_is_minecraft_installed_if_directory_exists(
+        self,
+        mocker: MockerFixture,
+        tmp_path: Path,
+        install_status: bool,
+    ):
+        """
+        Tests if is_minecraft_installed returns correct value when
+        the game directory is already exists.
+        """
+        server_config = ServerConfig(
+            internal_name="mock_name",
+            modpack=MagicMock(),
+            launcher_config=MagicMock(),
+            settings=MagicMock(),
+        )
+
+        server_config.minecraft_directory = tmp_path  # type: ignore
+        mocker.patch.object(
+            server_config._settings,
+            "get_user_value",
+            return_value=install_status,
+        )
+
+        assert server_config.is_minecraft_installed == install_status
+
+    def test_is_minecraft_installed_if_directory_non_exists(
+        self,
+        mocker: MockerFixture,
+    ):
+        """
+        Tests if is_minecraft_installed returns correct value when
+        the game directory is non-exists.
+        """
+        server_config = ServerConfig(
+            internal_name="mock_name",
+            modpack=MagicMock(),
+            launcher_config=MagicMock(),
+            settings=MagicMock(),
+        )
+
+        server_config.minecraft_directory = "non-exists"  # type: ignore
+        mocker.patch.object(
+            server_config._settings, "get_user_value", return_value=True
+        )
+
+        assert not server_config.is_minecraft_installed
