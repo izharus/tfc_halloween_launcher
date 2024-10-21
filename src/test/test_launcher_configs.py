@@ -56,9 +56,7 @@ class TestLauncherConfig:
         ):
             launcher_config = LauncherConfig()
         for dirname in launcher_config._GENERAL_DIR_NAMES:
-            assert Path(
-                launcher_config.general_lib_directory, dirname
-            ).exists()
+            assert Path(launcher_config._general_lib_dir, dirname).exists()
 
 
 class TestServerConfigManager:
@@ -205,7 +203,7 @@ class TestServerConfig:
             settings=MagicMock(),
         )
 
-        server_config.minecraft_directory = "non-exists"  # type: ignore
+        server_config.minecraft_directory = Path("non-exists")  # type: ignore
         mocker.patch.object(
             server_config._settings, "get_user_value", return_value=True
         )
