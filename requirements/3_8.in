@@ -6,6 +6,7 @@ loguru
 boto3
 pydantic==2.6.2 # older versions do not support windows 7
 unidecode
+elevate
 
 pip-tools
 pyinstaller

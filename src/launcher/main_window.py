@@ -24,6 +24,7 @@ from typing import Optional
 import win32con
 import win32console
 import win32gui
+from elevate import elevate
 from loguru import logger as log
 from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, QSettings, Qt, Slot
@@ -77,7 +78,7 @@ class Window(QtWidgets.QMainWindow):
         # For mouse events
         self._mouse_click_pos: Optional[QPoint] = None
 
-        logging_dir = self._launcher_config.logging_dir
+        logging_dir = self._launcher_config.LOGGING_DIR
         logging_dir /= "launcher_{time:YYYY-MM}.log"
         log.add(
             logging_dir,
@@ -170,7 +171,7 @@ class Window(QtWidgets.QMainWindow):
         # pylint: disable = C0301
         self._ui_instance.pushButton_minecraft_dir_disable_long_tern_save.clicked.connect(
             lambda: open_directory(
-                str(self._launcher_config.minecraft_root_directory),
+                str(self._launcher_config.LAUNCHER_ROOT_DIR),
             )
         )
         self.is_working = True
@@ -432,6 +433,7 @@ sys.excepthook = handle_exception
 
 def main():
     """Start application main loot"""
+    elevate()
     app = QtWidgets.QApplication(sys.argv)
 
     w = Window(settings=QSettings("IzharusTest", "TestProdApp"))

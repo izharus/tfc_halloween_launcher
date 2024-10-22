@@ -1,6 +1,11 @@
 """Pytest conftest."""
 
+# pylint: disable=W0212
+from unittest.mock import MagicMock
+
 import pytest
+from qtpy.QtCore import QSettings
+from src.launcher.launcher_configs import ServerConfig
 from src.launcher.main_window import Window
 
 CONFIG_NAME_1 = "TestModpack1"
@@ -96,11 +101,10 @@ def mock_auth_data():
 
 
 @pytest.fixture
-def mock_settings():
+def mock_settings() -> QSettings:
     """Mock QSettings instance"""
 
     # pylint: disable=C0415
-    from qtpy.QtCore import QSettings
 
     company_name = "IzharusTest"
     app_name = "TestApp"
@@ -112,7 +116,18 @@ def mock_settings():
 
 
 @pytest.fixture
-def main_window(mock_settings):
+def main_window(mock_settings) -> Window:
     """Mock main window."""
     window = Window(settings=mock_settings)
     return window
+
+
+@pytest.fixture
+def server_config(main_window) -> ServerConfig:
+    """Mock a ServeCOnfig."""
+    return ServerConfig(
+        internal_name="mock_name",
+        modpack=MagicMock(),
+        launcher_config=MagicMock(),
+        settings=main_window._settings,
+    )

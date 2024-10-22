@@ -50,72 +50,108 @@ class LauncherConfig:
     """
 
     DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
-    LAUNCHER_NAME = "tfc_halloween"
-    DATA_DIR = Path("halloween_data")
-    SERVERS_DIR = Path("servers")
+    LAUNCHER_NAME = "AuleCraft"
     JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
+
     MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
     API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
-    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json"  # pylint: disable=C0301
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
+
     IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
+    LAUNCHER_ROOT_DIR = (
+        Path(
+            unidecode(
+                os.path.dirname(mine_lib.utils.get_minecraft_directory())
+            )
+        )
+        / LAUNCHER_NAME
+    )
+    LOGGING_DIR = LAUNCHER_ROOT_DIR / "logs"
+    MINECRAFT_SKIN_DIR = LAUNCHER_ROOT_DIR / "skins"
+    MINECRAFT_CAPE_DIR = LAUNCHER_ROOT_DIR / "capes"
+
+    # Directory with "assets", "runtime", "libraries", "versions"
+
+    _GENERAL_DIR: Final = "general_libs"
+    _GENERAL_DIR_NAMES: Final = [
+        "assets",
+        "libraries",
+        "runtime",
+        "versions",
+    ]
+    _DOWNLOADS_DIR = Path("downloads")
+    _servers_data_dir: Path
+    _downloads_dir: Path
+    _general_lib_dir: Path
 
     def __init__(self):
         """
         Initialize directories and load launcher data from file if available.
         """
-        _minecraft_root_directory = (
-            mine_lib.utils.get_minecraft_directory() + f"_{self.LAUNCHER_NAME}"
-        )
-        log.info(
-            "Original minecraft_root_directory: "
-            f"{_minecraft_root_directory}"
-        )
-        self._minecraft_root_directory = Path(
-            unidecode(_minecraft_root_directory)
-        )
-        log.info(
-            "Current minecraft_root_directory: "
-            f"{self._minecraft_root_directory}"
-        )
+        self._create_launcher_dirs()
+        self.set_download_dir(self.LAUNCHER_ROOT_DIR)
 
-        self._minecraft_root_directory.mkdir(parents=True, exist_ok=True)
+    def set_download_dir(self, download_path: Path) -> None:
+        """Set directory for downloads."""
+        self._downloads_dir = download_path / self._DOWNLOADS_DIR
+        self._servers_data_dir = self._downloads_dir / "servers"
+        self._general_lib_dir = self._downloads_dir / "general"
 
-        self._logging_dir = (
-            self._minecraft_root_directory / self.DATA_DIR / "logs"
-        )
-        self._logging_dir.mkdir(parents=True, exist_ok=True)
+        self._downloads_dir.mkdir(parents=True, exist_ok=True)
+        self._servers_data_dir.mkdir(parents=True, exist_ok=True)
+        self._general_lib_dir.mkdir(parents=True, exist_ok=True)
 
-        self._minecraft_skin_directory = (
-            self._minecraft_root_directory / "skins"
-        )
-        self._minecraft_cape_directory = (
-            self._minecraft_root_directory / "capes"
-        )
-        self._minecraft_skin_directory.mkdir(exist_ok=True)
-        self._minecraft_cape_directory.mkdir(exist_ok=True)
+        self._create_general_dirs()
 
-    @property
-    def minecraft_root_directory(self) -> Path:
-        """Get the Minecraft root directory."""
-        return self._minecraft_root_directory
+    def _create_launcher_dirs(self):
+        self.LAUNCHER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+        self.LOGGING_DIR.mkdir(parents=True, exist_ok=True)
+        self.MINECRAFT_SKIN_DIR.mkdir(parents=True, exist_ok=True)
+        self.MINECRAFT_CAPE_DIR.mkdir(parents=True, exist_ok=True)
 
-    @property
-    def logging_dir(self) -> Path:
-        """Get the logging directory."""
-        return self._logging_dir
+    def _create_general_dirs(self) -> None:
+        for dirname in self._GENERAL_DIR_NAMES:
+            (self._general_lib_dir / dirname).mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
-    @property
-    def minecraft_skin_directory(self) -> Path:
-        """Get the directory with user skins."""
-        return self._minecraft_skin_directory
+    def get_servers_data_dir(self, server_name: str) -> Path:
+        """
+        Get the directory path for the specified server's data.
 
-    @property
-    def minecraft_cape_directory(self) -> Path:
-        """Get the directory with user capes."""
-        return self._minecraft_cape_directory
+        Args:
+            server_name (str): The name of the server.
+
+        Returns:
+            Path: The path to the server's data directory.
+        """
+        return self._servers_data_dir / server_name
+
+    def init_server_directory(self, server_data_path: Path) -> None:
+        """
+        Initializes the server directory by creating symbolic
+        links to general directories.
+
+        This method ensures that the specified server data path exists
+        and creates symbolic links for each directory listed in
+        `_GENERAL_DIR_NAMES` from the general library directory.
+
+        Args:
+            server_data_path (Path): The path to the server data directory
+                where symbolic links will be created.
+        """
+        server_data_path.mkdir(parents=True, exist_ok=True)
+        for general_dir_name in self._GENERAL_DIR_NAMES:
+            src_general_path = self._general_lib_dir / general_dir_name
+            dst_general_path = server_data_path / general_dir_name
+            if dst_general_path.exists() and dst_general_path.is_symlink():
+                dst_general_path.unlink()
+            dst_general_path.symlink_to(
+                src_general_path, target_is_directory=True
+            )
 
 
 class ServerConfigManager:
@@ -230,24 +266,13 @@ class ServerConfig:
         self.server_config: Final = modpack.server_config
         self.internal_name: Final = internal_name
         self._launcher_config = launcher_config
-        self.minecraft_directory: Final = self._generate_minecraft_directory()
+        self.minecraft_directory: Final = (
+            self._launcher_config.get_servers_data_dir(self.internal_name)
+        )
         self._settings = settings
 
         self._is_minecraft_installed_key: Final = "/".join(
             [self.internal_name, "is_installed"]
-        )
-
-    def _generate_minecraft_directory(self) -> str:
-        """
-        Generates the Minecraft directory based on the active configuration.
-
-        Returns:
-            str: The Minecraft directory.
-        """
-        return os.path.join(
-            self._launcher_config.minecraft_root_directory,
-            self._launcher_config.SERVERS_DIR,
-            self.internal_name,
         )
 
     @property
@@ -255,9 +280,9 @@ class ServerConfig:
         self,
     ) -> bool:
         """True if current minecraft server is installed, False otherwise."""
-        if not os.path.exists(self.minecraft_directory):
+        if not self.minecraft_directory.exists():
             self.is_minecraft_installed = False
-            return False
+        self._launcher_config.init_server_directory(self.minecraft_directory)
         return bool(
             self._settings.get_user_value(self._is_minecraft_installed_key)
         )

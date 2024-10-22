@@ -6,7 +6,7 @@ loguru
 boto3
 pydantic
 unidecode
-
+elevate
 
 pyinstaller
 pytest

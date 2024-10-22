@@ -146,7 +146,7 @@ class SettingsWidget(QObject, BaseWidget):
         # Choose and upload skin
         self._ui.pushButton_choose_skin.clicked.connect(
             lambda: self._choose_and_upload(
-                directory=self._launcher_config.minecraft_skin_directory,
+                directory=self._launcher_config.MINECRAFT_SKIN_DIR,
                 is_skin=True,
             )
         )
@@ -159,7 +159,7 @@ class SettingsWidget(QObject, BaseWidget):
         # Choose and upload cape
         self._ui.pushButton_choose_cape.clicked.connect(
             lambda: self._choose_and_upload(
-                self._launcher_config.minecraft_cape_directory,
+                self._launcher_config.MINECRAFT_CAPE_DIR,
                 is_skin=False,
             )
         )
