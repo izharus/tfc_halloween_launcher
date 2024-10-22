@@ -130,6 +130,30 @@ class LauncherConfig:
         """
         return self._servers_data_dir / server_name
 
+    def init_server_directory(self, server_data_path: Path) -> None:
+        """
+        Initializes the server directory by creating symbolic
+        links to general directories.
+
+        This method ensures that the specified server data path exists
+        and creates symbolic links for each directory listed in
+        `_GENERAL_DIR_NAMES` from the general library directory.
+
+        Args:
+            server_data_path (Path): The path to the server data directory
+                where symbolic links will be created.
+        """
+        server_data_path.mkdir(parents=True, exist_ok=True)
+        for general_dir_name in self._GENERAL_DIR_NAMES:
+            src_general_path = self._general_lib_dir / general_dir_name
+            dst_general_path = server_data_path / general_dir_name
+            if dst_general_path.exists() and dst_general_path.is_symlink():
+                dst_general_path.unlink()
+            dst_general_path.symlink_to(
+                src_general_path, target_is_directory=True
+            )
+
+
 class ServerConfigManager:
     """
     Manages server configurations, including downloading, validating,
@@ -258,7 +282,7 @@ class ServerConfig:
         """True if current minecraft server is installed, False otherwise."""
         if not self.minecraft_directory.exists():
             self.is_minecraft_installed = False
-            return False
+        self._launcher_config.init_server_directory(self.minecraft_directory)
         return bool(
             self._settings.get_user_value(self._is_minecraft_installed_key)
         )
