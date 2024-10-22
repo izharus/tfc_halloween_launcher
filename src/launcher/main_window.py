@@ -24,6 +24,7 @@ from typing import Optional
 import win32con
 import win32console
 import win32gui
+from elevate import elevate
 from loguru import logger as log
 from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, QSettings, Qt, Slot
@@ -432,6 +433,7 @@ sys.excepthook = handle_exception
 
 def main():
     """Start application main loot"""
+    elevate()
     app = QtWidgets.QApplication(sys.argv)
 
     w = Window(settings=QSettings("IzharusTest", "TestProdApp"))
