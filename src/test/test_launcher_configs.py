@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
+import src.minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 import pytest
 from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import (
@@ -19,7 +19,6 @@ from src.launcher.utility.custom_exceptions import (
     FiletDownloadError,
 )
 from src.launcher.utility.pydantic_models import MapJson
-
 
 class TestLauncherConfig:
     """Tests for LauncherConfig."""
