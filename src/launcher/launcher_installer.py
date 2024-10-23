@@ -31,11 +31,13 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Dict, List, Optional
 
-import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
-from minecraft_launcher_lib.types import MinecraftOptions
 from qtpy.QtCore import QThread, Signal
 
+from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
+from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
+    MinecraftOptions,
+)
 from .launcher_configs import ServerConfig, ServerConfigManager
 from .utility.custom_exceptions import (
     CalculateHashFailed,

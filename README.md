@@ -41,7 +41,11 @@ python -m pip install -r requirements/3_8.txt
 python -m pip install -r requirements/3_12.txt
 python main.py
 ```
-
+Clone my fork of minecraft_launcher_lib:
+```bash
+cd src
+git clone --branch feat/asynchronous-downloads https://codeberg.org/izharus/minecraft-launcher-lib.git minecraft_launcher_lib
+```
 
 ## Issues
 Detailed logs stores in "[minecraft_directory]/halloween_data/log" directory.

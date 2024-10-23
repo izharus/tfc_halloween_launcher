@@ -11,11 +11,11 @@ import os
 from pathlib import Path
 from typing import Final, Optional
 
-import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
 from pydantic import ValidationError
 from unidecode import unidecode
 
+from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (

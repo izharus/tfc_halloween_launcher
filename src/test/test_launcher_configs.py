@@ -1,11 +1,11 @@
 """Tests for src/launcher_config.py"""
 
-# pylint: disable=W0212,W0613,E0401
+# pylint: disable=W0212,W0613,E0401,C0411
 import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import minecraft_launcher_lib as mine_lib
+import minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 import pytest
 from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import (
