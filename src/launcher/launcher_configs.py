@@ -143,6 +143,7 @@ class LauncherConfig:
             server_data_path (Path): The path to the server data directory
                 where symbolic links will be created.
         """
+        self._create_general_dirs()
         server_data_path.mkdir(parents=True, exist_ok=True)
         for general_dir_name in self._GENERAL_DIR_NAMES:
             src_general_path = self._general_lib_dir / general_dir_name
