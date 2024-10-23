@@ -123,7 +123,7 @@ class LogMessageBox(MessageBox):
         self._log_button.setText("папка с логами")
         self.button_layout.addWidget(self._log_button)
         self._log_button.clicked.connect(
-            lambda: webbrowser.open(str(LauncherConfig().logging_dir))
+            lambda: webbrowser.open(str(LauncherConfig().LOGGING_DIR))
         )
 
 
