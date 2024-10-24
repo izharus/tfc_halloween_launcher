@@ -17,6 +17,7 @@ from qtpy.QtWidgets import (
     QComboBox,
     QLineEdit,
     QRadioButton,
+    QSlider,
     QSpinBox,
     QTextEdit,
     QWidget,
@@ -113,6 +114,7 @@ class UIManager:
         QCheckBox,
         QComboBox,
         QRadioButton,
+        QSlider,
     ]
 
     def __init__(
@@ -199,6 +201,8 @@ class UIManager:
             res = 1 if ui_element.isChecked() else 0
         elif isinstance(ui_element, QComboBox):
             res = ui_element.currentIndex()
+        elif isinstance(ui_element, QSlider):
+            res = ui_element.value()
         return res
 
     @staticmethod
@@ -226,6 +230,8 @@ class UIManager:
                 ui_element.setChecked(value)
             elif isinstance(ui_element, QComboBox):
                 ui_element.setCurrentIndex(value)
+            elif isinstance(ui_element, QSlider):
+                ui_element.setValue(value)
             else:
                 log.warning(
                     f"Unsupported UI element: {type(ui_element).__name__}"
@@ -258,6 +264,7 @@ class SettingsManager(QObject):
         QCheckBox: bool,
         QComboBox: int,
         QRadioButton: bool,
+        QSlider: int,
     }
 
     SIGNAL_MAP = {
@@ -267,6 +274,7 @@ class SettingsManager(QObject):
         QCheckBox: lambda e: e.toggled,
         QComboBox: lambda e: e.currentIndexChanged,
         QRadioButton: lambda e: e.toggled,
+        QSlider: lambda e: e.valueChanged,
     }
 
     def __init__(
@@ -296,8 +304,7 @@ class SettingsManager(QObject):
         self._ui_key_prefix = "ui_elements_data"
         self._user_data_key_prefix = "user_data"
         self._ui_instance = ui_instance
-        self._create_signals()
-        self._setup_settings()
+        self.update_ui_inputs()
 
     @Slot(QWidget, object)
     def set_value_to_ui(self, ui_element: QWidget, value: Any) -> None:
@@ -329,6 +336,7 @@ class SettingsManager(QObject):
         """
         self._ui_manager.update_ui_elements(self._ui_instance)
         self._setup_settings()
+        self._create_signals()
 
     @overload
     def get_ui_value(self, object_name: str) -> Any: ...
@@ -374,6 +382,7 @@ class SettingsManager(QObject):
         - `bool` for `QCheckBox`
         - `int` (current index) for `QComboBox`
         - `bool` for `QRadioButton`
+        - `int` for `QSlider`
 
         Args:
             object_name (str): The object name of the UI element whose

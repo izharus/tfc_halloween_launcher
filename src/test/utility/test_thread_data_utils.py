@@ -1,6 +1,6 @@
 """Module with tests for src.launcher.design.thread_data_utils."""
 
-# pylint: disable=R0903,W0621,W0212,W0613,E0401
+# pylint: disable=R0903,W0621,W0212,W0613,E0401,R0904
 
 import pytest
 from qtpy.QtCore import QSettings
@@ -9,6 +9,7 @@ from qtpy.QtWidgets import (
     QComboBox,
     QLineEdit,
     QRadioButton,
+    QSlider,
     QSpinBox,
     QTextEdit,
     QVBoxLayout,
@@ -41,6 +42,9 @@ class MockMainWindow(QWidget):
         self.radio_button = QRadioButton()
         self.radio_button.setObjectName("radio_button")
 
+        self.slider = QSlider()
+        self.slider.setObjectName("slider")
+
         layout = QVBoxLayout()
         layout.addWidget(self.line_edit)
         layout.addWidget(self.text_edit)
@@ -48,6 +52,8 @@ class MockMainWindow(QWidget):
         layout.addWidget(self.check_box)
         layout.addWidget(self.combo_box)
         layout.addWidget(self.radio_button)
+        layout.addWidget(self.slider)
+
         self.setLayout(layout)
 
 
@@ -333,6 +339,51 @@ class TestSettingsManager:
         assert (
             settings.get_ui_value(widget.radio_button.objectName())
             == radio_button_state
+        )
+
+    def test__setup_settings_loading_valid_slider(self, widget):
+        """
+        Tests '_setup_settings' when settings contain a valid type
+        for slider. The value from the settings should be applied
+        to the UI element.
+        """
+
+        widget.slider.setMaximum(10_000)
+        expected_value = 9_311
+        settings = SettingsManager(widget, settings=self.settings)
+
+        # Set a valid value in the settings for radio_button
+        settings._settings.set_value(
+            settings._get_ui_key(widget.slider.objectName()),
+            expected_value,
+        )
+        settings._setup_settings()
+
+        # Assert that value from settings is applied to UI element
+        assert widget.slider.value() == expected_value
+
+    def test__setup_settings_loading_invalid_type_slider(self, widget):
+        """
+        Tests '_setup_settings' when settings contain an invalid type
+        for slider.
+        The default value from the UI element should be saved to the settings.
+        """
+        widget.slider.setMaximum(10_000)
+        slider_value = 9_311
+        widget.slider.setValue(slider_value)
+
+        settings = SettingsManager(widget, settings=self.settings)
+
+        # Simulate invalid setting type for radio_button
+        settings._settings.set_value(
+            settings._get_ui_key(widget.slider.objectName()), "invalid"
+        )
+
+        settings._setup_settings()
+
+        # Assert that default value from UI element is loaded
+        assert (
+            settings.get_ui_value(widget.slider.objectName()) == slider_value
         )
 
     def test_update_ui_inputs_new_value_saved(self, widget):
