@@ -351,7 +351,9 @@ class MinecraftExecutorThread(QThread):
         self.access_token = access_token
         self.runtime_error: Optional[Exception] = None
 
-    def create_launcher_options(self) -> MinecraftOptions:
+    def create_launcher_options(
+            self,
+            allocate_ram: Optional[int] = None) -> MinecraftOptions:
         """
         Create launcher options for connecting to a Minecraft server.
 
@@ -360,6 +362,9 @@ class MinecraftExecutorThread(QThread):
         username, server IP, and port based on the attributes of the current
         instance.
 
+        Args:
+            allocate_ram: Optional[int]: Amount of RAM in MB to allocate
+                for the game.
         Returns:
             MinecraftOptions: A dictionary containing options for Minecraft
                 server connection, including the username, server IP, and port.
@@ -374,6 +379,9 @@ class MinecraftExecutorThread(QThread):
         options["token"] = self.access_token
         options["server"] = self.config.server_config.minecraft_server_ip
         options["port"] = self.config.server_config.minecraft_server_port
+
+        if allocate_ram:
+            options["jvmArguments"] = [f"-Xmx{allocate_ram}m"]
         return options
 
     def run(self):

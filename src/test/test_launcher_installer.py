@@ -2,11 +2,20 @@
 
 import json
 from unittest.mock import MagicMock
+import pytest
 
-from src.launcher.launcher_installer import ConfigInstallerThread
+from src.launcher.launcher_installer import ConfigInstallerThread, MinecraftExecutorThread
 from src.launcher.utility.custom_exceptions import FiletDownloadError
 
-
+@pytest.fixture
+def executor_thread() -> MinecraftExecutorThread:
+    """Mock MinecraftExecutorThread."""
+    return MinecraftExecutorThread(
+        nickname="mock_nickname",
+        uuid="mock_uuid",
+        access_token="mock_access_token",
+        config=MagicMock(),
+    )
 class TestConfigInstallerThread:
     """Tests for ConfigInstallerThread."""
 
@@ -65,3 +74,37 @@ class TestConfigInstallerThread:
         with qtbot.wait_signals([installer.finished, installer.write_info]):
             with qtbot.assertNotEmitted(installer.success):
                 installer.run()
+
+
+
+class TestMinecraftExecutorThread:
+    """Tests for MinecraftExecutorThread."""
+
+    def test_create_launcher_options_allocate_ram_not_specified(
+            self,
+            executor_thread: MinecraftExecutorThread,
+    ):
+        """Test that 'jvmArguments' is not present if RAM is not specified."""
+        options = executor_thread.create_launcher_options()
+
+        assert "jvmArguments" not in options
+
+    def test_create_launcher_options_with_allocate_ram_zero(
+            self,
+            executor_thread: MinecraftExecutorThread,
+    ):
+        """Test that 'jvmArguments' is not added if RAM is 0."""
+        ram = 0
+        options = executor_thread.create_launcher_options(allocate_ram=ram)
+
+        assert "jvmArguments" not in options
+
+    def test_create_launcher_options_with_allocate_ram(
+            self,
+            executor_thread: MinecraftExecutorThread,
+    ):
+        """Test that correct 'jvmArguments' are added when RAM is specified."""
+        ram = 34_314
+        options = executor_thread.create_launcher_options(allocate_ram=ram)
+
+        assert f"-Xmx{ram}m" in options["jvmArguments"]
