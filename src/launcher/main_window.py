@@ -372,6 +372,7 @@ class Window(QtWidgets.QMainWindow):
             uuid,
             access_token,
             self._server_config,
+            self._settings,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()

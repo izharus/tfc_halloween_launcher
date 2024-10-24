@@ -15,6 +15,7 @@ def executor_thread() -> MinecraftExecutorThread:
         uuid="mock_uuid",
         access_token="mock_access_token",
         config=MagicMock(),
+        settings=MagicMock(),
     )
 class TestConfigInstallerThread:
     """Tests for ConfigInstallerThread."""

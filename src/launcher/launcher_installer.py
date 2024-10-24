@@ -38,7 +38,7 @@ from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
     MinecraftOptions,
 )
-from .launcher_configs import ServerConfig, ServerConfigManager
+from .launcher_configs import ServerConfig, ServerConfigManager, SettingsManager
 from .utility.custom_exceptions import (
     CalculateHashFailed,
     ConfigDownloadError,
@@ -343,6 +343,7 @@ class MinecraftExecutorThread(QThread):
         uuid: str,
         access_token: str,
         config: ServerConfig,
+        settings: SettingsManager,
     ):
         QThread.__init__(self)
         self.nickname = nickname
@@ -350,6 +351,7 @@ class MinecraftExecutorThread(QThread):
         self.config = config
         self.access_token = access_token
         self.runtime_error: Optional[Exception] = None
+        self._settings = settings
 
     def create_launcher_options(
             self,
