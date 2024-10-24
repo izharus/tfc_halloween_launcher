@@ -262,12 +262,8 @@ class InstallThread(QThread):
         }
         self.is_working = False
         self.runtime_error: Optional[Exception] = None
-        self.is_install_shaders = False
         self._file_downloader = file_downloader
 
-    def change_install_shaders_status(self, is_install_shaders: bool):
-        """Indicates if shaders should be installed."""
-        self.is_install_shaders = is_install_shaders
 
     def set_config(self, config: ServerConfig):
         """
@@ -310,18 +306,6 @@ class InstallThread(QThread):
                 callback=self._callback_dict,
             )
         map_dirs = self.config.main_data
-        if self.is_install_shaders:
-            if "client_data_shaders" in self.config.client_additional_data:
-                map_dirs += self.config.client_additional_data[
-                    "client_data_shaders"
-                ]
-            else:
-                log.error(
-                    "Shaders couldn't be installed for "
-                    f"{self.config.internal_name}"
-                )
-                self.runtime_error = True
-                return
 
         installer = ModsInstaller(
             files_info_list=map_dirs,

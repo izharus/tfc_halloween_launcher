@@ -536,8 +536,66 @@ QLabel:hover {
               <item>
                <widget class="QWidget" name="widget" native="true">
                 <layout class="QHBoxLayout" name="horizontalLayout">
+                 <property name="spacing">
+                  <number>10</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <widget class="QWidget" name="widget_4" native="true"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
+                   <property name="minimumSize">
+                    <size>
+                     <width>175</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>150</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+                   </property>
+                   <property name="text">
+                    <string>Папка с игрой</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="pushButton_logout">
@@ -813,17 +871,28 @@ border: none; /* Убирает границу кнопки */
              </widget>
             </widget>
             <widget class="QWidget" name="launcher_settings_page">
-             <widget class="QGroupBox" name="groupBox">
-              <property name="geometry">
-               <rect>
-                <x>400</x>
-                <y>290</y>
-                <width>122</width>
-                <height>88</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">/* Custom Style QGroupBox */
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <spacer name="horizontalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_main_settings">
+                <item>
+                 <layout class="QFormLayout" name="formLayout_2">
+                  <item row="0" column="0">
+                   <widget class="QGroupBox" name="groupBox">
+                    <property name="styleSheet">
+                     <string notr="true">/* Custom Style QGroupBox */
 QGroupBox {
   font-size: 16px;
   border: 2px solid #4287f5; /* Border color for the group box */
@@ -862,17 +931,17 @@ QGroupBox QRadioButton::indicator:checked:hover {
   background-color: #3264ad;
 }
 </string>
-              </property>
-              <property name="title">
-               <string>Тип скина</string>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_2">
-               <item row="0" column="0">
-                <layout class="QVBoxLayout" name="verticalLayout_6">
-                 <item>
-                  <widget class="QRadioButton" name="radioButton_male">
-                   <property name="styleSheet">
-                    <string notr="true">/* Custom Style QCheckBox and QRadioButton */
+                    </property>
+                    <property name="title">
+                     <string>Тип скина</string>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_2">
+                     <item row="0" column="0">
+                      <layout class="QVBoxLayout" name="verticalLayout_6">
+                       <item>
+                        <widget class="QRadioButton" name="radioButton_male">
+                         <property name="styleSheet">
+                          <string notr="true">/* Custom Style QCheckBox and QRadioButton */
 QCheckBox, QRadioButton {
   spacing: 5px;
   font-size: 16px;
@@ -902,19 +971,19 @@ QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {
   background-color: #3264ad;
 }
 </string>
-                   </property>
-                   <property name="text">
-                    <string>Мужской</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="radioButton_female">
-                   <property name="styleSheet">
-                    <string notr="true">/* Custom Style QCheckBox and QRadioButton */
+                         </property>
+                         <property name="text">
+                          <string>Мужской</string>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QRadioButton" name="radioButton_female">
+                         <property name="styleSheet">
+                          <string notr="true">/* Custom Style QCheckBox and QRadioButton */
 QCheckBox, QRadioButton {
   spacing: 5px;
   font-size: 16px;
@@ -944,95 +1013,239 @@ QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {
   background-color: #3264ad;
 }
 </string>
-                   </property>
-                   <property name="text">
-                    <string>Женский</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QCheckBox" name="checkBox_is_install_shaders">
-              <property name="geometry">
-               <rect>
-                <x>420</x>
-                <y>30</y>
-                <width>184</width>
-                <height>24</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>250</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">/* Custom Style QCheckBox */
-QCheckBox {
-  spacing: 5px;
+                         </property>
+                         <property name="text">
+                          <string>Женский</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QGroupBox" name="groupBox_skin_cape">
+                    <property name="minimumSize">
+                     <size>
+                      <width>200</width>
+                      <height>200</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">/* Custom Style QGroupBox */
+QGroupBox {
   font-size: 16px;
-
+  border: 2px solid #4287f5; /* Border color for the group box */
+  border-radius: 8px; /* Border radius for rounded corners */
+  margin-top: 10px; /* Adjust margin as needed */
 }
 
-QCheckBox::indicator {
+QGroupBox::title {
+  subcontrol-origin: margin;
+  subcontrol-position: top center;
+  padding: 0 5px; /* Padding for the title text */
+}
+
+/* Apply the style for the child QRadioButton inside the QGroupBox */
+QGroupBox QRadioButton::indicator {
   width: 20px;
   height: 20px;
+  border-radius: 10px; /* Make the indicator circular */
 }
 
-QCheckBox::indicator:unchecked {
+QGroupBox QRadioButton::indicator:unchecked {
   border: 2px solid #ccc;
   background-color: #f9f9f9;
 }
 
-QCheckBox::indicator:checked {
+QGroupBox QRadioButton::indicator:checked {
   border: 2px solid #4287f5;
   background-color: #4287f5;
 }
 
-QCheckBox::indicator:hover {
+QGroupBox QRadioButton::indicator:hover {
   border: 2px solid #999;
 }
 
-QCheckBox::indicator:checked:hover {
+QGroupBox QRadioButton::indicator:checked:hover {
   background-color: #3264ad;
-}</string>
-              </property>
-              <property name="text">
-               <string>Установить шейдеры</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_back_arrow">
-              <property name="geometry">
-               <rect>
-                <x>820</x>
-                <y>10</y>
-                <width>64</width>
-                <height>64</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>64</width>
-                <height>64</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>64</width>
-                <height>64</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
+}
+</string>
+                    </property>
+                    <property name="title">
+                     <string>Выбор скина</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_5">
+                     <item>
+                      <layout class="QFormLayout" name="formLayout">
+                       <item row="0" column="0">
+                        <widget class="QPushButton" name="pushButton_choose_skin">
+                         <property name="minimumSize">
+                          <size>
+                           <width>200</width>
+                           <height>70</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>16777215</width>
+                           <height>70</height>
+                          </size>
+                         </property>
+                         <property name="styleSheet">
+                          <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+                         </property>
+                         <property name="text">
+                          <string>Выбрать скин</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="1">
+                        <widget class="QPushButton" name="pushButton_delete_skin">
+                         <property name="styleSheet">
+                          <string notr="true">QPushButton {
+  background-color: #FF0000; /* Red color */
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #CC0000; /* Darker red on hover */
+}
+
+QPushButton:pressed {
+  background-color: #990000; /* Even darker red when pressed */
+  border: 1px solid #660000; /* Dark border when pressed */
+}
+</string>
+                         </property>
+                         <property name="text">
+                          <string>Удалить скин</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="1" column="0">
+                        <widget class="QPushButton" name="pushButton_choose_cape">
+                         <property name="minimumSize">
+                          <size>
+                           <width>200</width>
+                           <height>70</height>
+                          </size>
+                         </property>
+                         <property name="styleSheet">
+                          <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+                         </property>
+                         <property name="text">
+                          <string>Выбрать плащ</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="1" column="1">
+                        <widget class="QPushButton" name="pushButton_delete_cape">
+                         <property name="styleSheet">
+                          <string notr="true">QPushButton {
+  background-color: #FF0000; /* Red color */
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #CC0000; /* Darker red on hover */
+}
+
+QPushButton:pressed {
+  background-color: #990000; /* Even darker red when pressed */
+  border: 1px solid #660000; /* Dark border when pressed */
+}
+</string>
+                         </property>
+                         <property name="text">
+                          <string>Удалить плащ</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QGridLayout" name="gridLayout_7">
+                <item row="0" column="1">
+                 <widget class="QPushButton" name="pushButton_back_arrow">
+                  <property name="minimumSize">
+                   <size>
+                    <width>64</width>
+                    <height>64</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>64</width>
+                    <height>64</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton {
     background-image: url(:/data/background/back_arrow.png);
     background-position: center;
     background-repeat: no-repeat;
@@ -1052,266 +1265,41 @@ QPushButton:pressed {
     background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
 }
 </string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-             <widget class="QGroupBox" name="groupBox_skin_cape">
-              <property name="geometry">
-               <rect>
-                <x>270</x>
-                <y>80</y>
-                <width>388</width>
-                <height>200</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>200</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">/* Custom Style QGroupBox */
-QGroupBox {
-  font-size: 16px;
-  border: 2px solid #4287f5; /* Border color for the group box */
-  border-radius: 8px; /* Border radius for rounded corners */
-  margin-top: 10px; /* Adjust margin as needed */
-}
-
-QGroupBox::title {
-  subcontrol-origin: margin;
-  subcontrol-position: top center;
-  padding: 0 5px; /* Padding for the title text */
-}
-
-/* Apply the style for the child QRadioButton inside the QGroupBox */
-QGroupBox QRadioButton::indicator {
-  width: 20px;
-  height: 20px;
-  border-radius: 10px; /* Make the indicator circular */
-}
-
-QGroupBox QRadioButton::indicator:unchecked {
-  border: 2px solid #ccc;
-  background-color: #f9f9f9;
-}
-
-QGroupBox QRadioButton::indicator:checked {
-  border: 2px solid #4287f5;
-  background-color: #4287f5;
-}
-
-QGroupBox QRadioButton::indicator:hover {
-  border: 2px solid #999;
-}
-
-QGroupBox QRadioButton::indicator:checked:hover {
-  background-color: #3264ad;
-}
-</string>
-              </property>
-              <property name="title">
-               <string>Выбор скина</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5">
-               <item>
-                <layout class="QFormLayout" name="formLayout">
-                 <item row="0" column="0">
-                  <widget class="QPushButton" name="pushButton_choose_skin">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-  background-color: #3A92F7;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #303EF7;
-}
-
-
-QPushButton:pressed {
-  background-color: #1000F7;
-  border: 1px solid #00274D;
-}
-</string>
-                   </property>
-                   <property name="text">
-                    <string>Выбрать скин</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="pushButton_delete_skin">
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-  background-color: #FF0000; /* Red color */
-  border: none;
-  border-radius: 15px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #CC0000; /* Darker red on hover */
-}
-
-QPushButton:pressed {
-  background-color: #990000; /* Even darker red when pressed */
-  border: 1px solid #660000; /* Dark border when pressed */
-}
-</string>
-                   </property>
-                   <property name="text">
-                    <string>Удалить скин</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QPushButton" name="pushButton_choose_cape">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-  background-color: #3A92F7;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #303EF7;
-}
-
-
-QPushButton:pressed {
-  background-color: #1000F7;
-  border: 1px solid #00274D;
-}
-</string>
-                   </property>
-                   <property name="text">
-                    <string>Выбрать плащ</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QPushButton" name="pushButton_delete_cape">
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-  background-color: #FF0000; /* Red color */
-  border: none;
-  border-radius: 15px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #CC0000; /* Darker red on hover */
-}
-
-QPushButton:pressed {
-  background-color: #990000; /* Even darker red when pressed */
-  border: 1px solid #660000; /* Dark border when pressed */
-}
-</string>
-                   </property>
-                   <property name="text">
-                    <string>Удалить плащ</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
-              <property name="geometry">
-               <rect>
-                <x>630</x>
-                <y>20</y>
-                <width>175</width>
-                <height>50</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>175</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>150</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-  background-color: #3A92F7;
-  border: none;
-  border-radius: 15px;
-  padding: 12px 24px;
-  color: #FFFFFF;
-  font-weight: bold;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-QPushButton:hover {
-  background-color: #303EF7;
-}
-
-
-QPushButton:pressed {
-  background-color: #1000F7;
-  border: 1px solid #00274D;
-}
-</string>
-              </property>
-              <property name="text">
-               <string>Папка с игрой</string>
-              </property>
-             </widget>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <spacer name="verticalSpacer_4">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="0" column="0">
+                 <spacer name="horizontalSpacer_9">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </widget>
           </item>
