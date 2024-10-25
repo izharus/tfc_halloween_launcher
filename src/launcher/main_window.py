@@ -332,10 +332,6 @@ class Window(QtWidgets.QMainWindow):
             # After installation user should restart app
             sys.exit(1)
 
-        is_install_shaders = self._settings.get_ui_value(
-            "checkBox_is_install_shaders"
-        )
-        self._install_thread.change_install_shaders_status(is_install_shaders)
         self._install_thread.start()
 
     def _install_thread_finished(self) -> None:
@@ -376,6 +372,7 @@ class Window(QtWidgets.QMainWindow):
             uuid,
             access_token,
             self._server_config,
+            self._settings,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()

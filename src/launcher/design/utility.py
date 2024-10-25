@@ -1,10 +1,10 @@
 """Utility module for creating and managing UI elements."""
 
 import webbrowser
-from typing import Optional
+from typing import List, Optional, Tuple, Union
 
-from qtpy.QtCore import Qt, QUrl
-from qtpy.QtGui import QDesktopServices, QFont, QPixmap
+from qtpy.QtCore import QPoint, QRect, Qt, QUrl, Slot
+from qtpy.QtGui import QDesktopServices, QFont, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
     QGraphicsBlurEffect,
@@ -15,7 +15,10 @@ from qtpy.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSizePolicy,
+    QSlider,
     QSpacerItem,
+    QStyle,
+    QStyleOptionSlider,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -23,6 +26,7 @@ from qtpy.QtWidgets import (
 
 from ..launcher_configs import LauncherConfig
 from .styles import (
+    ALLOCATE_RAM_SLIDER,
     CUSTOM_MESSAGE_BOX_STYLE,
     INSTALL_PROGRESS_BAR,
     MainButtonData,
@@ -441,3 +445,229 @@ class InstallProgressBar(QProgressBar):
 
         # Применение стилей
         self.setStyleSheet(INSTALL_PROGRESS_BAR)
+
+
+class LabeledSlider(QWidget):
+    """
+    A custom slider widget with labeled intervals
+    and a dynamic label for displaying the current value.
+
+    Init code was took from here:
+    https://gist.github.com/wiccy46/b7d8a1d57626a4ea40b19c5dbc5029ff
+
+    Args:
+        minimum (int): The minimum value for the slider.
+        maximum (int): The maximum value for the slider.
+        max_typos (int): Maximum number of label intervals.
+            Must be a positive integer.
+        labels (Optional[Union[List[str], Tuple[str]]]): Optional
+            custom labels for each interval. If None, default
+            labels based on values will be generated.
+        orientation (Qt.Orientation): The orientation of the slider
+            (horizontal or vertical).
+        position (int): The initial position of the slider.
+        parent (Optional[QWidget]): The parent widget of the slider.
+
+    Raises:
+        ValueError: If `max_typos` is not a positive integer.
+        TypeError: If `labels` is not a tuple or list, or if the length of
+            `labels` does not match the number of intervals.
+        ValueError: If the `orientation` is neither Qt.Horizontal
+            nor Qt.Vertical.
+    """
+
+    # pylint: disable=R0913,R0917, R0902
+    def __init__(
+        self,
+        minimum: int,
+        maximum: int,
+        max_typos: int,
+        labels: Optional[Union[List[str], Tuple[str]]] = None,
+        orientation=Qt.Horizontal,
+        position: int = 0,
+        parent: Optional[QWidget] = None,
+    ):
+
+        super().__init__(parent=parent)
+        if max_typos <= 0:
+            raise ValueError(
+                f"Max typos is a positive integer, not: {position}"
+            )
+
+        self.setFixedSize(600, 50)
+        interval = maximum // min(max(1, maximum // 1024), max_typos)
+        levels = range(minimum, maximum + interval, interval)
+        if labels is not None:
+            if not isinstance(labels, (tuple, list)):
+                raise TypeError("<labels> is a list or tuple.")
+            if len(labels) != len(levels):
+                raise TypeError("Size of <labels> doesn't match levels.")
+            self.levels = list(zip(levels, labels))
+        else:
+            self.levels = list(
+                zip(
+                    levels,
+                    map(lambda num: str(round(num / 1024)) + "G", levels),
+                )
+            )
+
+        if orientation == Qt.Horizontal:
+            self.layout = QVBoxLayout(self)
+        elif orientation == Qt.Vertical:
+            self.layout = QHBoxLayout(self)
+        else:
+            raise ValueError("<orientation> wrong.")
+
+        # gives some space to print labels
+        self.left_margin = 10
+        self.top_margin = 10
+        self.right_margin = 10
+        self.bottom_margin = 10
+
+        self.layout.setContentsMargins(
+            self.left_margin,
+            self.top_margin,
+            self.right_margin,
+            self.bottom_margin,
+        )
+
+        self.sl = QSlider(orientation, self)
+
+        self.sl.setObjectName("slider_ram_settings")
+        self.sl.setMinimum(minimum)
+        self.sl.setMaximum(maximum)
+        self.sl.setValue(minimum)
+        self.sl.setSliderPosition(position)
+        if orientation == Qt.Horizontal:
+            self.sl.setTickPosition(QSlider.TicksBelow)
+            self.sl.setMinimumWidth(300)  # just to make it easier to read
+        else:
+            self.sl.setTickPosition(QSlider.TicksLeft)
+            self.sl.setMinimumHeight(300)  # just to make it easier to read
+        self.sl.setTickInterval(interval)
+        self.sl.setSingleStep(1)
+
+        # Label for current value
+        self.value_label = QLabel()
+        self.value_label.setAlignment(Qt.AlignCenter)
+        self._update_value()
+
+        self.sl.setStyleSheet(ALLOCATE_RAM_SLIDER)
+        # Change value_label if slider.value changed
+        self.sl.valueChanged.connect(self._update_value)
+        self.layout.addWidget(self.value_label)
+        self.layout.addWidget(self.sl)
+
+    @Slot()
+    def _update_value(self):
+        """
+        Update the label that displays the current value of the slider.
+        """
+        value = self.sl.value()
+        info_text = f"Память: {value} МБ"
+
+        if not value:
+            info_text = "Авто"
+        self.value_label.setText(info_text)
+
+    def paintEvent(self, e):  # pylint: disable=C0103, R0914
+        """
+        Reimplement the paint event to draw the labels next
+        to the slider ticks.
+        """
+        super().paintEvent(e)
+        style = self.sl.style()
+        painter = QPainter(self)
+        st_slider = QStyleOptionSlider()
+        st_slider.initFrom(self.sl)
+        st_slider.orientation = self.sl.orientation()
+
+        # Current fount
+        font = painter.font()
+
+        # Decrease font size
+        new_font_size = painter.font().pointSize() // 1.2
+        font.setPointSize(new_font_size)
+
+        # Set new font
+        painter.setFont(font)
+
+        length = style.pixelMetric(QStyle.PM_SliderLength, st_slider, self.sl)
+        available = style.pixelMetric(
+            QStyle.PM_SliderSpaceAvailable, st_slider, self.sl
+        )
+
+        for v, v_str in self.levels[0:-1]:
+
+            # get the size of the label
+            rect = painter.drawText(QRect(), Qt.TextDontPrint, v_str)
+
+            if self.sl.orientation() == Qt.Horizontal:
+                # I assume the offset is half the length of slider, therefore
+                # + length//2
+                x_loc = (
+                    QStyle.sliderPositionFromValue(
+                        self.sl.minimum(), self.sl.maximum(), v, available
+                    )
+                    + length // 2
+                )
+
+                # left bound of the text=center - half of text width + L_margin
+                left = x_loc - rect.width() // 2 + self.left_margin
+                bottom = self.rect().bottom()
+
+                # enlarge margins if clipping
+                if v == self.sl.minimum():
+                    if left <= 0:
+                        self.left_margin = rect.width() // 2 - x_loc
+                    self.bottom_margin = max(self.bottom_margin, rect.height())
+
+                    self.layout.setContentsMargins(
+                        self.left_margin,
+                        self.top_margin,
+                        self.right_margin,
+                        self.bottom_margin,
+                    )
+
+                if (
+                    v == self.sl.maximum()
+                    and rect.width() // 2 >= self.right_margin
+                ):
+                    self.right_margin = rect.width() // 2
+                    self.layout.setContentsMargins(
+                        self.left_margin,
+                        self.top_margin,
+                        self.right_margin,
+                        self.bottom_margin,
+                    )
+
+            else:
+                y_loc = QStyle.sliderPositionFromValue(
+                    self.sl.minimum(),
+                    self.sl.maximum(),
+                    v,
+                    available,
+                    upsideDown=True,
+                )
+
+                bottom = (
+                    y_loc
+                    + length // 2
+                    + rect.height() // 2
+                    + self.top_margin
+                    - 3
+                )
+                # there is a 3 px offset that I can't attribute to any metric
+
+                left = self.left_margin - rect.width()
+                if left <= 0:
+                    self.left_margin = rect.width() + 2
+                    self.layout.setContentsMargins(
+                        self.left_margin,
+                        self.top_margin,
+                        self.right_margin,
+                        self.bottom_margin,
+                    )
+
+            pos = QPoint(left, bottom)
+            painter.drawText(pos, v_str)

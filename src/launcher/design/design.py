@@ -15,11 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGridLayout,
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QPushButton, QRadioButton, QScrollArea,
-    QSizePolicy, QSpacerItem, QStackedWidget, QVBoxLayout,
-    QWidget)
+from PySide6.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+    QPushButton, QRadioButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
 from resources import resources
 
 class Ui_MainWindow(object):
@@ -343,11 +342,42 @@ class Ui_MainWindow(object):
         self.widget = QWidget(self.choose_server_page)
         self.widget.setObjectName(u"widget")
         self.horizontalLayout = QHBoxLayout(self.widget)
+        self.horizontalLayout.setSpacing(10)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.widget_4 = QWidget(self.widget)
         self.widget_4.setObjectName(u"widget_4")
 
         self.horizontalLayout.addWidget(self.widget_4)
+
+        self.pushButton_minecraft_dir_disable_long_tern_save = QPushButton(self.widget)
+        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(u"pushButton_minecraft_dir_disable_long_tern_save")
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(QSize(175, 50))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(150, 50))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(u"QPushButton {\n"
+"  background-color: #3A92F7;\n"
+"  border: none;\n"
+"  border-radius: 15px;\n"
+"  padding: 12px 24px;\n"
+"  color: #FFFFFF;\n"
+"  font-weight: bold;\n"
+"  text-align: center;\n"
+"  text-decoration: none;\n"
+"  font-size: 16px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"  background-color: #303EF7;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed {\n"
+"  background-color: #1000F7;\n"
+"  border: 1px solid #00274D;\n"
+"}\n"
+"")
+
+        self.horizontalLayout.addWidget(self.pushButton_minecraft_dir_disable_long_tern_save)
 
         self.pushButton_logout = QPushButton(self.widget)
         self.pushButton_logout.setObjectName(u"pushButton_logout")
@@ -505,9 +535,18 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.server_settings_page)
         self.launcher_settings_page = QWidget()
         self.launcher_settings_page.setObjectName(u"launcher_settings_page")
+        self.horizontalLayout_3 = QHBoxLayout(self.launcher_settings_page)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_7)
+
+        self.verticalLayout_main_settings = QVBoxLayout()
+        self.verticalLayout_main_settings.setObjectName(u"verticalLayout_main_settings")
+        self.formLayout_2 = QFormLayout()
+        self.formLayout_2.setObjectName(u"formLayout_2")
         self.groupBox = QGroupBox(self.launcher_settings_page)
         self.groupBox.setObjectName(u"groupBox")
-        self.groupBox.setGeometry(QRect(400, 290, 122, 88))
         self.groupBox.setStyleSheet(u"/* Custom Style QGroupBox */\n"
 "QGroupBox {\n"
 "  font-size: 16px;\n"
@@ -626,69 +665,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addLayout(self.verticalLayout_6, 0, 0, 1, 1)
 
-        self.checkBox_is_install_shaders = QCheckBox(self.launcher_settings_page)
-        self.checkBox_is_install_shaders.setObjectName(u"checkBox_is_install_shaders")
-        self.checkBox_is_install_shaders.setGeometry(QRect(420, 30, 184, 24))
-        self.checkBox_is_install_shaders.setMinimumSize(QSize(0, 0))
-        self.checkBox_is_install_shaders.setMaximumSize(QSize(250, 16777215))
-        self.checkBox_is_install_shaders.setStyleSheet(u"/* Custom Style QCheckBox */\n"
-"QCheckBox {\n"
-"  spacing: 5px;\n"
-"  font-size: 16px;\n"
-"\n"
-"}\n"
-"\n"
-"QCheckBox::indicator {\n"
-"  width: 20px;\n"
-"  height: 20px;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:unchecked {\n"
-"  border: 2px solid #ccc;\n"
-"  background-color: #f9f9f9;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:checked {\n"
-"  border: 2px solid #4287f5;\n"
-"  background-color: #4287f5;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:hover {\n"
-"  border: 2px solid #999;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:checked:hover {\n"
-"  background-color: #3264ad;\n"
-"}")
-        self.pushButton_back_arrow = QPushButton(self.launcher_settings_page)
-        self.pushButton_back_arrow.setObjectName(u"pushButton_back_arrow")
-        self.pushButton_back_arrow.setGeometry(QRect(820, 10, 64, 64))
-        self.pushButton_back_arrow.setMinimumSize(QSize(64, 64))
-        self.pushButton_back_arrow.setMaximumSize(QSize(64, 64))
-        self.pushButton_back_arrow.setStyleSheet(u"QPushButton {\n"
-"    background-image: url(:/data/background/back_arrow.png);\n"
-"    background-position: center;\n"
-"    background-repeat: no-repeat;\n"
-"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
-"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
-"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
-"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
-"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
-"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
-                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
-"}\n"
-"")
+
+        self.formLayout_2.setWidget(0, QFormLayout.LabelRole, self.groupBox)
+
         self.groupBox_skin_cape = QGroupBox(self.launcher_settings_page)
         self.groupBox_skin_cape.setObjectName(u"groupBox_skin_cape")
-        self.groupBox_skin_cape.setGeometry(QRect(270, 80, 388, 200))
         self.groupBox_skin_cape.setMinimumSize(QSize(200, 200))
         self.groupBox_skin_cape.setStyleSheet(u"/* Custom Style QGroupBox */\n"
 "QGroupBox {\n"
@@ -846,33 +827,56 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addLayout(self.formLayout)
 
-        self.pushButton_minecraft_dir_disable_long_tern_save = QPushButton(self.launcher_settings_page)
-        self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(u"pushButton_minecraft_dir_disable_long_tern_save")
-        self.pushButton_minecraft_dir_disable_long_tern_save.setGeometry(QRect(630, 20, 175, 50))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(QSize(175, 50))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(150, 50))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(u"QPushButton {\n"
-"  background-color: #3A92F7;\n"
-"  border: none;\n"
-"  border-radius: 15px;\n"
-"  padding: 12px 24px;\n"
-"  color: #FFFFFF;\n"
-"  font-weight: bold;\n"
-"  text-align: center;\n"
-"  text-decoration: none;\n"
-"  font-size: 16px;\n"
+
+        self.formLayout_2.setWidget(0, QFormLayout.FieldRole, self.groupBox_skin_cape)
+
+
+        self.verticalLayout_main_settings.addLayout(self.formLayout_2)
+
+
+        self.horizontalLayout_3.addLayout(self.verticalLayout_main_settings)
+
+        self.gridLayout_7 = QGridLayout()
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.pushButton_back_arrow = QPushButton(self.launcher_settings_page)
+        self.pushButton_back_arrow.setObjectName(u"pushButton_back_arrow")
+        self.pushButton_back_arrow.setMinimumSize(QSize(64, 64))
+        self.pushButton_back_arrow.setMaximumSize(QSize(64, 64))
+        self.pushButton_back_arrow.setStyleSheet(u"QPushButton {\n"
+"    background-image: url(:/data/background/back_arrow.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
+                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
-"  background-color: #303EF7;\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
 "}\n"
-"\n"
 "\n"
 "QPushButton:pressed {\n"
-"  background-color: #1000F7;\n"
-"  border: 1px solid #00274D;\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
 "}\n"
 "")
+
+        self.gridLayout_7.addWidget(self.pushButton_back_arrow, 0, 1, 1, 1)
+
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_7.addItem(self.verticalSpacer_4, 1, 1, 1, 1)
+
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_7.addItem(self.horizontalSpacer_9, 0, 0, 1, 1)
+
+
+        self.horizontalLayout_3.addLayout(self.gridLayout_7)
+
         self.stackedWidget.addWidget(self.launcher_settings_page)
 
         self.verticalLayout.addWidget(self.stackedWidget)
@@ -903,6 +907,7 @@ class Ui_MainWindow(object):
         self.lineEdit_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
         self.label_creat_account.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442", None))
         self.pushButton_error_info.setText(QCoreApplication.translate("MainWindow", u"ERROR_BUTTON", None))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
         self.pushButton_logout.setText("")
         self.pushButton_settings.setText("")
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
@@ -911,13 +916,11 @@ class Ui_MainWindow(object):
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0422\u0438\u043f \u0441\u043a\u0438\u043d\u0430", None))
         self.radioButton_male.setText(QCoreApplication.translate("MainWindow", u"\u041c\u0443\u0436\u0441\u043a\u043e\u0439", None))
         self.radioButton_female.setText(QCoreApplication.translate("MainWindow", u"\u0416\u0435\u043d\u0441\u043a\u0438\u0439", None))
-        self.checkBox_is_install_shaders.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0448\u0435\u0439\u0434\u0435\u0440\u044b", None))
-        self.pushButton_back_arrow.setText("")
         self.groupBox_skin_cape.setTitle(QCoreApplication.translate("MainWindow", u"\u0412\u044b\u0431\u043e\u0440 \u0441\u043a\u0438\u043d\u0430", None))
         self.pushButton_choose_skin.setText(QCoreApplication.translate("MainWindow", u"\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0441\u043a\u0438\u043d", None))
         self.pushButton_delete_skin.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043a\u0438\u043d", None))
         self.pushButton_choose_cape.setText(QCoreApplication.translate("MainWindow", u"\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u043f\u043b\u0430\u0449", None))
         self.pushButton_delete_cape.setText(QCoreApplication.translate("MainWindow", u"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043f\u043b\u0430\u0449", None))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
+        self.pushButton_back_arrow.setText("")
     # retranslateUi
 

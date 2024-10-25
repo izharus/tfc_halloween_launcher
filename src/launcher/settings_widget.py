@@ -5,13 +5,14 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
+import psutil
 from loguru import logger as log
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from qtpy.QtWidgets import QFileDialog
 
 from .design.design import Ui_MainWindow
 from .design.thread_data_utils import SettingsManager
-from .design.utility import BaseWidget, MessageBox
+from .design.utility import BaseWidget, LabeledSlider, MessageBox
 from .launcher_authorization import SkinUploader
 from .launcher_configs import LauncherConfig
 from .utility.custom_exceptions import (
@@ -42,7 +43,7 @@ class UploadWorker(QThread):
     write_message = Signal(str)
 
     def __init__(self):
-        self._function: Optional[Callable] = None
+        self._function: Optional[Callable[..., None]] = None
         super().__init__()
 
     def run(self):
@@ -127,6 +128,19 @@ class SettingsWidget(QObject, BaseWidget):
             push_cape_api_url=self._launcher_config.API_URL_PUSH_CAPE,
         )
         self._upload_worker = UploadWorker()
+
+        # Configure RAM slider
+        max_ram = psutil.virtual_memory().total // (1024 * 1024)  # RAM in MB
+        self._memory_slider = LabeledSlider(
+            minimum=0, maximum=max_ram, max_typos=20
+        )
+        self._ui.verticalLayout_main_settings.insertWidget(
+            0, self._memory_slider
+        )
+        self._settings.update_ui_inputs()
+
+        self._memory_slider.show()
+
         self._connect_signals()
 
     def _connect_signals(self):

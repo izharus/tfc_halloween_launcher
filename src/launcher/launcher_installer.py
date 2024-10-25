@@ -38,7 +38,11 @@ from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
     MinecraftOptions,
 )
-from .launcher_configs import ServerConfig, ServerConfigManager
+from .launcher_configs import (
+    ServerConfig,
+    ServerConfigManager,
+    SettingsManager,
+)
 from .utility.custom_exceptions import (
     CalculateHashFailed,
     ConfigDownloadError,
@@ -262,12 +266,7 @@ class InstallThread(QThread):
         }
         self.is_working = False
         self.runtime_error: Optional[Exception] = None
-        self.is_install_shaders = False
         self._file_downloader = file_downloader
-
-    def change_install_shaders_status(self, is_install_shaders: bool):
-        """Indicates if shaders should be installed."""
-        self.is_install_shaders = is_install_shaders
 
     def set_config(self, config: ServerConfig):
         """
@@ -310,18 +309,6 @@ class InstallThread(QThread):
                 callback=self._callback_dict,
             )
         map_dirs = self.config.main_data
-        if self.is_install_shaders:
-            if "client_data_shaders" in self.config.client_additional_data:
-                map_dirs += self.config.client_additional_data[
-                    "client_data_shaders"
-                ]
-            else:
-                log.error(
-                    "Shaders couldn't be installed for "
-                    f"{self.config.internal_name}"
-                )
-                self.runtime_error = True
-                return
 
         installer = ModsInstaller(
             files_info_list=map_dirs,
@@ -359,6 +346,7 @@ class MinecraftExecutorThread(QThread):
         uuid: str,
         access_token: str,
         config: ServerConfig,
+        settings: SettingsManager,
     ):
         QThread.__init__(self)
         self.nickname = nickname
@@ -366,8 +354,11 @@ class MinecraftExecutorThread(QThread):
         self.config = config
         self.access_token = access_token
         self.runtime_error: Optional[Exception] = None
+        self._settings = settings
 
-    def create_launcher_options(self) -> MinecraftOptions:
+    def create_launcher_options(
+        self, allocate_ram: Optional[int] = None
+    ) -> MinecraftOptions:
         """
         Create launcher options for connecting to a Minecraft server.
 
@@ -376,6 +367,9 @@ class MinecraftExecutorThread(QThread):
         username, server IP, and port based on the attributes of the current
         instance.
 
+        Args:
+            allocate_ram: Optional[int]: Amount of RAM in MB to allocate
+                for the game.
         Returns:
             MinecraftOptions: A dictionary containing options for Minecraft
                 server connection, including the username, server IP, and port.
@@ -390,6 +384,12 @@ class MinecraftExecutorThread(QThread):
         options["token"] = self.access_token
         options["server"] = self.config.server_config.minecraft_server_ip
         options["port"] = self.config.server_config.minecraft_server_port
+
+        if allocate_ram:
+            log.debug("Allocating RAM: {allocate_ram}m")
+            options["jvmArguments"] = [f"-Xmx{allocate_ram}m"]
+        else:
+            log.debug("Allocating RAM: auto")
         return options
 
     def run(self):
@@ -402,12 +402,15 @@ class MinecraftExecutorThread(QThread):
 
         """
         self.runtime_error = None
+        options = self.create_launcher_options(
+            self._settings.get_ui_value("slider_ram_settings", int),
+        )
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
                 self.config.server_config.minecraft_profile,
                 self.config.minecraft_directory,
-                self.create_launcher_options(),
+                options,
             )
             # Hide the console window
             creation_flags = (

@@ -117,3 +117,36 @@ INSTALL_PROGRESS_BAR = """
                 );
             }
         """
+
+ALLOCATE_RAM_SLIDER = """QSlider::groove:horizontal {
+    border: 1px solid #999999;
+    height: 20px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #BBDEFB,  /* Светлый синий */
+                                stop:1 #2196F3); /* Темный синий */
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #F06292,  /* Светлый розовый */
+                                stop:1 #E91E63); /* Темный розовый */
+    border: 1px solid #C2185B;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    margin: -6px 0; /* Handle overlaps the groove */
+}
+
+QSlider::handle:horizontal:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #F48FB1,  /* Более светлый розовый при наведении */
+                                stop:1 #D81B60); /* Более темный розовый */
+}
+
+QSlider::add-page:horizontal {
+    background: #b3b3b3;  /* Серый цвет для неактивной части */
+    border-radius: 4px;
+}
+
+"""
