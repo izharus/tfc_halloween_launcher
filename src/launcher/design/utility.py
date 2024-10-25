@@ -3,7 +3,7 @@
 import webbrowser
 from typing import List, Optional, Tuple, Union
 
-from qtpy.QtCore import QPoint, QRect, Qt, QUrl, Slot
+from qtpy.QtCore import QBuffer, QByteArray, QPoint, QRect, Qt, QUrl, Slot
 from qtpy.QtGui import QDesktopServices, QFont, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
@@ -369,7 +369,7 @@ class ServerWidget(QPushButton):
         subtitle: str,
         cur_online: int = 0,
         max_online: int = 0,
-        image_path: str = ":/data/background/server-icon.png",
+        image: Union[str, bytes] = ":/data/background/server-icon.png",
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
@@ -383,7 +383,16 @@ class ServerWidget(QPushButton):
 
         # Add an image
         self.image_label = QLabel(self)
-        pixmap = QPixmap(image_path)
+
+        if isinstance(image, bytes):
+            pixmap = QPixmap()
+            byte_array = QByteArray(image)
+            buffer = QBuffer(byte_array)
+
+            buffer.open(QBuffer.ReadOnly)
+            pixmap.loadFromData(buffer.data())
+        else:
+            pixmap = QPixmap(image)
         self.image_label.setPixmap(pixmap.scaled(180, 180, Qt.KeepAspectRatio))
         layout.addWidget(self.image_label)
 
@@ -404,7 +413,7 @@ class ServerWidget(QPushButton):
         self._progress_bar = QProgressBar(self)
 
         self._progress_bar.setMinimum(0)
-        if cur_online and max_online:
+        if max_online:
             self._progress_bar.setMaximum(max_online)
             self._progress_bar.setValue(cur_online)
             self._progress_bar.setFormat(f"{cur_online} В ИГРЕ")
