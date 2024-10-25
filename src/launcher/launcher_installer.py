@@ -253,6 +253,7 @@ class InstallThread(QThread):
     def __init__(
         self,
         file_downloader: FileDownloaderProtocol,
+        is_working: Callable[..., bool],
         config: Optional[ServerConfig] = None,
     ) -> None:
         QThread.__init__(self)
@@ -264,7 +265,7 @@ class InstallThread(QThread):
             ),
             "setProgress": lambda progress: self.progress.emit(progress),
         }
-        self.is_working = False
+        self._is_working = is_working
         self.runtime_error: Optional[Exception] = None
         self._file_downloader = file_downloader
 
@@ -280,11 +281,15 @@ class InstallThread(QThread):
         try:
             self.main_worker()
         except Exception as error:
-            log.error(
-                "Unexpected error in InstallThread thread:\n"
-                f"{traceback.format_exc()}"
-            )
-            self.runtime_error = error
+            if self._is_working():
+                log.error(
+                    "Unexpected error in InstallThread thread:\n"
+                    f"{traceback.format_exc()}"
+                )
+                self.runtime_error = error
+            else:
+                log.error("closeEvent was triggered, installation failed.")
+                self.runtime_error = error
 
     def main_worker(self):
         """

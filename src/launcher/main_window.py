@@ -68,9 +68,12 @@ def hide_console() -> None:
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
+    is_working = False
+
     # pylint: disable = R0902
     def __init__(self, settings: QSettings) -> None:
         log.debug("Window class __init__ entered.")
+        self.is_working = True
         super().__init__()
         self._ui_instance = Ui_MainWindow()
         self._launcher_config = LauncherConfig()
@@ -115,7 +118,10 @@ class Window(QtWidgets.QMainWindow):
             )
             sys.exit(1)
 
-        self._install_thread = InstallThread(self.file_downloader)
+        self._install_thread = InstallThread(
+            self.file_downloader,
+            is_working=lambda: self.is_working,
+        )
 
         self._settings = SettingsManager(
             ui_instance=self._ui_instance.centralwidget,
@@ -174,7 +180,6 @@ class Window(QtWidgets.QMainWindow):
                 str(self._launcher_config.LAUNCHER_ROOT_DIR),
             )
         )
-        self.is_working = True
 
         self.setWindowIcon(QIcon(self.icon_file_path))
         self._executor: MinecraftExecutorThread
@@ -403,28 +408,27 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
     Custom exception handler to catch all exceptions.
     """
-
-    config = LauncherConfig()
-    log.critical("Exception occurred:")
-    log.critical(exc_type)
-    log.critical(exc_value)
-    log.critical(" ".join(traceback.format_tb(exc_traceback)))
-    msg_box = LogMessageBox(None)
-    msg_box.show_message(
-        title="Критическая ошибка!",
-        msg="Отправьте последний текстовый файл разработчику: "
-        + f"{config.DEVELOPER_EMAIL}",
-        close_button_text="закрыть приложение",
-    )
+    if Window.is_working:
+        config = LauncherConfig()
+        log.critical("Exception occurred:")
+        log.critical(exc_type)
+        log.critical(exc_value)
+        log.critical(" ".join(traceback.format_tb(exc_traceback)))
+        msg_box = LogMessageBox(None)
+        msg_box.show_message(
+            title="Критическая ошибка!",
+            msg="Отправьте последний текстовый файл разработчику: "
+            + f"{config.DEVELOPER_EMAIL}",
+            close_button_text="закрыть приложение",
+        )
     sys.exit(1)
-
-
-# Set the custom exception handler
-sys.excepthook = handle_exception
 
 
 def main():
     """Start application main loot"""
+
+    # Set the custom exception handler
+    sys.excepthook = handle_exception
     elevate()
     app = QtWidgets.QApplication(sys.argv)
 
