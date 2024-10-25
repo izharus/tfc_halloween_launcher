@@ -38,7 +38,11 @@ from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
     MinecraftOptions,
 )
-from .launcher_configs import ServerConfig, ServerConfigManager, SettingsManager
+from .launcher_configs import (
+    ServerConfig,
+    ServerConfigManager,
+    SettingsManager,
+)
 from .utility.custom_exceptions import (
     CalculateHashFailed,
     ConfigDownloadError,
@@ -264,7 +268,6 @@ class InstallThread(QThread):
         self.runtime_error: Optional[Exception] = None
         self._file_downloader = file_downloader
 
-
     def set_config(self, config: ServerConfig):
         """
         Set or update the configuration for the installation thread.
@@ -354,8 +357,8 @@ class MinecraftExecutorThread(QThread):
         self._settings = settings
 
     def create_launcher_options(
-            self,
-            allocate_ram: Optional[int] = None) -> MinecraftOptions:
+        self, allocate_ram: Optional[int] = None
+    ) -> MinecraftOptions:
         """
         Create launcher options for connecting to a Minecraft server.
 
@@ -383,7 +386,10 @@ class MinecraftExecutorThread(QThread):
         options["port"] = self.config.server_config.minecraft_server_port
 
         if allocate_ram:
+            log.debug("Allocating RAM: {allocate_ram}m")
             options["jvmArguments"] = [f"-Xmx{allocate_ram}m"]
+        else:
+            log.debug("Allocating RAM: auto")
         return options
 
     def run(self):
@@ -396,12 +402,15 @@ class MinecraftExecutorThread(QThread):
 
         """
         self.runtime_error = None
+        options = self.create_launcher_options(
+            self._settings.get_ui_value("slider_ram_settings", int),
+        )
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
                 self.config.server_config.minecraft_profile,
                 self.config.minecraft_directory,
-                self.create_launcher_options(),
+                options,
             )
             # Hide the console window
             creation_flags = (
