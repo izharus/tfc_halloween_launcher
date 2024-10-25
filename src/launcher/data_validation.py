@@ -5,6 +5,8 @@ import traceback
 
 from loguru import logger as log
 
+from .utility._helper import SUBPROCESS_CREATION_FLAGS
+
 
 class Validator:
     """Validation data in MainWindow."""
@@ -26,6 +28,7 @@ class Validator:
                 ["java", "-version"],
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
+                creationflags=SUBPROCESS_CREATION_FLAGS,
             )
             return True
         except Exception as error:

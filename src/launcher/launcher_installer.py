@@ -43,6 +43,7 @@ from .launcher_configs import (
     ServerConfigManager,
     SettingsManager,
 )
+from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,
     ConfigDownloadError,
@@ -413,15 +414,11 @@ class MinecraftExecutorThread(QThread):
                 self._config.minecraft_directory,
                 options,
             )
-            # Hide the console window
-            creation_flags = (
-                subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-            )
 
             with subprocess.Popen(
                 minecraft_command,
                 cwd=self._config.minecraft_directory,
-                creationflags=creation_flags,
+                creationflags=SUBPROCESS_CREATION_FLAGS,
                 # Redirect stdout to PIPE to capture output
                 # stdout=subprocess.PIPE,
                 # Redirect stderr to PIPE to capture error output

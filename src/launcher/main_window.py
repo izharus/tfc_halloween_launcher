@@ -429,7 +429,7 @@ def main():
 
     # Set the custom exception handler
     sys.excepthook = handle_exception
-    elevate()
+    elevate(show_console=False)
     app = QtWidgets.QApplication(sys.argv)
 
     w = Window(settings=QSettings("IzharusTest", "TestProdApp"))
