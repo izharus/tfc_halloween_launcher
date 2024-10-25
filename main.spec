@@ -6,6 +6,8 @@ data_files = []
 data_files.append(('icon.ico', "root_dir"))
 data_files.append(("data\\image", "data\\image"))
 
+data_files.append(("src\\minecraft_launcher_lib\\minecraft_launcher_lib", "src\\minecraft_launcher_lib\\minecraft_launcher_lib"))
+
 icon_path = 'icon.ico'
 
 main_module_name = 'main.py'
