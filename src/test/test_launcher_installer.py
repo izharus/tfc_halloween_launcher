@@ -13,16 +13,20 @@ from src.launcher.launcher_installer import (
     MinecraftExecutorThread,
 )
 from src.launcher.utility.custom_exceptions import FiletDownloadError
+from src.launcher.utility.pydantic_models import AuthData
 
 
 @pytest.fixture
 def executor_thread() -> MinecraftExecutorThread:
     """Mock MinecraftExecutorThread."""
     return MinecraftExecutorThread(
-        nickname="mock_nickname",
-        uuid="mock_uuid",
-        access_token="mock_access_token",
-        config=MagicMock(),
+        auth_data=AuthData(
+            status="mock_status",
+            username="mock_nickname",
+            uuid="mock_uuid",
+            accessToken="mock_access_token",
+        ),
+        server_config=MagicMock(),
         settings=MagicMock(),
     )
 

@@ -52,7 +52,7 @@ from .utility.custom_exceptions import (
     MinecraftLauncherConfigNotSet,
 )
 from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
-from .utility.pydantic_models import FileInfo
+from .utility.pydantic_models import AuthData, FileInfo
 
 MAX_WORKERS = (os.cpu_count() or 4) * 4
 
@@ -334,27 +334,23 @@ class MinecraftExecutorThread(QThread):
     configuration and execution of Minecraft with a specified nickname.
 
     Attributes:
-        nickname (str): The nickname to be used in the Minecraft game.
-        uuid (str): The UUID of the user.
-        access_token (str): User access token.
-
+        auth_data (AuthData): Represents user credential data.
+        server_config (ServerConfig): Current server config data.
+        settings (SettingsManager): An instance of SettingsManager.
     """
 
     def __init__(
         self,
-        nickname: str,
-        uuid: str,
-        access_token: str,
-        config: ServerConfig,
+        auth_data: AuthData,
+        server_config: ServerConfig,
         settings: SettingsManager,
     ):
         QThread.__init__(self)
-        self.nickname = nickname
-        self.uuid = uuid
-        self.config = config
-        self.access_token = access_token
-        self.runtime_error: Optional[Exception] = None
+        self._auth_data = auth_data
+        self._config = server_config
         self._settings = settings
+
+        self.runtime_error: Optional[Exception] = None
 
     def create_launcher_options(
         self, allocate_ram: Optional[int] = None
@@ -379,11 +375,11 @@ class MinecraftExecutorThread(QThread):
             connection to a Minecraft server.
         """
         options = mine_lib.utils.generate_test_options()
-        options["username"] = self.nickname
-        options["uuid"] = self.uuid
-        options["token"] = self.access_token
-        options["server"] = self.config.server_config.minecraft_server_ip
-        options["port"] = self.config.server_config.minecraft_server_port
+        options["username"] = self._auth_data.username
+        options["uuid"] = self._auth_data.uuid
+        options["token"] = self._auth_data.accessToken
+        options["server"] = self._config.server_config.minecraft_server_ip
+        options["port"] = self._config.server_config.minecraft_server_port
 
         if allocate_ram:
             log.debug("Allocating RAM: {allocate_ram}m")
@@ -408,8 +404,8 @@ class MinecraftExecutorThread(QThread):
         try:
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
-                self.config.server_config.minecraft_profile,
-                self.config.minecraft_directory,
+                self._config.server_config.minecraft_profile,
+                self._config.minecraft_directory,
                 options,
             )
             # Hide the console window
@@ -419,7 +415,7 @@ class MinecraftExecutorThread(QThread):
 
             with subprocess.Popen(
                 minecraft_command,
-                cwd=self.config.minecraft_directory,
+                cwd=self._config.minecraft_directory,
                 creationflags=creation_flags,
                 # Redirect stdout to PIPE to capture output
                 # stdout=subprocess.PIPE,

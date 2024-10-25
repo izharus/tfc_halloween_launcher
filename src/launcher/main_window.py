@@ -364,15 +364,10 @@ class Window(QtWidgets.QMainWindow):
                 close_button_text="закрыть приложение",
             )
             sys.exit(1)
-        nickname = self._settings.get_ui_value("lineEdit_nickname")
-        uuid = auth_data.uuid
-        access_token = auth_data.accessToken
         self._executor = MinecraftExecutorThread(
-            nickname,
-            uuid,
-            access_token,
-            self._server_config,
-            self._settings,
+            auth_data=auth_data,
+            server_config=self._server_config,
+            settings=self._settings,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()
