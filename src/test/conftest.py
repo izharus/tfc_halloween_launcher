@@ -7,6 +7,9 @@ import pytest
 from qtpy.QtCore import QSettings
 from src.launcher.launcher_configs import ServerConfig
 from src.launcher.main_window import Window
+from src.launcher.utility.pydantic_models import (
+    ServerConfig as PydanticServerConfig,
+)
 
 CONFIG_NAME_1 = "TestModpack1"
 CONFIG_NAME_2 = "TestModpack2"
@@ -87,6 +90,12 @@ def mock_modpack_data():
         ],
         "client_additional_data": {},
     }
+
+
+@pytest.fixture
+def pydantic_server_config(mock_modpack_data) -> PydanticServerConfig:
+    """Mock a pydantic ServerConfig data."""
+    return PydanticServerConfig(**mock_modpack_data["server_config"])
 
 
 @pytest.fixture
