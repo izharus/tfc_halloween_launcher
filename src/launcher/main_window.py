@@ -92,6 +92,9 @@ class Window(QtWidgets.QMainWindow):
             serialize=False,
         )
         self._ui_instance.setupUi(self)
+        self._ui_instance.stackedWidget.setCurrentWidget(
+            self._ui_instance.login_page,
+        )
         self.resize(500, 125)  # Adjust 800 to your desired width
 
         script_dir = os.getcwd()
