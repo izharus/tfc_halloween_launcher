@@ -172,3 +172,4 @@ logs/
 src/launcher/boto3_cred.py
 !.venv_3_12x64/Lib/site-packages/minecraft_launcher_lib/install.py
 !.venv_3_12x64/Lib/site-packages/minecraft_launcher_lib/runtime/install_jvm_runtime.py
+3_12_designer.exe.lnk
