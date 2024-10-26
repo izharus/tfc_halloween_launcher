@@ -1,6 +1,7 @@
 """Implementation of launcher choose server logic."""
 
 from typing import List
+from functools import partial
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QLayout
@@ -20,6 +21,7 @@ class ChoseServer(QObject, BaseWidget):
     """
 
     launch_game = Signal(str)
+    switch_to_server_page = Signal(str, object)
 
     def __init__(
         self, main_window: Ui_MainWindow, config_manager: ServerConfigManager
@@ -42,17 +44,19 @@ class ChoseServer(QObject, BaseWidget):
 
     def _create_signals(self, buttons: List[ServerWidget]) -> None:
         """
-        Connects button clicks to the launch_game signal.
+        Connects signals from the provided list of ServerWidget buttons
+        to their respective slots.
 
         Args:
-            buttons (List[ServerWidget]): A list of ServerWidget buttons
-                to connect signals for.
+            buttons (List[ServerWidget]): A list of ServerWidget instances
+                containing buttons to connect signals for.
         """
         for button in buttons:
             button.push_button.clicked.connect(
-                lambda _, obj_name=button.objectName(): self.launch_game.emit(
-                    obj_name
-                )
+                partial(self.launch_game.emit, button.objectName())
+            )
+            button.clicked.connect(
+                partial(self.switch_to_server_page.emit, button.objectName(), button)
             )
 
     def update_server_buttons(self, layout: QLayout) -> List[ServerWidget]:
@@ -72,11 +76,8 @@ class ChoseServer(QObject, BaseWidget):
         buttons = []
         for name, data in self._config_manager.map_json.modpacks.items():
             button = ServerWidget(
-                image_path=":/data/background/server-icon.png",
                 title=data.server_config.display_name,
                 subtitle=f"Minecraft {data.server_config.minecraft_version}",
-                cur_online=15,
-                max_online=30,
                 parent=self._ui.scrollAreaWidgetContents,
             )
             button.setObjectName(name)

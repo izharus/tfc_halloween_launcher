@@ -1,14 +1,14 @@
 """Pytest conftest."""
 
-# pylint: disable=W0212
+# pylint: disable=W0212,W0613
+import json
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 from qtpy.QtCore import QSettings
 from src.launcher.launcher_configs import ServerConfig, ServerConfigManager
 from src.launcher.main_window import Window
-from src.launcher.utility.pydantic_models import MapJson
+from src.launcher.utility.file_downloader import FileDownloaderProtocol
 from src.launcher.utility.pydantic_models import (
     ServerConfig as PydanticServerConfig,
 )
@@ -160,3 +160,20 @@ def server_config(main_window) -> ServerConfig:
         launcher_config=MagicMock(),
         settings=main_window._settings,
     )
+
+
+@pytest.fixture
+def auth_window(mock_settings, mock_config_data) -> Window:
+    """Mock main window."""
+    window = Window(settings=mock_settings)
+
+    downloader = MagicMock(spec_set=FileDownloaderProtocol)
+    downloader.download_bytes.return_value = json.dumps(
+        mock_config_data
+    ).encode("utf-8")
+    window._config_installer_thread._config_manager = ServerConfigManager(
+        file_downloader=downloader,
+        map_object_key="mock_key",
+    )
+    window._config_installer_complete()
+    return window

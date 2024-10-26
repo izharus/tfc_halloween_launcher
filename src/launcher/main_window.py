@@ -43,6 +43,7 @@ from .launcher_installer import (
     MinecraftExecutorThread,
 )
 from .login_widget import LoginWidget
+from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
 from .utility.custom_exceptions import (
     ConfigDownloadError,
@@ -134,7 +135,7 @@ class Window(QtWidgets.QMainWindow):
         self.config_manager: ServerConfigManager
         self._choose_server: ChoseServer
         self._server_config: ServerConfig
-
+        self._server_page = ServerWidgetPage
         # This widget connects signals in _connect_signals
         self._settings_widget = SettingsWidget
         # This widget connects signals in _connect_signals
@@ -216,12 +217,19 @@ class Window(QtWidgets.QMainWindow):
             self._launcher_config,
             settings=self._settings,
         )
+        self._server_page = ServerWidgetPage(
+            config=self.config_manager,
+            ui_instance=self._ui_instance,
+        )
         self._choose_server = ChoseServer(
             self._ui_instance, self.config_manager
         )
 
         self._choose_server.launch_game.connect(
             self._install_minecraft_multi_thread
+        )
+        self._choose_server.switch_to_server_page.connect(
+            self._server_page.switch_to_server_page
         )
         self._ui_instance.stackedWidget.setCurrentWidget(
             self._ui_instance.choose_server_page
