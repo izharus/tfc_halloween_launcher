@@ -388,7 +388,7 @@ class MinecraftExecutorThread(QThread):
         options["port"] = self._config.server_config.minecraft_server_port
 
         if allocate_ram:
-            log.debug("Allocating RAM: {allocate_ram}m")
+            log.debug(f"Allocating RAM: {allocate_ram}m")
             options["jvmArguments"] = [f"-Xmx{allocate_ram}m"]
         else:
             log.debug("Allocating RAM: auto")
