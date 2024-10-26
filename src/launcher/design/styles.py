@@ -85,6 +85,22 @@ class ServerWidgetCSS:
             border-radius: 10px;
         }
         """
+    progress_bar_loading = """
+        QProgressBar {
+            height: 20px;
+            border: 1px solid #555555;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            font-weight: bold;
+            color: #333333;
+        }
+        QProgressBar::chunk {
+            background-color: #00aaff;
+            width: 20px;
+            margin: 2px;
+            border-radius: 10px;
+        }
+    """
 
 
 CUSTOM_MESSAGE_BOX_STYLE = (
