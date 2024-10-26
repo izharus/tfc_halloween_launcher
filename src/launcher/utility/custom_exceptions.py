@@ -179,3 +179,14 @@ class WidgetNotFound(Exception):
     def __init__(self, message: str = ""):
         self.message = message
         super().__init__(self.message)
+
+
+class ServerQueryStatusError(Exception):
+    """
+    Exception raised if any error occurs due querying information
+    from a minecraft server
+    """
+
+    def __init__(self, message: str = ""):
+        self.message = message
+        super().__init__(self.message)
