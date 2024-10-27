@@ -1,0 +1,1 @@
+"""A QThread for loading server status and server icons."""
