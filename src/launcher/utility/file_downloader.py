@@ -5,15 +5,19 @@ for safe downloading of files.
 
 import hashlib
 import os
-from typing import Protocol
+from os import PathLike
+from pathlib import Path
+from typing import Protocol, Union
 
 import boto3
 import boto3.exceptions
+from loguru import logger as log
 
 from .custom_exceptions import (
     CalculateHashFailed,
     DownloadServerHandshakeError,
     FileDownloadError,
+    FileHashMismatchError,
     FilesSaveError,
 )
 
@@ -40,7 +44,7 @@ def calculate_hash(file_name, hash_algorithm="sha256"):
 
 
 def save_file(
-    file_path: str,
+    file_path: Union[str, PathLike],
     file_content: bytes,
 ) -> None:
     """
@@ -56,9 +60,10 @@ def save_file(
         FilesSaveError: If there's an error while saving the file.
     """
     try:
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "wb") as file:
-            file.write(file_content)
+        file = Path(file_path)
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_bytes(file_content)
+
     except Exception as error:
         raise FilesSaveError from error
 
@@ -66,20 +71,34 @@ def save_file(
 class FileDownloaderProtocol(Protocol):
     """Protocol for defining a file downloader interface."""
 
-    def download_file(self, object_key: str, dst_path: str) -> None:
+    def download_file(
+        self,
+        object_key: str,
+        dst_path: str,
+        filehash: str,
+        hash_algorithm: str = "sha256",
+    ) -> None:
         """
-        Download and save file.
+        Download and save a file, with integrity verification using a hash.
+
+        If the file already exists at the specified path, its hash is verified
+        against the provided `filehash`. If the hash is incorrect, the file
+        is re-downloaded. If, after re-downloading, the file's hash still does
+        not match, an exception is raised.
 
         Args:
             object_key (str): The key of the object to download.
             dst_path (str): The path where the file will be saved.
+            filehash (str): The expected hash of the file for integrity
+                verification.
+            hash_algorithm (str, optional): The hashing algorithm to use
+                for verification (e.g., "md5", "sha256"). Default is "sha256".
 
-        Returns:
-            bytes: The content of the downloaded file.
         Raises:
-            FileDownloadError : If there's any error occurs
-                during file download.
-            FilesSaveError: If there's an error while saving the file.
+            FileDownloadError: If an error occurs during file download.
+            FileSaveError: If there is an error while saving the file.
+            FileHashMismatchError: If the file's hash does not match
+                `filehash` after re-downloading.
         """
 
     def download_bytes(
@@ -144,19 +163,6 @@ class FileYOSDownloader(FileDownloaderProtocol):
         self,
         object_key: str,
     ) -> bytes:
-        """
-        Download a file from the S3 bucket and return bytes.
-
-        Args:
-            object_key (str): The key of the object to download.
-
-        Returns:
-            bytes: The content of the downloaded file.
-
-        Raises:
-            FileDownloadError : If there's any error occurs
-                during file download.
-        """
         try:
             response = self._boto3_client.get_object(
                 Bucket=self._bucket_name,
@@ -173,23 +179,28 @@ class FileYOSDownloader(FileDownloaderProtocol):
     def download_file(
         self,
         object_key: str,
-        dst_path: str,
+        dst_path: Union[str, PathLike],
+        filehash: str,
+        hash_algorithm: str = "sha256",
     ) -> None:
-        """
-        Download a file from the S3 bucket and saves it to the dst_path.
-
-        Args:
-            object_key (str): The key of the object to download.
-            dst_path (str): The path where the file will be saved.
-
-        Returns:
-            None.
-        Raises:
-            FileDownloadError : If there's any error occurs
-                during file download.
-            FilesSaveError: If there's an error while saving the file.
-        """
+        
+        filepath = Path(dst_path)
+        s  = filepath.absolute()
+        if filepath.exists():
+            log.debug(f"File exists: {filepath}")
+            try:
+                if filehash == calculate_hash(filepath, hash_algorithm):
+                    log.debug(f"File hash correct: {filepath}")
+                    return
+                else:
+                    log.error(f"File hash incorrect: {filepath}")
+            except CalculateHashFailed:
+                log.error(f"Failed to calculate hash: {filepath}")
         save_file(
             file_content=self.download_bytes(object_key),
             file_path=dst_path,
         )
+        log.debug(f"File was downloaded: {filepath}")
+        if filehash != calculate_hash(filepath, hash_algorithm):
+            log.debug(f"File hash incorrect after download: {filepath}")
+            raise FileHashMismatchError

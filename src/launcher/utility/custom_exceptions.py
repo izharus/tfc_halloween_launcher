@@ -21,7 +21,7 @@ class MinecraftLauncherConfigNotSet(RuntimeError):
         return "Не установлен конфиг лаунчера."
 
 
-class FileDownloadError (Exception):
+class FileDownloadError(Exception):
     """Raises in any error occurs deu downloading files."""
 
     def __init__(self, message="Failed to download a file.") -> None:
@@ -31,7 +31,7 @@ class FileDownloadError (Exception):
         return "Ошибка во время загрузки файла."
 
 
-class ConfigDownloadError(FileDownloadError ):
+class ConfigDownloadError(FileDownloadError):
     """
     Raises if any error occurs due downloading a config file.
     """
@@ -43,6 +43,20 @@ class ConfigDownloadError(FileDownloadError ):
 
     def __str__(self):
         return "Ошибка во время загрузки файла конфигурации."
+
+
+class FileHashMismatchError(FileDownloadError):
+    """
+    Raised if the hash of a downloaded file does not match the expected hash.
+    """
+
+    def __init__(
+        self, message="File hash does not match the expected hash."
+    ) -> None:
+        super().__init__(message)
+
+    def __str__(self):
+        return "Хэш загруженного файла не соответствует ожидаемому значению."
 
 
 class ConfigProcessingError(Exception):

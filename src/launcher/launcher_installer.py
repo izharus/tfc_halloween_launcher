@@ -48,11 +48,11 @@ from .utility.custom_exceptions import (
     CalculateHashFailed,
     ConfigDownloadError,
     ConfigProcessingError,
+    FileDownloadError,
     FilesSaveError,
-    FileDownloadError ,
     MinecraftLauncherConfigNotSet,
 )
-from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
+from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import AuthData, FileInfo
 
 MAX_WORKERS = (os.cpu_count() or 4) * 4
@@ -175,24 +175,15 @@ class ModsInstaller(QThread):
             file_name = file_info.file_name
             dist_file_path = file_info.dist_file_path
             file_path = os.path.join(self.minecraft_directory, dist_file_path)
-            if callback:
-                callback["setStatus"](f"Checking file hash: {file_name}...")
-            if os.path.exists(file_path):
-                file_hash = calculate_hash(file_path)
 
-                if file_hash == file_info.hash:
-                    # log.info(f"File hash correct: {file_name}")
-                    return None
-                log.info(f"File hash incorrect: {file_name}")
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
 
             self._file_downloader.download_file(
                 file_info.yan_obj_storage,
                 file_path,
-            )
-            log.info(
-                "File was downloaded from object storage: " f"{file_name}"
+                filehash=file_info.hash,
+                hash_algorithm="sha256",
             )
             return None
 
@@ -209,7 +200,7 @@ class ModsInstaller(QThread):
                 except CalculateHashFailed as error:
                     log.error(f"Failed to calculate hash for: {error}.")
                     return False
-                except (FileDownloadError , FilesSaveError) as error:
+                except (FileDownloadError, FilesSaveError) as error:
                     log.error(
                         "Failed to download file from object storage: "
                         f"{error}"
