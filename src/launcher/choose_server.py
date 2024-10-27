@@ -1,7 +1,7 @@
 """Implementation of launcher choose server logic."""
 
-from typing import List
 from functools import partial
+from typing import List
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QLayout
@@ -56,7 +56,11 @@ class ChoseServer(QObject, BaseWidget):
                 partial(self.launch_game.emit, button.objectName())
             )
             button.clicked.connect(
-                partial(self.switch_to_server_page.emit, button.objectName(), button)
+                partial(
+                    self.switch_to_server_page.emit,
+                    button.objectName(),
+                    button,
+                )
             )
 
     def update_server_buttons(self, layout: QLayout) -> List[ServerWidget]:
@@ -76,11 +80,11 @@ class ChoseServer(QObject, BaseWidget):
         buttons = []
         for name, data in self._config_manager.map_json.modpacks.items():
             button = ServerWidget(
+                config_name=name,
                 title=data.server_config.display_name,
                 subtitle=f"Minecraft {data.server_config.minecraft_version}",
                 parent=self._ui.scrollAreaWidgetContents,
             )
-            button.setObjectName(name)
             buttons.append(button)
             self._ui.horizontalLayout_2.addWidget(button)
 

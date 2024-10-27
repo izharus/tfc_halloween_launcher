@@ -373,6 +373,7 @@ class ServerWidget(QPushButton):
     # pylint: disable=R0913, R0917
     def __init__(
         self,
+        config_name: str,
         title: str,
         subtitle: str,
         image: Union[str, bytes] = ":/data/background/server-icon.png",
@@ -380,6 +381,7 @@ class ServerWidget(QPushButton):
     ):
         super().__init__(parent)
 
+        self.setObjectName(config_name)
         # Set widget size
         self.setFixedSize(self.WIDGET_W_SIZE, self.WIDGET_H_SIZE)
         self.setStyleSheet(ServerWidgetCSS.main_widget)
