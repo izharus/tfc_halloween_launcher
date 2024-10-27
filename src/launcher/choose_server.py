@@ -3,12 +3,13 @@
 from functools import partial
 from typing import List
 
+from loguru import logger as log
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QLayout
 
 from .design.design import Ui_MainWindow
 from .design.utility import BaseWidget, ServerWidget, clear_layout
-from .launcher_configs import ServerConfigManager
+from .launcher_configs import LauncherConfig, ServerConfigManager
 
 
 class ChoseServer(QObject, BaseWidget):
@@ -79,11 +80,20 @@ class ChoseServer(QObject, BaseWidget):
         clear_layout(layout)
         buttons = []
         for name, data in self._config_manager.map_json.modpacks.items():
+
+            config = self._config_manager.get_config(name)
+            if not config:
+                log.critical(f"Config name no found: '{name}'")
+                continue
+            icon_image = LauncherConfig.get_icon_file(
+                config.server_config.server_icon.hash
+            )
             button = ServerWidget(
                 config_name=name,
                 title=data.server_config.display_name,
                 subtitle=f"Minecraft {data.server_config.minecraft_version}",
                 parent=self._ui.scrollAreaWidgetContents,
+                image=icon_image,
             )
             buttons.append(button)
             self._ui.horizontalLayout_2.addWidget(button)

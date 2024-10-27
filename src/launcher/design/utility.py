@@ -370,18 +370,21 @@ class ServerWidget(QPushButton):
     ICON_H_SIZE: Final = 240
     ICON_W_SIZE: Final = 150
 
+    DEFAULT_IMAGE_PATH: Final = ":/data/background/server-icon.png"
+
     # pylint: disable=R0913, R0917
     def __init__(
         self,
         config_name: str,
         title: str,
         subtitle: str,
-        image: Union[str, bytes] = ":/data/background/server-icon.png",
+        image: Optional[Union[str, bytes, PathLike]] = None,
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
-
+        self._config_name = config_name
         self.setObjectName(config_name)
+
         # Set widget size
         self.setFixedSize(self.WIDGET_W_SIZE, self.WIDGET_H_SIZE)
         self.setStyleSheet(ServerWidgetCSS.main_widget)
@@ -393,7 +396,10 @@ class ServerWidget(QPushButton):
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignCenter)
 
-        self.set_image(image)
+        if image:
+            self.set_image(image)
+        else:
+            self.set_image(self.DEFAULT_IMAGE_PATH)
 
         layout.addWidget(self.image_label)
 
@@ -426,6 +432,11 @@ class ServerWidget(QPushButton):
         layout.addWidget(self.push_button)
         layout.addStretch()
 
+    @property
+    def config_name(self) -> str:
+        """Return config name from ServerConfigManager."""
+        return self._config_name
+
     def set_image(self, image: Union[bytes, str, PathLike]) -> bool:
         """
         Sets the image for the widget.
@@ -451,6 +462,7 @@ class ServerWidget(QPushButton):
             if not pixmap.load(image_path):
                 return False  # Return False if loading from path fails
         # Assuming you have a QLabel or similar to set the pixmap
+        # self.image_label.pixmap
         self.image_label.setPixmap(
             pixmap.scaled(
                 self.ICON_W_SIZE,

@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import src.minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 import pytest
+import src.minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import (
     LauncherConfig,
@@ -16,12 +16,32 @@ from src.launcher.launcher_configs import (
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
-    FileDownloadError ,
+    FileDownloadError,
 )
 from src.launcher.utility.pydantic_models import MapJson
 
+
 class TestLauncherConfig:
     """Tests for LauncherConfig."""
+
+    def test__create_launcher_dirs(
+        self,
+        tmp_path: Path,
+        mocker: MockerFixture,
+    ):
+        """Test if launcher create initial directories correctly."""
+        with mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=str(tmp_path),
+        ):
+            launcher_config = LauncherConfig()
+
+        assert launcher_config.LAUNCHER_ROOT_DIR.exists()
+        assert launcher_config.LAUNCHER_DATA_DIR.exists()
+        assert launcher_config.MINECRAFT_SKIN_DIR.exists()
+        assert launcher_config.MINECRAFT_CAPE_DIR.exists()
+        assert launcher_config.LAUNCHER_SERVER_ICONS_DIR.exists()
 
     def test__create_general_dirs(
         self,
@@ -83,6 +103,50 @@ class TestLauncherConfig:
             assert symlink.is_symlink()
             assert symlink.resolve() == expected_target
 
+    def test_get_icon_icon_exists(
+        self,
+        tmp_path: Path,
+        mocker: MockerFixture,
+    ):
+        """Test get_icon_file returns correct icon path."""
+        with mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=str(tmp_path),
+        ):
+            launcher_config = LauncherConfig()
+            filehash = "hash"
+            expected_file_content = b"Test_bin_data."
+            tmp_file = launcher_config.LAUNCHER_SERVER_ICONS_DIR / filehash
+            tmp_file.write_bytes(expected_file_content)
+            launcher_config = LauncherConfig()
+
+            icon_path = launcher_config.get_icon_file(filehash)
+
+        assert (
+            icon_path == launcher_config.LAUNCHER_SERVER_ICONS_DIR / filehash
+        )
+        assert icon_path.read_bytes() == expected_file_content
+
+    def test_get_icon_icon_not_exists(
+        self,
+        tmp_path: Path,
+        mocker: MockerFixture,
+    ):
+        """Test get_icon_file returns None if icon not exists."""
+        with mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=str(tmp_path),
+        ):
+            launcher_config = LauncherConfig()
+            filehash = "non_exists"
+            launcher_config = LauncherConfig()
+
+            icon_path = launcher_config.get_icon_file(filehash)
+
+        assert icon_path is None
+
     def test_init_server_directory_check_symbolic_links_create_after_moving(
         self, tmp_path: Path
     ):
@@ -142,7 +206,7 @@ class TestServerConfigManager:
         with mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
-            side_effect=FileDownloadError ,
+            side_effect=FileDownloadError,
         ):
             with pytest.raises(ConfigDownloadError):
                 ServerConfigManager(
