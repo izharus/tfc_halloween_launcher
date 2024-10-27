@@ -49,7 +49,7 @@ from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     FilesSaveError,
-    FiletDownloadError,
+    FileDownloadError ,
     MinecraftLauncherConfigNotSet,
 )
 from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
@@ -209,7 +209,7 @@ class ModsInstaller(QThread):
                 except CalculateHashFailed as error:
                     log.error(f"Failed to calculate hash for: {error}.")
                     return False
-                except (FiletDownloadError, FilesSaveError) as error:
+                except (FileDownloadError , FilesSaveError) as error:
                     log.error(
                         "Failed to download file from object storage: "
                         f"{error}"

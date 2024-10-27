@@ -16,7 +16,7 @@ from src.launcher.launcher_configs import (
 from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
-    FiletDownloadError,
+    FileDownloadError ,
 )
 from src.launcher.utility.pydantic_models import MapJson
 
@@ -142,7 +142,7 @@ class TestServerConfigManager:
         with mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
-            side_effect=FiletDownloadError,
+            side_effect=FileDownloadError ,
         ):
             with pytest.raises(ConfigDownloadError):
                 ServerConfigManager(

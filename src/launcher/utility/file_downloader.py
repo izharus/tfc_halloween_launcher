@@ -14,7 +14,7 @@ from .custom_exceptions import (
     CalculateHashFailed,
     DownloadServerHandshakeError,
     FilesSaveError,
-    FiletDownloadError,
+    FileDownloadError ,
 )
 
 
@@ -77,7 +77,7 @@ class FileDownloaderProtocol(Protocol):
         Returns:
             bytes: The content of the downloaded file.
         Raises:
-            FiletDownloadError: If there's any error occurs
+            FileDownloadError : If there's any error occurs
                 during file download.
             FilesSaveError: If there's an error while saving the file.
         """
@@ -97,7 +97,7 @@ class FileDownloaderProtocol(Protocol):
             bytes: The content of the downloaded file.
 
         Raises:
-            FiletDownloadError: If there's any error occurs
+            FileDownloadError : If there's any error occurs
                 during file download.
         """
 
@@ -155,7 +155,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
             bytes: The content of the downloaded file.
 
         Raises:
-            FiletDownloadError: If there's any error occurs
+            FileDownloadError : If there's any error occurs
                 during file download.
         """
         try:
@@ -167,7 +167,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
         # boto3.exceptions.Boto3Error do not catches
         # exceptions if ethernet connection was lost
         except Exception as e:
-            raise FiletDownloadError(
+            raise FileDownloadError (
                 f"Failed to download file from S3: {e}"
             ) from e
 
@@ -186,7 +186,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
         Returns:
             None.
         Raises:
-            FiletDownloadError: If there's any error occurs
+            FileDownloadError : If there's any error occurs
                 during file download.
             FilesSaveError: If there's an error while saving the file.
         """

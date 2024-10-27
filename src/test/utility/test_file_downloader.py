@@ -10,7 +10,7 @@ from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 from src.launcher.launcher_configs import LauncherConfig
 from src.launcher.utility.custom_exceptions import (
     FilesSaveError,
-    FiletDownloadError,
+    FileDownloadError ,
 )
 from src.launcher.utility.file_downloader import FileYOSDownloader, save_file
 
@@ -71,7 +71,7 @@ class TestFileYOSDownloader:
             "Connection error"
         )
         self.file_downloader._boto3_client = boto3_client
-        with pytest.raises(FiletDownloadError):
+        with pytest.raises(FileDownloadError ):
             self.file_downloader.download_file(
                 object_key,
                 "mock_path",

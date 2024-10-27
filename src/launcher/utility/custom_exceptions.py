@@ -21,7 +21,7 @@ class MinecraftLauncherConfigNotSet(RuntimeError):
         return "Не установлен конфиг лаунчера."
 
 
-class FiletDownloadError(Exception):
+class FileDownloadError (Exception):
     """Raises in any error occurs deu downloading files."""
 
     def __init__(self, message="Failed to download a file.") -> None:
@@ -31,7 +31,7 @@ class FiletDownloadError(Exception):
         return "Ошибка во время загрузки файла."
 
 
-class ConfigDownloadError(FiletDownloadError):
+class ConfigDownloadError(FileDownloadError ):
     """
     Raises if any error occurs due downloading a config file.
     """

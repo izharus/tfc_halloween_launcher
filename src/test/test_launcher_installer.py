@@ -12,7 +12,7 @@ from src.launcher.launcher_installer import (
     ConfigInstallerThread,
     MinecraftExecutorThread,
 )
-from src.launcher.utility.custom_exceptions import FiletDownloadError
+from src.launcher.utility.custom_exceptions import FileDownloadError 
 from src.launcher.utility.pydantic_models import AuthData
 
 
@@ -75,12 +75,12 @@ class TestConfigInstallerThread:
 
     def test_installation_with_download_error(self, qtbot):
         """
-        Test run method when ServerConfigManager raises FiletDownloadError.
+        Test run method when ServerConfigManager raises FileDownloadError .
         """
 
         mock_file_downloader = MagicMock()
         mock_file_downloader.download_bytes = MagicMock(
-            side_effect=FiletDownloadError
+            side_effect=FileDownloadError 
         )
         installer = ConfigInstallerThread(
             mock_file_downloader, "mock_object_key"

@@ -21,7 +21,7 @@ from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
-    FiletDownloadError,
+    FileDownloadError ,
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
@@ -205,7 +205,7 @@ class ServerConfigManager:
             self._map_json = MapJson.model_validate(
                 json.loads(bytes_file_data)
             )
-        except FiletDownloadError as download_error:
+        except FileDownloadError  as download_error:
             log.error(f"Failed to download file for key: {self._object_key}")
             raise ConfigDownloadError from download_error
         except json.JSONDecodeError as json_error:
