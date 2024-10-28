@@ -11,6 +11,7 @@ from PySide6.QtCore import Slot
 from .design.design import Ui_MainWindow
 from .design.utility import ServerWidget
 from .launcher_configs import ServerConfigManager
+from .utility.custom_exceptions import ModpackNotfound
 
 
 class ServerWidgetPage:
@@ -64,36 +65,33 @@ class ServerWidgetPage:
     @Slot(str, object)
     def switch_to_server_page(
         self,
-        config_name: str,
+        modpack_name: str,
         widget: ServerWidget,
     ):
         """
         Switches to the specified server settings page.
 
         Args:
-            config_name (str): The name of the server configuration
+            modpack_name (str): The name of the modpack.
                 to switch to.
             widget (ServerWidget): The ServerWidget instance
                 to be displayed.
-
-        If the specified server widget is already active, this method does
-        nothing. Otherwise, it retrieves the server configuration, updates
-        the UI, and adds the new server widget to the layout.
         """
         if self._server_widget == widget:
             return
-        server_config = self._config.get_config(config_name)
+        try:
+            server_config = self._config.get_modpack(modpack_name)
+        except ModpackNotfound:
+            log.critical(
+                f"Failed to switch page to the modpack: {modpack_name}"
+            )
+            return
 
-        if server_config:
-            self._ui.stackedWidget.setCurrentWidget(
-                self._ui.server_settings_page
-            )
-            self._ui.label_server_description.setWordWrap(True)
-            self._ui.label_server_description.setText(
-                server_config.server_config.description
-            )
-            self._last_layout_pos = self._ui.horizontalLayout_2.indexOf(widget)
-            self._server_widget = widget
-            self._ui.gridLayout.addWidget(widget)
-        else:
-            log.error("server_config is None")
+        self._ui.stackedWidget.setCurrentWidget(self._ui.server_settings_page)
+        self._ui.label_server_description.setWordWrap(True)
+        self._ui.label_server_description.setText(
+            server_config.server_config.description
+        )
+        self._last_layout_pos = self._ui.horizontalLayout_2.indexOf(widget)
+        self._server_widget = widget
+        self._ui.gridLayout.addWidget(widget)

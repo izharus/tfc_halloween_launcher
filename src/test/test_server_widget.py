@@ -1,4 +1,5 @@
 """Tests for src.launcher.server_widget.py"""
+
 # pylint: disable=R0903,W0621,W0212,W0613,E0401,R0904
 
 from unittest.mock import MagicMock
@@ -46,7 +47,7 @@ class TestServerWidgetPage:
         the widget and description.
         """
         # Arrange
-        server_config = auth_window.config_manager.get_config(CONFIG_NAME_1)
+        server_config = auth_window.config_manager.get_modpack(CONFIG_NAME_1)
         server_widget = auth_window._choose_server._buttons[0]
         expected_pos = auth_window._ui_instance.horizontalLayout_2.indexOf(
             server_widget
@@ -80,7 +81,7 @@ class TestServerWidgetPage:
         auth_window._server_page.switch_to_server_page(
             CONFIG_NAME_1, server_widget
         )
-        auth_window._server_page._config.get_config = MagicMock()
+        auth_window._server_page._config.get_modpack = MagicMock()
         # Act
 
         auth_window._server_page.switch_to_server_page(
@@ -92,7 +93,7 @@ class TestServerWidgetPage:
             auth_window._ui_instance.stackedWidget.currentWidget()
             == auth_window._ui_instance.server_settings_page
         )
-        auth_window._server_page._config.get_config.assert_not_called()
+        auth_window._server_page._config.get_modpack.assert_not_called()
 
     def test_back_arrow_functionality(self, auth_window: Window, qtbot: QtBot):
         """

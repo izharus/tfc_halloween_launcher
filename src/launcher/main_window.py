@@ -49,6 +49,7 @@ from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     DownloadServerHandshakeError,
+    ModpackNotfound,
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
@@ -287,7 +288,7 @@ class Window(QtWidgets.QMainWindow):
             # event.accept()
 
     @Slot(str)
-    def _install_minecraft_multi_thread(self, config_name: str) -> None:
+    def _install_minecraft_multi_thread(self, modpack_name: str) -> None:
         """
         Initiates the multi-threaded installation of Minecraft.
 
@@ -319,9 +320,9 @@ class Window(QtWidgets.QMainWindow):
             )
             self._choose_server.enable_ui()
             return
-        modpack_model = self.config_manager.get_config(config_name)
-        if not modpack_model:
-
+        try:
+            modpack_model = self.config_manager.get_modpack(modpack_name)
+        except ModpackNotfound:
             self.msg_box.show_message(
                 title="Получены обновления",
                 msg="Попробуйте запустить игру снова.",
@@ -331,7 +332,7 @@ class Window(QtWidgets.QMainWindow):
             return
 
         self._server_config = ServerConfig(
-            config_name,
+            modpack_name,
             modpack_model,
             self._launcher_config,
             self._settings,

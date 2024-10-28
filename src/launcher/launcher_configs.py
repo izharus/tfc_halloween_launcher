@@ -22,6 +22,7 @@ from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     FileDownloadError,
+    ModpackNotfound,
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
@@ -107,7 +108,6 @@ class LauncherConfig:
             Optional[Path]: Path where icon should be saved.
         """
         return cls.LAUNCHER_SERVER_ICONS_DIR / filehash
-
 
     @classmethod
     def get_icon_file(cls, filehash: str) -> Optional[Path]:
@@ -262,15 +262,23 @@ class ServerConfigManager:
         """
         return self._map_json
 
-    def get_config(self, config_name: str) -> Optional["Modpack"]:
+    def get_modpack(self, modpack_name: str) -> "Modpack":
         """
         Retrieves a specific modpack configuration by its name.
 
         Returns:
-            Optional[Modpack]: The modpack configuration if found,
+            Modpack: The modpack configuration if found,
                 otherwise `None`.
+
+        Raises:
+            ModpackNotfound: If modpack was not found with the provided
+                modpack name.
         """
-        return self._map_json.modpacks.get(config_name, None)
+        try:
+            return self._map_json.modpacks[modpack_name]
+        except KeyError as error:
+            log.error(f"Modpack was not found: {modpack_name}")
+            raise ModpackNotfound from error
 
 
 class ServerConfig:

@@ -1,6 +1,12 @@
 """A modules with custom exception classes"""
 
 
+class ModpackNotfound(Exception):
+    """
+    Raised if the modpack was not found with the provided config name.
+    """
+
+
 class DownloadServerHandshakeError(Exception):
     """Raised if failed to connect to the file store server."""
 

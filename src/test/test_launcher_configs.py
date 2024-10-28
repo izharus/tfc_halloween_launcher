@@ -17,8 +17,9 @@ from src.launcher.utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     FileDownloadError,
+    ModpackNotfound,
 )
-from src.launcher.utility.pydantic_models import MapJson
+from src.launcher.utility.pydantic_models import MapJson, Modpack
 
 
 class TestLauncherConfig:
@@ -267,6 +268,58 @@ class TestServerConfigManager:
                     mock_file_downloader,
                     object_key,
                 )
+
+    def test_get_modpack_success(
+        self,
+        mocker,
+        mock_config_data,
+    ):
+        """Test get_modpack returns modpack object."""
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        mock_download_bytes = MagicMock(
+            return_value=json.dumps(mock_config_data),
+        )
+        mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            mock_download_bytes,
+        )
+        config_manager = ServerConfigManager(
+            mock_file_downloader,
+            object_key,
+        )
+
+        modpack = config_manager.get_modpack("TestModpack1")
+
+        assert isinstance(modpack, Modpack)
+        assert modpack.server_config.display_name == "display_name_1"
+
+    def test_get_modpack_not_found(
+        self,
+        mocker,
+        mock_config_data,
+    ):
+        """
+        Test get_modpack raises an exception if the modpack not found.
+        """
+        object_key = "mock_object_key"
+        mock_file_downloader = MagicMock()
+        mock_download_bytes = MagicMock(
+            return_value=json.dumps(mock_config_data),
+        )
+        mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            mock_download_bytes,
+        )
+        config_manager = ServerConfigManager(
+            mock_file_downloader,
+            object_key,
+        )
+
+        with pytest.raises(ModpackNotfound):
+            config_manager.get_modpack("non-exists")
 
 
 class TestServerConfig:
