@@ -46,6 +46,7 @@ from .login_widget import LoginWidget
 from .mine_query_thread import MinecraftQueryThread
 from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
+from .utility._helper import get_version
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -54,7 +55,7 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
-from .utility._helper import is_windows_8_or_older
+
 
 def hide_console() -> None:
     """
@@ -67,7 +68,10 @@ def hide_console() -> None:
     win32gui.ShowWindow(window, win32con.SW_HIDE)
 
 
-# pylint: disable = R0903
+log.debug(f"Current platform: {get_version()}")
+
+
+# pylint: disable = R0903,R0902
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
 
