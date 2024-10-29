@@ -5,7 +5,16 @@ import webbrowser
 from os import PathLike
 from typing import Final, List, Optional, Tuple, Union
 
-from qtpy.QtCore import QBuffer, QByteArray, QPoint, QRect, Qt, QUrl, Slot
+from qtpy.QtCore import (
+    QBuffer,
+    QByteArray,
+    QObject,
+    QPoint,
+    QRect,
+    Qt,
+    QUrl,
+    Slot,
+)
 from qtpy.QtGui import QDesktopServices, QFont, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
@@ -230,7 +239,7 @@ def clear_layout(layout: QLayout) -> None:
                 clear_layout(item.layout())
 
 
-class BaseWidget:
+class BaseWidget(QObject):
     """
     A base class for creating a widget with blur effect and an info widget.
 
@@ -239,6 +248,7 @@ class BaseWidget:
     """
 
     def __init__(self, widget: QWidget, parent_widget: QWidget):
+        super().__init__()
         self._widget = widget
         self._parent_widget = parent_widget
         self._blur_effect: QGraphicsBlurEffect

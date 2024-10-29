@@ -4,7 +4,7 @@ import time
 from typing import Optional
 
 from loguru import logger as log
-from qtpy.QtCore import QObject, QThread, QTimer, Signal, Slot
+from qtpy.QtCore import QThread, QTimer, Signal, Slot
 from qtpy.QtWidgets import QPushButton
 
 from .design.design import Ui_MainWindow
@@ -114,7 +114,7 @@ class AuthenticationWorker(QThread):
         return self._auth_data
 
 
-class LoginWidget(QObject, BaseWidget):
+class LoginWidget(BaseWidget):
     """
     A widget for user login interface.
 
