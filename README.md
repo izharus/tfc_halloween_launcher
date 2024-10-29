@@ -77,8 +77,7 @@ pyside6_uic design.ui -o design.py
 ### Packing to exe
 Activate target environment (Python 3.12, Python 3.8 32 bit or Python 3.8 64 bit) and run pyinstaller.
 ```bash
-.\.venv_3_12x64\scripts\activate
-pyinstaller main.spec
+python create_binary.py
 ```
 
 ### Code Style and Linting

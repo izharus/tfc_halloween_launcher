@@ -1,6 +1,37 @@
 # -*- mode: python ; coding: utf-8 -*-
+import platform
 import os
 import sys
+
+
+def get_version():
+    """
+    Determines the version and architecture of the current Python environment.
+
+    Returns:
+        str: A string representing the operating system and architecture.
+                Returns 'win7x64' or 'win7x86' if Python version is 3.8
+                (indicating compatibility with Windows 7), and 'win10x64'
+                or 'win10x86'  otherwise. 'x64' indicates 64-bit architecture,
+                and 'x86' indicates 32-bit.
+    """
+    # Python version
+    res = ""
+
+    if platform.python_version().startswith("3.8"):
+        res = "win7"
+    else:
+        res = "win10"
+
+    # 32 or 64 bit
+    if sys.maxsize > 2**32:
+        res+="x64"
+    else:
+        res+="x86"
+
+    return res
+
+
 root_path = os.getcwd()
 data_files = []
 data_files.append(('icon.ico', "root_dir"))
@@ -11,7 +42,7 @@ data_files.append(("src\\minecraft_launcher_lib\\minecraft_launcher_lib", "src\\
 icon_path = 'icon.ico'
 
 main_module_name = 'main.py'
-exe_file_name = "TFC_Halloween"
+exe_file_name = "AuleCraft" + get_version()
 
 block_cipher = None
 
