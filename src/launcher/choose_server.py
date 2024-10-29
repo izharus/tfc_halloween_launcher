@@ -4,8 +4,8 @@ from functools import partial
 from typing import List
 
 from loguru import logger as log
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QLayout
+from qtpy.QtCore import QObject, Signal
+from qtpy.QtWidgets import QLayout
 
 from .design.design import Ui_MainWindow
 from .design.utility import BaseWidget, ServerWidget, clear_layout

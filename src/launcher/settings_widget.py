@@ -7,7 +7,7 @@ from typing import Callable, Optional
 
 import psutil
 from loguru import logger as log
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from qtpy.QtCore import QObject, QThread, Signal, Slot
 from qtpy.QtWidgets import QFileDialog
 
 from .design.design import Ui_MainWindow

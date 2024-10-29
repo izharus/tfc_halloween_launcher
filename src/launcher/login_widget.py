@@ -4,7 +4,7 @@ import time
 from typing import Optional
 
 from loguru import logger as log
-from PySide6.QtCore import QObject, QThread, QTimer, Signal, Slot
+from qtpy.QtCore import QObject, QThread, QTimer, Signal, Slot
 from qtpy.QtWidgets import QPushButton
 
 from .design.design import Ui_MainWindow
