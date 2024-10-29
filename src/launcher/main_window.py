@@ -85,9 +85,7 @@ class Window(QtWidgets.QMainWindow):
         # For mouse events
         self._mouse_click_pos: Optional[QPoint] = None
 
-        logging_dir = self._launcher_config.LOGGING_DIR
-        logging_dir /= "launcher_{time:YYYY-MM}.log"
-        init_loguru_logger(logging_dir)
+        init_loguru_logger(self._launcher_config.LOGGING_DIR)
 
         log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
