@@ -42,6 +42,7 @@ class ServerConfig(BaseModel):
         minecraft_profile (str): The name of the Minecraft profile.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
+        description (str): Server description in launcher.
     """
 
     display_name: str
@@ -50,6 +51,8 @@ class ServerConfig(BaseModel):
     minecraft_profile: str
     minecraft_server_ip: str
     minecraft_server_port: str
+    description: str
+    server_icon: FileInfo
 
 
 class Modpack(BaseModel):

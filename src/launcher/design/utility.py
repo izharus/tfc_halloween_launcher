@@ -1,9 +1,11 @@
 """Utility module for creating and managing UI elements."""
 
+import os
 import webbrowser
-from typing import List, Optional, Tuple, Union
+from os import PathLike
+from typing import Final, List, Optional, Tuple, Union
 
-from qtpy.QtCore import QPoint, QRect, Qt, QUrl, Slot
+from qtpy.QtCore import QBuffer, QByteArray, QPoint, QRect, Qt, QUrl, Slot
 from qtpy.QtGui import QDesktopServices, QFont, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
@@ -362,20 +364,29 @@ class ServerWidget(QPushButton):
     Template widget for server data: Image, server information, play button.
     """
 
+    WIDGET_H_SIZE: Final = 350
+    WIDGET_W_SIZE: Final = 200
+
+    ICON_H_SIZE: Final = 240
+    ICON_W_SIZE: Final = 150
+
+    DEFAULT_IMAGE_PATH: Final = ":/data/background/server-icon.png"
+
     # pylint: disable=R0913, R0917
     def __init__(
         self,
+        config_name: str,
         title: str,
         subtitle: str,
-        cur_online: int = 0,
-        max_online: int = 0,
-        image_path: str = ":/data/background/server-icon.png",
+        image: Optional[Union[str, bytes, PathLike]] = None,
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
+        self._config_name = config_name
+        self.setObjectName(config_name)
 
         # Set widget size
-        self.setFixedSize(200, 300)
+        self.setFixedSize(self.WIDGET_W_SIZE, self.WIDGET_H_SIZE)
         self.setStyleSheet(ServerWidgetCSS.main_widget)
 
         # Main layout of the widget
@@ -383,8 +394,13 @@ class ServerWidget(QPushButton):
 
         # Add an image
         self.image_label = QLabel(self)
-        pixmap = QPixmap(image_path)
-        self.image_label.setPixmap(pixmap.scaled(180, 180, Qt.KeepAspectRatio))
+        self.image_label.setAlignment(Qt.AlignCenter)
+
+        if image:
+            self.set_image(image)
+        else:
+            self.set_image(self.DEFAULT_IMAGE_PATH)
+
         layout.addWidget(self.image_label)
 
         # Set server title
@@ -404,20 +420,7 @@ class ServerWidget(QPushButton):
         self._progress_bar = QProgressBar(self)
 
         self._progress_bar.setMinimum(0)
-        if cur_online and max_online:
-            self._progress_bar.setMaximum(max_online)
-            self._progress_bar.setValue(cur_online)
-            self._progress_bar.setFormat(f"{cur_online} В ИГРЕ")
-            self._progress_bar.setStyleSheet(
-                ServerWidgetCSS.progress_bar_online
-            )
-        else:
-            self._progress_bar.setMaximum(1)
-            self._progress_bar.setValue(1)
-            self._progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
-            self._progress_bar.setStyleSheet(
-                ServerWidgetCSS.progress_bar_offline
-            )
+        self.set_loading_label()
 
         # Setting alignment to centre
         self._progress_bar.setAlignment(Qt.AlignCenter)
@@ -428,6 +431,83 @@ class ServerWidget(QPushButton):
         self.push_button.setStyleSheet(ServerWidgetCSS.play_button)
         layout.addWidget(self.push_button)
         layout.addStretch()
+
+    @property
+    def config_name(self) -> str:
+        """Return config name from ServerConfigManager."""
+        return self._config_name
+
+    def set_image(self, image: Union[bytes, str, PathLike]) -> bool:
+        """
+        Sets the image for the widget.
+
+        Args:
+            image (Union[bytes, str, PathLike]): The image data as bytes,
+                a file path as a string, or a PathLike object.
+
+        Returns:
+            bool: True if the image is loaded successfully, False otherwise.
+        """
+        pixmap = QPixmap()
+
+        if isinstance(image, bytes):
+            byte_array = QByteArray(image)
+            buffer = QBuffer(byte_array)
+            buffer.open(QBuffer.ReadOnly)
+            if not pixmap.loadFromData(buffer.data()):
+                return False  # Return False if loading from bytes fails
+        else:
+            # Convert PathLike to string
+            image_path = os.fspath(image)
+            if not pixmap.load(image_path):
+                return False  # Return False if loading from path fails
+        # Assuming you have a QLabel or similar to set the pixmap
+        # self.image_label.pixmap
+        self.image_label.setPixmap(
+            pixmap.scaled(
+                self.ICON_W_SIZE,
+                self.ICON_H_SIZE,
+            )
+        )
+
+        return True  # Return True if the image is successfully set
+
+    def set_loading_label(self):
+        """
+        Sets the progress bar to a loading state with an indefinite
+        progress style and a 'ЗАГРУЗКА...' label.
+        """
+        self._progress_bar.setMaximum(0)  # Indeterminate state
+        # For styles that support undetermined
+        self._progress_bar.setValue(-1)
+        self._progress_bar.setStyleSheet(ServerWidgetCSS.progress_bar_loading)
+
+    def set_offline_label(self):
+        """
+        Sets the progress bar to indicate the server is offline.
+
+        The bar is fully filled with a red color and displays the text
+        'СЕРВЕР ОФЛАЙН'. Uses a specific offline style defined in
+        `ServerWidgetCSS`.
+        """
+        self._progress_bar.setMaximum(1)
+        self._progress_bar.setValue(1)
+        self._progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
+        self._progress_bar.setStyleSheet(ServerWidgetCSS.progress_bar_offline)
+
+    def set_online_label(self, cur_online: int, max_online: int):
+        """
+        Sets the progress bar to indicate the server's online status,
+        showing the current and maximum online players.
+
+        Args:
+            cur_online (int): Current number of players online.
+            max_online (int): Maximum number of players allowed online.
+        """
+        self._progress_bar.setMaximum(max_online)
+        self._progress_bar.setValue(cur_online)
+        self._progress_bar.setFormat(f"{cur_online} В ИГРЕ")
+        self._progress_bar.setStyleSheet(ServerWidgetCSS.progress_bar_online)
 
 
 class InstallProgressBar(QProgressBar):

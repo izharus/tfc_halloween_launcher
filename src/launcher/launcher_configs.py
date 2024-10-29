@@ -21,7 +21,8 @@ from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
-    FiletDownloadError,
+    FileDownloadError,
+    ModpackNotfound,
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
@@ -69,8 +70,10 @@ class LauncherConfig:
         / LAUNCHER_NAME
     )
     LOGGING_DIR = LAUNCHER_ROOT_DIR / "logs"
-    MINECRAFT_SKIN_DIR = LAUNCHER_ROOT_DIR / "skins"
-    MINECRAFT_CAPE_DIR = LAUNCHER_ROOT_DIR / "capes"
+    LAUNCHER_DATA_DIR = LAUNCHER_ROOT_DIR / "data"
+    MINECRAFT_SKIN_DIR = LAUNCHER_DATA_DIR / "skins"
+    MINECRAFT_CAPE_DIR = LAUNCHER_DATA_DIR / "capes"
+    LAUNCHER_SERVER_ICONS_DIR = LAUNCHER_DATA_DIR / "icons"
 
     # Directory with "assets", "runtime", "libraries", "versions"
 
@@ -93,6 +96,35 @@ class LauncherConfig:
         self._create_launcher_dirs()
         self.set_download_dir(self.LAUNCHER_ROOT_DIR)
 
+    @classmethod
+    def get_icon_path(cls, filehash: str) -> Path:
+        """
+        Generate the icon path.
+
+        Args:
+            filehash (str): Hash of the icon file.
+
+        Returns:
+            Optional[Path]: Path where icon should be saved.
+        """
+        return cls.LAUNCHER_SERVER_ICONS_DIR / filehash
+
+    @classmethod
+    def get_icon_file(cls, filehash: str) -> Optional[Path]:
+        """
+        Get icon file path by its filehash.
+
+        Args:
+            filehash (str): Hash of the icon file.
+
+        Returns:
+            Optional[Path]: Path to the icon or None if icon not exists.
+        """
+        path = cls.get_icon_path(filehash)
+        if path.exists():
+            return path
+        return None
+
     def set_download_dir(self, download_path: Path) -> None:
         """Set directory for downloads."""
         self._downloads_dir = download_path / self._DOWNLOADS_DIR
@@ -110,6 +142,7 @@ class LauncherConfig:
         self.LOGGING_DIR.mkdir(parents=True, exist_ok=True)
         self.MINECRAFT_SKIN_DIR.mkdir(parents=True, exist_ok=True)
         self.MINECRAFT_CAPE_DIR.mkdir(parents=True, exist_ok=True)
+        self.LAUNCHER_SERVER_ICONS_DIR.mkdir(parents=True, exist_ok=True)
 
     def _create_general_dirs(self) -> None:
         for dirname in self._GENERAL_DIR_NAMES:
@@ -205,7 +238,7 @@ class ServerConfigManager:
             self._map_json = MapJson.model_validate(
                 json.loads(bytes_file_data)
             )
-        except FiletDownloadError as download_error:
+        except FileDownloadError as download_error:
             log.error(f"Failed to download file for key: {self._object_key}")
             raise ConfigDownloadError from download_error
         except json.JSONDecodeError as json_error:
@@ -229,15 +262,23 @@ class ServerConfigManager:
         """
         return self._map_json
 
-    def get_config(self, config_name: str) -> Optional["Modpack"]:
+    def get_modpack(self, modpack_name: str) -> "Modpack":
         """
         Retrieves a specific modpack configuration by its name.
 
         Returns:
-            Optional[Modpack]: The modpack configuration if found,
+            Modpack: The modpack configuration if found,
                 otherwise `None`.
+
+        Raises:
+            ModpackNotfound: If modpack was not found with the provided
+                modpack name.
         """
-        return self._map_json.modpacks.get(config_name, None)
+        try:
+            return self._map_json.modpacks[modpack_name]
+        except KeyError as error:
+            log.error(f"Modpack was not found: {modpack_name}")
+            raise ModpackNotfound from error
 
 
 class ServerConfig:

@@ -1,13 +1,16 @@
 """Implementation of launcher choose server logic."""
 
+from functools import partial
 from typing import List
 
+from loguru import logger as log
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QLayout
 
 from .design.design import Ui_MainWindow
 from .design.utility import BaseWidget, ServerWidget, clear_layout
-from .launcher_configs import ServerConfigManager
+from .launcher_configs import LauncherConfig, ServerConfigManager
+from .utility.custom_exceptions import ModpackNotfound
 
 
 class ChoseServer(QObject, BaseWidget):
@@ -20,6 +23,7 @@ class ChoseServer(QObject, BaseWidget):
     """
 
     launch_game = Signal(str)
+    switch_to_server_page = Signal(str, object)
 
     def __init__(
         self, main_window: Ui_MainWindow, config_manager: ServerConfigManager
@@ -40,18 +44,29 @@ class ChoseServer(QObject, BaseWidget):
 
         self._buttons = self.update_server_buttons(self._ui.horizontalLayout_2)
 
+    @property
+    def server_buttons(self) -> List[ServerWidget]:
+        """Return all ServerWidget instances."""
+        return self._buttons
+
     def _create_signals(self, buttons: List[ServerWidget]) -> None:
         """
-        Connects button clicks to the launch_game signal.
+        Connects signals from the provided list of ServerWidget buttons
+        to their respective slots.
 
         Args:
-            buttons (List[ServerWidget]): A list of ServerWidget buttons
-                to connect signals for.
+            buttons (List[ServerWidget]): A list of ServerWidget instances
+                containing buttons to connect signals for.
         """
         for button in buttons:
             button.push_button.clicked.connect(
-                lambda _, obj_name=button.objectName(): self.launch_game.emit(
-                    obj_name
+                partial(self.launch_game.emit, button.objectName())
+            )
+            button.clicked.connect(
+                partial(
+                    self.switch_to_server_page.emit,
+                    button.objectName(),
+                    button,
                 )
             )
 
@@ -71,15 +86,21 @@ class ChoseServer(QObject, BaseWidget):
         clear_layout(layout)
         buttons = []
         for name, data in self._config_manager.map_json.modpacks.items():
+            try:
+                modpack = self._config_manager.get_modpack(name)
+            except ModpackNotfound:
+                log.critical(f"Modpack name no found: '{name}'")
+                continue
+            icon_image = LauncherConfig.get_icon_file(
+                modpack.server_config.server_icon.hash
+            )
             button = ServerWidget(
-                image_path=":/data/background/server-icon.png",
+                config_name=name,
                 title=data.server_config.display_name,
                 subtitle=f"Minecraft {data.server_config.minecraft_version}",
-                cur_online=15,
-                max_online=30,
                 parent=self._ui.scrollAreaWidgetContents,
+                image=icon_image,
             )
-            button.setObjectName(name)
             buttons.append(button)
             self._ui.horizontalLayout_2.addWidget(button)
 

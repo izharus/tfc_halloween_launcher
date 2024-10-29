@@ -43,11 +43,14 @@ from .launcher_installer import (
     MinecraftExecutorThread,
 )
 from .login_widget import LoginWidget
+from .mine_query_thread import MinecraftQueryThread
+from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
     DownloadServerHandshakeError,
+    ModpackNotfound,
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
@@ -92,6 +95,9 @@ class Window(QtWidgets.QMainWindow):
             serialize=False,
         )
         self._ui_instance.setupUi(self)
+        self._ui_instance.stackedWidget.setCurrentWidget(
+            self._ui_instance.login_page,
+        )
         self.resize(500, 125)  # Adjust 800 to your desired width
 
         script_dir = os.getcwd()
@@ -128,10 +134,11 @@ class Window(QtWidgets.QMainWindow):
             settings=settings,
         )
         self._settings.update_ui_signal.connect(self._settings.set_value_to_ui)
+        self._minecraft_query_thread: MinecraftQueryThread
         self.config_manager: ServerConfigManager
         self._choose_server: ChoseServer
         self._server_config: ServerConfig
-
+        self._server_page = ServerWidgetPage
         # This widget connects signals in _connect_signals
         self._settings_widget = SettingsWidget
         # This widget connects signals in _connect_signals
@@ -213,12 +220,24 @@ class Window(QtWidgets.QMainWindow):
             self._launcher_config,
             settings=self._settings,
         )
+        self._server_page = ServerWidgetPage(
+            config=self.config_manager,
+            ui_instance=self._ui_instance,
+        )
         self._choose_server = ChoseServer(
             self._ui_instance, self.config_manager
         )
-
+        self._minecraft_query_thread = MinecraftQueryThread(
+            self._choose_server.server_buttons,
+            self.file_downloader,
+            self.config_manager,
+        )
+        self._minecraft_query_thread.start()
         self._choose_server.launch_game.connect(
             self._install_minecraft_multi_thread
+        )
+        self._choose_server.switch_to_server_page.connect(
+            self._server_page.switch_to_server_page
         )
         self._ui_instance.stackedWidget.setCurrentWidget(
             self._ui_instance.choose_server_page
@@ -276,7 +295,7 @@ class Window(QtWidgets.QMainWindow):
             # event.accept()
 
     @Slot(str)
-    def _install_minecraft_multi_thread(self, config_name: str) -> None:
+    def _install_minecraft_multi_thread(self, modpack_name: str) -> None:
         """
         Initiates the multi-threaded installation of Minecraft.
 
@@ -308,9 +327,9 @@ class Window(QtWidgets.QMainWindow):
             )
             self._choose_server.enable_ui()
             return
-        modpack_model = self.config_manager.get_config(config_name)
-        if not modpack_model:
-
+        try:
+            modpack_model = self.config_manager.get_modpack(modpack_name)
+        except ModpackNotfound:
             self.msg_box.show_message(
                 title="Получены обновления",
                 msg="Попробуйте запустить игру снова.",
@@ -320,7 +339,7 @@ class Window(QtWidgets.QMainWindow):
             return
 
         self._server_config = ServerConfig(
-            config_name,
+            modpack_name,
             modpack_model,
             self._launcher_config,
             self._settings,
@@ -408,19 +427,19 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
     Custom exception handler to catch all exceptions.
     """
-    if Window.is_working:
-        config = LauncherConfig()
-        log.critical("Exception occurred:")
-        log.critical(exc_type)
-        log.critical(exc_value)
-        log.critical(" ".join(traceback.format_tb(exc_traceback)))
-        msg_box = LogMessageBox(None)
-        msg_box.show_message(
-            title="Критическая ошибка!",
-            msg="Отправьте последний текстовый файл разработчику: "
-            + f"{config.DEVELOPER_EMAIL}",
-            close_button_text="закрыть приложение",
-        )
+    # if Window.is_working:
+    config = LauncherConfig()
+    log.critical("Exception occurred:")
+    log.critical(exc_type)
+    log.critical(exc_value)
+    log.critical(" ".join(traceback.format_tb(exc_traceback)))
+    msg_box = LogMessageBox(None)
+    msg_box.show_message(
+        title="Критическая ошибка!",
+        msg="Отправьте последний текстовый файл разработчику: "
+        + f"{config.DEVELOPER_EMAIL}",
+        close_button_text="закрыть приложение",
+    )
     sys.exit(1)
 
 

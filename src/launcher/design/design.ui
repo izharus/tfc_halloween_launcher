@@ -29,7 +29,83 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">#scrollArea, #scrollArea_2, #scrollAreaWidgetContents, #scrollAreaWidgetContents_2 {
+    background-color: rgba(255, 255, 255, 0);  /* Полностью прозрачный фон */
+    border: none; /* Убирает границу */
+}
+
+/* Горизонтальная полоса прокрутки */
+QScrollBar:horizontal {
+    border: none; /* Убираем границы */
+    background: rgba(0, 51, 102, 200); /* Темно-синий фон для горизонтальной полосы */
+    height: 10px; /* Высота полосы прокрутки */
+    margin: 0px 22px; /* Отступы для управления кнопками */
+}
+
+QScrollBar::handle:horizontal {
+    background: rgba(0, 76, 153, 200); /* Более светлый темно-синий для ползунка */
+    min-width: 20px; /* Минимальная ширина ползунка */
+    border-radius: 5px; /* Скругление углов ползунка */
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: rgba(0, 102, 204, 200); /* Светлый синий при наведении */
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    background: none; /* Убираем фон для стрелок */
+    border: none; /* Убираем границы для стрелок */
+}
+
+QScrollBar::left-arrow:horizontal,
+QScrollBar::right-arrow:horizontal {
+    background: none; /* Убираем фон для стрелок */
+    width: 0px; /* Убираем ширину стрелок */
+    height: 0px; /* Убираем высоту стрелок */
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none; /* Убираем фон для области прокрутки */
+}
+
+/* Вертикальная полоса прокрутки */
+QScrollBar:vertical {
+    border: none; /* Убираем границы */
+    background: rgba(0, 51, 102, 200); /* Темно-синий фон для вертикальной полосы */
+    width: 10px; /* Ширина полосы прокрутки */
+    margin: 22px 0px; /* Отступы для управления кнопками */
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(0, 76, 153, 200); /* Более светлый темно-синий для ползунка */
+    min-height: 20px; /* Минимальная высота ползунка */
+    border-radius: 5px; /* Скругление углов ползунка */
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(0, 102, 204, 200); /* Светлый синий при наведении */
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    background: none; /* Убираем фон для стрелок */
+    border: none; /* Убираем границы для стрелок */
+}
+
+QScrollBar::up-arrow:vertical,
+QScrollBar::down-arrow:vertical {
+    background: none; /* Убираем фон для стрелок */
+    width: 0px; /* Убираем ширину стрелок */
+    height: 0px; /* Убираем высоту стрелок */
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none; /* Убираем фон для области прокрутки */
+}
+</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="minimumSize">
@@ -194,7 +270,7 @@ QPushButton:pressed {
              <string notr="true"/>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="login_page">
              <layout class="QGridLayout" name="gridLayout_3">
@@ -709,47 +785,7 @@ QPushButton:pressed {
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">#scrollArea, #scrollAreaWidgetContents{
-
-background-color: rgba(255, 255, 255, 0);  /* Полностью прозрачный фон */
-border: none; /* Убирает границу кнопки */
-}
-
-
-    QScrollBar:horizontal {
-        border: none; /* Убираем границы */
-        background: rgba(0, 51, 102, 200); /* Темно-синий фон для горизонтальной полосы */
-        height: 10px; /* Высота полосы прокрутки */
-        margin: 0px 22px; /* Отступы для управления кнопками */
-    }
-
-    QScrollBar::handle:horizontal {
-        background: rgba(0, 76, 153, 200); /* Более светлый темно-синий для ползунка */
-        min-width: 20px; /* Минимальная ширина ползунка */
-        border-radius: 5px; /* Скругление углов ползунка */
-    }
-
-    QScrollBar::handle:horizontal:hover {
-        background: rgba(0, 102, 204, 200); /* Светлый синий при наведении */
-    }
-
-    QScrollBar::add-line:horizontal,
-    QScrollBar::sub-line:horizontal {
-        background: none; /* Убираем фон для стрелок */
-        border: none; /* Убираем границы для стрелок */
-    }
-
-    QScrollBar::left-arrow:horizontal,
-    QScrollBar::right-arrow:horizontal {
-        background: none; /* Убираем фон для стрелок */
-        width: 0px; /* Убираем ширину стрелок */
-        height: 0px; /* Убираем высоту стрелок */
-    }
-
-    QScrollBar::add-page:horizontal,
-    QScrollBar::sub-page:horizontal {
-        background: none; /* Убираем фон для области прокрутки */
-    }</string>
+                 <string notr="true"/>
                 </property>
                 <property name="widgetResizable">
                  <bool>true</bool>
@@ -850,25 +886,143 @@ border: none; /* Убирает границу кнопки */
              </layout>
             </widget>
             <widget class="QWidget" name="server_settings_page">
-             <widget class="QPushButton" name="pushButton_5">
-              <property name="geometry">
-               <rect>
-                <x>240</x>
-                <y>10</y>
-                <width>500</width>
-                <height>500</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>500</width>
-                <height>500</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>ИГРАТЬ</string>
-              </property>
-             </widget>
+             <layout class="QFormLayout" name="formLayout_3">
+              <item row="0" column="0">
+               <widget class="QWidget" name="widget_server_widget" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>300</width>
+                  <height>400</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_8">
+                 <item row="0" column="0">
+                  <layout class="QGridLayout" name="gridLayout"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <item>
+                   <spacer name="horizontalSpacer_8">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_back_from_server_settings">
+                    <property name="minimumSize">
+                     <size>
+                      <width>64</width>
+                      <height>64</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>64</width>
+                      <height>64</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+    background-image: url(:/data/background/back_arrow.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none; /* Убираем границы */
+    border-radius: 10px; /* Скругляем углы кнопки */
+    padding: 10px; /* Добавляем внутренние отступы */
+    color: white; /* Устанавливаем цвет текста */
+    font-size: 16px; /* Устанавливаем размер шрифта */
+    font-weight: bold; /* Устанавливаем жирный шрифт */
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
+}
+</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QScrollArea" name="scrollArea_2">
+                  <property name="widgetResizable">
+                   <bool>true</bool>
+                  </property>
+                  <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                   <property name="geometry">
+                    <rect>
+                     <x>0</x>
+                     <y>0</y>
+                     <width>588</width>
+                     <height>348</height>
+                    </rect>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_7">
+                    <item>
+                     <widget class="QLabel" name="label_server_description">
+                      <property name="styleSheet">
+                       <string notr="true">QLabel {
+    font-family: 'Arial', sans-serif; /* Устанавливаем шрифт */
+    font-size: 18px; /* Увеличиваем размер шрифта */
+    font-weight: bold; /* Жирный текст */
+    color: #FFFFFF; /* Цвет текста (белый) */
+    background-color: rgba(0, 51, 102, 0.8); /* Полупрозрачный темно-синий фон */
+    border: 1px solid #007BFF; /* Синяя рамка */
+    border-radius: 5px; /* Скругление углов */
+    padding: 10px; /* Отступы вокруг текста */
+    margin: 5px; /* Отступы от других элементов */
+    text-align: left; /* Выравнивание текста влево */
+    line-height: 1.5; /* Междустрочный интервал */
+}
+</string>
+                      </property>
+                      <property name="text">
+                       <string>Описание сервера</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_6">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
             <widget class="QWidget" name="launcher_settings_page">
              <layout class="QHBoxLayout" name="horizontalLayout_3">

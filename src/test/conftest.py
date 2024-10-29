@@ -1,12 +1,17 @@
 """Pytest conftest."""
 
-# pylint: disable=W0212
+# pylint: disable=W0212,W0613
+import json
 from unittest.mock import MagicMock
 
 import pytest
 from qtpy.QtCore import QSettings
-from src.launcher.launcher_configs import ServerConfig
+from src.launcher.launcher_configs import ServerConfig, ServerConfigManager
 from src.launcher.main_window import Window
+from src.launcher.utility.file_downloader import FileDownloaderProtocol
+from src.launcher.utility.pydantic_models import (
+    ServerConfig as PydanticServerConfig,
+)
 
 CONFIG_NAME_1 = "TestModpack1"
 CONFIG_NAME_2 = "TestModpack2"
@@ -16,7 +21,19 @@ MODPACK_DISPLAY_NAME = "modpack_display_name"
 
 
 @pytest.fixture
-def mock_config_data():
+def mock_file_info():
+    """Mock FileInfo."""
+    return {
+        "file_name": "test_file1.txt",
+        "api_url": "http://example.com/test_file1.txt",
+        "yan_obj_storage": "test_object_key1",
+        "hash": "abcdef123456",
+        "dist_file_path": "/path/to/test_file1.txt",
+    }
+
+
+@pytest.fixture
+def mock_config_data(mock_file_info):
     """Mock a config data."""
     return {
         "modpacks": {
@@ -28,6 +45,8 @@ def mock_config_data():
                     "minecraft_profile": "TestProfile1",
                     "minecraft_server_ip": "127.0.0.1",
                     "minecraft_server_port": "25565",
+                    "description": "config_1_desc",
+                    "server_icon": mock_file_info,
                 },
                 "main_data": [
                     {
@@ -48,6 +67,8 @@ def mock_config_data():
                     "minecraft_profile": "TestProfile2",
                     "minecraft_server_ip": "127.0.0.1",
                     "minecraft_server_port": "25565",
+                    "description": "config_2_desc",
+                    "server_icon": mock_file_info,
                 },
                 "main_data": [
                     {
@@ -65,7 +86,7 @@ def mock_config_data():
 
 
 @pytest.fixture
-def mock_modpack_data():
+def mock_modpack_data(mock_file_info):
     """Mock a modpack data."""
     return {
         "server_config": {
@@ -75,6 +96,8 @@ def mock_modpack_data():
             "minecraft_profile": "TestProfile3",
             "minecraft_server_ip": "192.168.0.1",
             "minecraft_server_port": "25566",
+            "description": "config_1_desc",
+            "server_icon": mock_file_info,
         },
         "main_data": [
             {
@@ -87,6 +110,12 @@ def mock_modpack_data():
         ],
         "client_additional_data": {},
     }
+
+
+@pytest.fixture
+def pydantic_server_config(mock_modpack_data) -> PydanticServerConfig:
+    """Mock a pydantic ServerConfig data."""
+    return PydanticServerConfig(**mock_modpack_data["server_config"])
 
 
 @pytest.fixture
@@ -116,7 +145,7 @@ def mock_settings() -> QSettings:
 
 
 @pytest.fixture
-def main_window(mock_settings) -> Window:
+def main_window(mock_settings, qtbot) -> Window:
     """Mock main window."""
     window = Window(settings=mock_settings)
     return window
@@ -131,3 +160,20 @@ def server_config(main_window) -> ServerConfig:
         launcher_config=MagicMock(),
         settings=main_window._settings,
     )
+
+
+@pytest.fixture
+def auth_window(mock_settings, mock_config_data) -> Window:
+    """Mock main window."""
+    window = Window(settings=mock_settings)
+
+    downloader = MagicMock(spec_set=FileDownloaderProtocol)
+    downloader.download_bytes.return_value = json.dumps(
+        mock_config_data
+    ).encode("utf-8")
+    window._config_installer_thread._config_manager = ServerConfigManager(
+        file_downloader=downloader,
+        map_object_key="mock_key",
+    )
+    window._config_installer_complete()
+    return window

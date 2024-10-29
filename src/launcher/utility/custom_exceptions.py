@@ -1,6 +1,17 @@
 """A modules with custom exception classes"""
 
 
+class ModpackNotfound(Exception):
+    """
+    Raised if the modpack was not found with the provided config name.
+    """
+
+    def __init__(
+        self, message="Modpack was not found with the provided modpack name."
+    ):
+        super().__init__(message)
+
+
 class DownloadServerHandshakeError(Exception):
     """Raised if failed to connect to the file store server."""
 
@@ -21,7 +32,7 @@ class MinecraftLauncherConfigNotSet(RuntimeError):
         return "Не установлен конфиг лаунчера."
 
 
-class FiletDownloadError(Exception):
+class FileDownloadError(Exception):
     """Raises in any error occurs deu downloading files."""
 
     def __init__(self, message="Failed to download a file.") -> None:
@@ -31,7 +42,7 @@ class FiletDownloadError(Exception):
         return "Ошибка во время загрузки файла."
 
 
-class ConfigDownloadError(FiletDownloadError):
+class ConfigDownloadError(FileDownloadError):
     """
     Raises if any error occurs due downloading a config file.
     """
@@ -43,6 +54,20 @@ class ConfigDownloadError(FiletDownloadError):
 
     def __str__(self):
         return "Ошибка во время загрузки файла конфигурации."
+
+
+class FileHashMismatchError(FileDownloadError):
+    """
+    Raised if the hash of a downloaded file does not match the expected hash.
+    """
+
+    def __init__(
+        self, message="File hash does not match the expected hash."
+    ) -> None:
+        super().__init__(message)
+
+    def __str__(self):
+        return "Хэш загруженного файла не соответствует ожидаемому значению."
 
 
 class ConfigProcessingError(Exception):
@@ -168,7 +193,7 @@ class Base64ParsingError(RuntimeError):
 class WidgetValueAssignmentError(Exception):
     """Custom exception for errors during value assignment to UI elements."""
 
-    def __init__(self, message: str = ""):
+    def __init__(self, message: str = "Incorrect value for widget."):
         self.message = message
         super().__init__(self.message)
 
@@ -176,6 +201,19 @@ class WidgetValueAssignmentError(Exception):
 class WidgetNotFound(Exception):
     """Exception raised when a specified widget cannot be found."""
 
-    def __init__(self, message: str = ""):
+    def __init__(self, message: str = "Widget was nof found."):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ServerQueryStatusError(Exception):
+    """
+    Exception raised if any error occurs due querying information
+    from a minecraft server
+    """
+
+    def __init__(
+        self, message: str = "Failed to query minecraft server online status."
+    ):
         self.message = message
         super().__init__(self.message)
