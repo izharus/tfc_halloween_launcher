@@ -54,7 +54,7 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
-
+from .utility._helper import is_windows_8_or_older
 
 def hide_console() -> None:
     """
@@ -254,7 +254,11 @@ class Window(QtWidgets.QMainWindow):
         self._install_thread.text.connect(
             lambda text: self._choose_server.progress_bar.setFormat(text)
         )
-
+        if is_windows_8_or_older():
+            self.msg_box.show_message(
+                title="Устаревшая версия Windows",
+                msg="У меня нет ресурсов чтобы полноценно портировать лаунчер на Windows 7."
+            )
     # pylint: disable=C0103
     def mousePressEvent(self, event):
         """
