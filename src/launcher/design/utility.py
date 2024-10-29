@@ -584,7 +584,7 @@ class LabeledSlider(QWidget):
                 f"Max typos is a positive integer, not: {position}"
             )
 
-        self.setFixedSize(600, 50)
+        self.setFixedSize(600, 100)
         interval = maximum // min(max(1, maximum // 1024), max_typos)
         levels = range(minimum, maximum + interval, interval)
         if labels is not None:
@@ -642,7 +642,7 @@ class LabeledSlider(QWidget):
         self.value_label.setAlignment(Qt.AlignCenter)
         self._update_value()
 
-        self.sl.setStyleSheet(ALLOCATE_RAM_SLIDER)
+        self.setStyleSheet(ALLOCATE_RAM_SLIDER)
         # Change value_label if slider.value changed
         self.sl.valueChanged.connect(self._update_value)
         self.layout.addWidget(self.value_label)
@@ -657,7 +657,7 @@ class LabeledSlider(QWidget):
         info_text = f"Память: {value} МБ"
 
         if not value:
-            info_text = "Авто"
+            info_text = "Память: Авто"
         self.value_label.setText(info_text)
 
     def paintEvent(self, e):  # pylint: disable=C0103, R0914

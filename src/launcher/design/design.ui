@@ -270,7 +270,7 @@ QPushButton:pressed {
              <string notr="true"/>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="login_page">
              <layout class="QGridLayout" name="gridLayout_3">
@@ -1052,6 +1052,7 @@ QGroupBox {
   border: 2px solid #4287f5; /* Border color for the group box */
   border-radius: 8px; /* Border radius for rounded corners */
   margin-top: 10px; /* Adjust margin as needed */
+  color: white;
 }
 
 QGroupBox::title {
@@ -1099,6 +1100,7 @@ QGroupBox QRadioButton::indicator:checked:hover {
 QCheckBox, QRadioButton {
   spacing: 5px;
   font-size: 16px;
+  color: white;
 }
 
 QCheckBox::indicator, QRadioButton::indicator {
@@ -1141,6 +1143,7 @@ QCheckBox::indicator:checked:hover, QRadioButton::indicator:checked:hover {
 QCheckBox, QRadioButton {
   spacing: 5px;
   font-size: 16px;
+  color: white;
 }
 
 QCheckBox::indicator, QRadioButton::indicator {
@@ -1193,6 +1196,7 @@ QGroupBox {
   border: 2px solid #4287f5; /* Border color for the group box */
   border-radius: 8px; /* Border radius for rounded corners */
   margin-top: 10px; /* Adjust margin as needed */
+  color: white;
 }
 
 QGroupBox::title {

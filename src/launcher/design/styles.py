@@ -65,6 +65,7 @@ class ServerWidgetCSS:
                 border-radius: 10px;
                 background-color: #3d3f43;
                 font-weight: bold;
+                color: white;
             }
             QProgressBar::chunk {
                 background-color: #7289da;
@@ -78,6 +79,7 @@ class ServerWidgetCSS:
             border-radius: 10px;
             background-color: #ffcccc;
             font-weight: bold;
+            color: white;
 
         }
         QProgressBar::chunk {
@@ -135,13 +137,20 @@ INSTALL_PROGRESS_BAR = """
             }
         """
 
-ALLOCATE_RAM_SLIDER = """QSlider::groove:horizontal {
+ALLOCATE_RAM_SLIDER = """
+QLabel {
+    color: white;
+    font-size: 24px;
+}
+
+QSlider::groove:horizontal {
     border: 1px solid #999999;
     height: 20px;
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                                 stop:0 #BBDEFB,  /* Светлый синий */
                                 stop:1 #2196F3); /* Темный синий */
     border-radius: 4px;
+    color: white;
 }
 
 QSlider::handle:horizontal {
@@ -153,6 +162,7 @@ QSlider::handle:horizontal {
     height: 20px;
     border-radius: 10px;
     margin: -6px 0; /* Handle overlaps the groove */
+    color: white;
 }
 
 QSlider::handle:horizontal:hover {
@@ -164,6 +174,6 @@ QSlider::handle:horizontal:hover {
 QSlider::add-page:horizontal {
     background: #b3b3b3;  /* Серый цвет для неактивной части */
     border-radius: 4px;
+    color: white;
 }
-
 """
