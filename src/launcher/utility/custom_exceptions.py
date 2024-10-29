@@ -6,6 +6,11 @@ class ModpackNotfound(Exception):
     Raised if the modpack was not found with the provided config name.
     """
 
+    def __init__(
+        self, message="Modpack was not found with the provided modpack name."
+    ):
+        super().__init__(message)
+
 
 class DownloadServerHandshakeError(Exception):
     """Raised if failed to connect to the file store server."""
@@ -188,7 +193,7 @@ class Base64ParsingError(RuntimeError):
 class WidgetValueAssignmentError(Exception):
     """Custom exception for errors during value assignment to UI elements."""
 
-    def __init__(self, message: str = ""):
+    def __init__(self, message: str = "Incorrect value for widget."):
         self.message = message
         super().__init__(self.message)
 
@@ -196,7 +201,7 @@ class WidgetValueAssignmentError(Exception):
 class WidgetNotFound(Exception):
     """Exception raised when a specified widget cannot be found."""
 
-    def __init__(self, message: str = ""):
+    def __init__(self, message: str = "Widget was nof found."):
         self.message = message
         super().__init__(self.message)
 
@@ -207,6 +212,8 @@ class ServerQueryStatusError(Exception):
     from a minecraft server
     """
 
-    def __init__(self, message: str = ""):
+    def __init__(
+        self, message: str = "Failed to query minecraft server online status."
+    ):
         self.message = message
         super().__init__(self.message)
