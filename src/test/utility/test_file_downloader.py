@@ -66,6 +66,28 @@ class TestFileYOSDownloader:
         assert isinstance(tmp_data, bytes)
         assert len(tmp_data) > 100
 
+    def test_get_hash_success(self, tmp_path: Path):
+        """Test if get_hash returns the correct hahs string."""
+        filepath = tmp_path / "tmp.json"
+        self.file_downloader.download_file(
+            LauncherConfig.MAP_JSON_YOS_OBJ_KEY,
+            dst_path=filepath,
+        )
+        tpm_hash = self.file_downloader.get_hash(
+            LauncherConfig.MAP_JSON_YOS_OBJ_KEY
+        )
+        assert isinstance(tpm_hash, str)
+        assert tpm_hash == file_downloader.calculate_hash(filepath, "md5")
+
+    def test_get_hash_failed(self):
+        """
+        Test if get_hash raises FileDownloadError
+        for non-exists object key.
+        """
+        with pytest.raises(FileDownloadError):
+            self.file_downloader.get_hash(
+                "non-exists",
+            )
     def test_download_file_boto3_error(self):
         """Test handling Boto3 errors during file download."""
         bucket_name = LauncherConfig.BUCKET_NAME

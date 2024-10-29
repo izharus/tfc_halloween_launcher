@@ -141,6 +141,25 @@ class FileDownloaderProtocol(Protocol):
                 during file download.
         """
 
+    def get_hash(
+        self,
+        object_key: str,
+    ) -> str:
+        """
+        Retrieves the md5 hash (ETag) of an object from an S3 bucket.
+
+        Args:
+            object_key (str): The key of the object in the S3 bucket whose
+                hash is to be retrieved.
+
+        Returns:
+            str: The ETag of the object, which serves as a hash
+                representation.
+
+        Raises:
+            FileDownloadError: If the file cannot be downloaded
+                from S3 due to connectivity issues or other exceptions.
+        """
 
 class FileYOSDownloader(FileDownloaderProtocol):
     """
@@ -183,13 +202,40 @@ class FileYOSDownloader(FileDownloaderProtocol):
     def download_bytes(
         self,
         object_key: str,
+        callback: Optional[DownloadProgress] = None,
+        chunk_size: int = 1024 * 1024,
     ) -> bytes:
         try:
             response = self._boto3_client.get_object(
                 Bucket=self._bucket_name,
                 Key=object_key,
             )
-            return response["Body"].read()
+            if callback:
+                callback.maximum =  response["ContentLength"]
+
+            data = b""
+            while chunk := response["Body"].read(chunk_size):
+                data += chunk
+                if callback:
+                    callback.current = len(data)
+
+            return data
+
+        except Exception as e:
+            raise FileDownloadError(
+                f"Failed to download file from S3: {e}"
+            ) from e
+
+    def get_hash(
+        self,
+        object_key: str,
+    ) -> str:
+        try:
+            response = self._boto3_client.get_object(
+                Bucket=self._bucket_name,
+                Key=object_key,
+            )
+            return response["ETag"].strip('"')
         # boto3.exceptions.Boto3Error do not catches
         # exceptions if ethernet connection was lost
         except Exception as e:
