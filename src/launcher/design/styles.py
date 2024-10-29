@@ -112,6 +112,7 @@ CUSTOM_MESSAGE_BOX_STYLE = (
             }
             QTextEdit {
                 background-color: rgba(0, 0, 0, 0);
+                color: white;
             }
             """
     + ServerWidgetCSS.play_button
