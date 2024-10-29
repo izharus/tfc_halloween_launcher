@@ -332,9 +332,8 @@ class Window(QtWidgets.QMainWindow):
         except ModpackNotfound:
             self.msg_box.show_message(
                 title="Получены обновления",
-                msg="Попробуйте запустить игру снова.",
+                msg="Перезапустите приложение.",
             )
-
             self._choose_server.enable_ui()
             return
 
