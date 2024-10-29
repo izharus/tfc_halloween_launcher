@@ -43,6 +43,7 @@ from .launcher_installer import (
     MinecraftExecutorThread,
 )
 from .login_widget import LoginWidget
+from .mine_query_thread import MinecraftQueryThread
 from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
 from .utility.custom_exceptions import (
@@ -133,6 +134,7 @@ class Window(QtWidgets.QMainWindow):
             settings=settings,
         )
         self._settings.update_ui_signal.connect(self._settings.set_value_to_ui)
+        self._minecraft_query_thread: MinecraftQueryThread
         self.config_manager: ServerConfigManager
         self._choose_server: ChoseServer
         self._server_config: ServerConfig
@@ -225,7 +227,12 @@ class Window(QtWidgets.QMainWindow):
         self._choose_server = ChoseServer(
             self._ui_instance, self.config_manager
         )
-
+        self._minecraft_query_thread = MinecraftQueryThread(
+            self._choose_server.server_buttons,
+            self.file_downloader,
+            self.config_manager,
+        )
+        self._minecraft_query_thread.start()
         self._choose_server.launch_game.connect(
             self._install_minecraft_multi_thread
         )

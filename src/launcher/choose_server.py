@@ -44,6 +44,11 @@ class ChoseServer(QObject, BaseWidget):
 
         self._buttons = self.update_server_buttons(self._ui.horizontalLayout_2)
 
+    @property
+    def server_buttons(self) -> List[ServerWidget]:
+        """Return all ServerWidget instances."""
+        return self._buttons
+
     def _create_signals(self, buttons: List[ServerWidget]) -> None:
         """
         Connects signals from the provided list of ServerWidget buttons

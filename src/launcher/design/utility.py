@@ -495,14 +495,14 @@ class ServerWidget(QPushButton):
         self._progress_bar.setFormat("СЕРВЕР ОФЛАЙН")
         self._progress_bar.setStyleSheet(ServerWidgetCSS.progress_bar_offline)
 
-    def set_online_label(self, cur_online: str, max_online: str):
+    def set_online_label(self, cur_online: int, max_online: int):
         """
         Sets the progress bar to indicate the server's online status,
         showing the current and maximum online players.
 
         Args:
-            cur_online (str): Current number of players online.
-            max_online (str): Maximum number of players allowed online.
+            cur_online (int): Current number of players online.
+            max_online (int): Maximum number of players allowed online.
         """
         self._progress_bar.setMaximum(max_online)
         self._progress_bar.setValue(cur_online)
