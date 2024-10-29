@@ -8,6 +8,7 @@ launcher and managing server configurations.
 
 import json
 import os
+from enum import Enum
 from pathlib import Path
 from typing import Final, Optional
 
@@ -26,6 +27,14 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
+
+
+class BinariesObjectKey(Enum):
+    """Object keys for launcher binaries."""
+
+    WIN10X64: str = "binary/AuleCraftwin10x64.exe"
+    WIN7X64: str = "binary/AuleCraftwin7x64.exe"
+    WIN7X86: str = "binary/AuleCraftwin7x86.exe"
 
 
 class LauncherConfig:
@@ -59,6 +68,7 @@ class LauncherConfig:
     API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
+    LAUNCHER_BINARIES = BinariesObjectKey
 
     IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
     LAUNCHER_ROOT_DIR = (
