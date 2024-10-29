@@ -106,7 +106,7 @@ class ServerWidgetCSS:
 CUSTOM_MESSAGE_BOX_STYLE = (
     """
             QWidget {
-                background-color: rgba(26, 26, 64, 200);
+                background-color: rgba(26, 26, 64, 255);
                 border-radius: 20px;
                 font-size: 16px;
             }
