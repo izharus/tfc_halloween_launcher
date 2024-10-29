@@ -178,7 +178,7 @@ class Window(QtWidgets.QMainWindow):
         )
 
         self._install_thread.finished.connect(self._install_thread_finished)
-        self.setWindowTitle("TFC-Halloween 3.0.3")
+        self.setWindowTitle(self._launcher_config.LAUNCHER_NAME)
         self._ui_instance.pushButton_close_app.clicked.connect(self.close)
         self._ui_instance.pushButton_collapse_app.clicked.connect(
             self.showMinimized
