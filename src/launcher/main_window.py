@@ -68,9 +68,6 @@ def hide_console() -> None:
     win32gui.ShowWindow(window, win32con.SW_HIDE)
 
 
-log.debug(f"Current platform: {get_version()}")
-
-
 # pylint: disable = R0903,R0902
 class Window(QtWidgets.QMainWindow):
     """Main window of app"""
@@ -98,6 +95,7 @@ class Window(QtWidgets.QMainWindow):
             level="DEBUG",
             serialize=False,
         )
+        log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
         self._ui_instance.stackedWidget.setCurrentWidget(
             self._ui_instance.login_page,
