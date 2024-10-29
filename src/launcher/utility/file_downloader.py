@@ -23,15 +23,15 @@ from .pydantic_models import HashInfo
 
 
 def calculate_hash(
-        file_name: Union[str, PathLike],
-        hash_algorithm="sha256",
-        ) -> str:
+    file_name: Union[str, PathLike],
+    hash_algorithm="sha256",
+) -> str:
     """Calculates the hash of a file using the specified hash algorithm.
 
     Args:
         file_name (str): The path to the file whose hash needs
             to be calculated.
-        hash_algorithm (str, optional): The name of the hash algorithm to use 
+        hash_algorithm (str, optional): The name of the hash algorithm to use
             (e.g., 'sha256', 'md5'). Defaults to 'sha256'.
 
     Returns:
@@ -39,7 +39,7 @@ def calculate_hash(
 
     Raises:
         CalculateHashFailed: If an error occurs while calculating the hash.
-        
+
     Example:
         >>> calculate_hash("example.txt", "md5")
         'd41d8cd98f00b204e9800998ecf8427e'
@@ -88,7 +88,6 @@ def save_file(
         raise FilesSaveError from error
 
 
-
 class DownloadProgress:
     """
     A helper class to manage and update download progress
@@ -104,6 +103,7 @@ class DownloadProgress:
         current(int): Updates the current progress value.
         maximum(int): Updates the maximum progress value.
     """
+
     def __init__(
         self,
         set_current: Callable[[int], None],
@@ -125,26 +125,27 @@ class DownloadProgress:
         self._maximum = 0
 
     @property
-    def current(self) -> None:
+    def current(self):
         """Returns the current status"""
         return self._current
 
-    @property
-    def maximum(self) -> None:
-        """Returns the current maximum"""
-        return self._maximum
-
     @current.setter
-    def current(self, current: int) -> None:
+    def current(self, current: int):
         """Updates the current progress value."""
         self._current = current
         self._set_current(self._current)
 
+    @property
+    def maximum(self):
+        """Returns the current maximum"""
+        return self._maximum
+
     @maximum.setter
-    def maximum(self, maximum: int) -> None:
+    def maximum(self, maximum: int):
         """Updates the maximum progress value."""
         self._maximum = maximum
         self._set_maximum(self._maximum)
+
 
 class FileDownloaderProtocol(Protocol):
     """Protocol for defining a file downloader interface."""
@@ -225,6 +226,7 @@ class FileDownloaderProtocol(Protocol):
                 from S3 due to connectivity issues or other exceptions.
         """
 
+
 class FileYOSDownloader(FileDownloaderProtocol):
     """
     Initializes the FileYOSDownloader with AWS credentials and settings.
@@ -275,7 +277,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
                 Key=object_key,
             )
             if callback:
-                callback.maximum =  response["ContentLength"]
+                callback.maximum = response["ContentLength"]
 
             data = b""
             while chunk := response["Body"].read(chunk_size):
