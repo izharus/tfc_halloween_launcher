@@ -106,11 +106,21 @@ class TestFileYOSDownloader:
             Bucket=bucket_name, Key=object_key
         )
 
-    def test_download_file_file_system_error(self):
+    def test_download_file_file_system_error(
+        self,
+        mocker: MockerFixture,
+    ):
         """Test handling Boto3 errors during file download."""
         object_key = "test-object-key"
         boto3_client = MagicMock()
         self.file_downloader._boto3_client = boto3_client
+
+        mocker.patch.object(
+            self.file_downloader,
+            "download_bytes",
+            return_value=b"bytes_content",
+        )
+        mocker.patch.object(Path, "write_bytes", side_effect=PermissionError)
         with pytest.raises(FilesSaveError):
             self.file_downloader.download_file(
                 object_key, "unknown_path", "mock_filehash"
@@ -212,12 +222,12 @@ def test_save_file_success(tmp_path, mock_file_content):
         assert file.read() == mock_file_content
 
 
-def test_save_file_failure(tmp_path, mock_file_content):
+def test_save_file_failure(tmp_path: Path, mock_file_content: bytes):
     """Test handling file saving failure."""
     file_path = os.path.join(tmp_path, "temp_dir", "test_file.txt")
 
     # Patching open to raise an exception
-    with patch("pathlib.Path.write_bytes", side_effect=Exception("File write error")):
+    with patch("pathlib.Path.write_bytes", side_effect=PermissionError):
         with pytest.raises(FilesSaveError):
             save_file(file_path, mock_file_content)
 

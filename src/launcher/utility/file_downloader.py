@@ -4,10 +4,9 @@ for safe downloading of files.
 """
 
 import hashlib
-import os
 from os import PathLike
 from pathlib import Path
-from typing import Protocol, Union
+from typing import Callable, Optional, Protocol, Union
 
 import boto3
 import boto3.exceptions
@@ -85,9 +84,67 @@ def save_file(
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_bytes(file_content)
 
-    except Exception as error:
+    except OSError as error:
         raise FilesSaveError from error
 
+
+
+class DownloadProgress:
+    """
+    A helper class to manage and update download progress
+    values for a UI component.
+
+    Attributes:
+        set_current (Callable[[int], None]): A function to set
+            the current progress value.
+        set_maximum (Callable[[int], None]): A function to set
+            the maximum value of the progress.
+
+    Methods:
+        current(int): Updates the current progress value.
+        maximum(int): Updates the maximum progress value.
+    """
+    def __init__(
+        self,
+        set_current: Callable[[int], None],
+        set_maximum: Callable[[int], None],
+    ):
+        """
+        Initializes the DownloadProgress with functions
+        to set maximum and current progress values.
+
+        Args:
+            set_maximum (Callable[[int], None]): A function
+                to set the maximum value of the progress.
+            set_current (Callable[[int], None]): A function
+                to set the current value of the progress.
+        """
+        self._set_current = set_current
+        self._set_maximum = set_maximum
+        self._current = 0
+        self._maximum = 0
+
+    @property
+    def current(self) -> None:
+        """Returns the current status"""
+        return self._current
+
+    @property
+    def maximum(self) -> None:
+        """Returns the current maximum"""
+        return self._maximum
+
+    @current.setter
+    def current(self, current: int) -> None:
+        """Updates the current progress value."""
+        self._current = current
+        self._set_current(self._current)
+
+    @maximum.setter
+    def maximum(self, maximum: int) -> None:
+        """Updates the maximum progress value."""
+        self._maximum = maximum
+        self._set_maximum(self._maximum)
 
 class FileDownloaderProtocol(Protocol):
     """Protocol for defining a file downloader interface."""
@@ -95,36 +152,39 @@ class FileDownloaderProtocol(Protocol):
     def download_file(
         self,
         object_key: str,
-        dst_path: str,
+        dst_path: Union[str, PathLike],
         hash_info: Optional[HashInfo] = None,
         callback: Optional[DownloadProgress] = None,
     ) -> None:
         """
-        Download and save a file, with integrity verification using a hash.
-
-        If the file already exists at the specified path, its hash is verified
-        against the provided `filehash`. If the hash is incorrect, the file
-        is re-downloaded. If, after re-downloading, the file's hash still does
-        not match, an exception is raised.
+        Downloads a file from S3 and saves it to the specified
+        destination path.
 
         Args:
-            object_key (str): The key of the object to download.
-            dst_path (str): The path where the file will be saved.
-            filehash (str): The expected hash of the file for integrity
-                verification.
-            hash_algorithm (str, optional): The hashing algorithm to use
-                for verification (e.g., "md5", "sha256"). Default is "sha256".
+            object_key (str): The key of the object in the S3 bucket
+                to be downloaded.
+            dst_path (Union[str, PathLike]): The local path where
+                the file will be saved.
+            hash_info (Optional[HashInfo]): An instance of HashInfo
+                containing the expected hash value
+                and the hash algorithm for verification. If None,
+                    the hash check is skipped.
+            callback (Optional[DownloadProgress]): An optional
+                DownloadProgress instance to track download
+                progress, receiving the bytes downloaded and
+                total file size.
 
         Raises:
-            FileDownloadError: If an error occurs during file download.
-            FileSaveError: If there is an error while saving the file.
-            FileHashMismatchError: If the file's hash does not match
-                `filehash` after re-downloading.
+            FileHashMismatchError: If the downloaded file's hash does
+                not match the  expected hash after the download.
+            CalculateHashFailed: If the hash calculation fails
+                during the hash check.
         """
 
     def download_bytes(
         self,
         object_key: str,
+        callback: Optional[DownloadProgress] = None,
     ) -> bytes:
         """
         Download a file from the S3 bucket and return bytes.
@@ -132,6 +192,10 @@ class FileDownloaderProtocol(Protocol):
         Args:
             object_key (str): The key of the object to download.
             dst_path (str): The path where the file will be saved.
+            callback (Optional[DownloadProgress]): An optional
+                DownloadProgress instance to track download
+                progress, receiving the bytes downloaded and
+                total file size.
 
         Returns:
             bytes: The content of the downloaded file.
@@ -267,7 +331,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
             except CalculateHashFailed:
                 log.error(f"Failed to calculate hash: {filepath}")
         save_file(
-            file_content=self.download_bytes(object_key),
+            file_content=self.download_bytes(object_key, callback=callback),
             file_path=dst_path,
         )
         log.debug(f"File was downloaded: {filepath}")
