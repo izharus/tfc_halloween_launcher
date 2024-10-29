@@ -110,7 +110,7 @@ class SettingsWidget(QObject, BaseWidget):
 
         super().__init__(
             widget=main_window.stackedWidget,
-            parent_widget=main_window.widget_main_window,
+            parent_widget=main_window.widget_main_window_child,
         )
 
         self._ui = main_window
