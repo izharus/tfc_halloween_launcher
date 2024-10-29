@@ -17,6 +17,7 @@ from src.launcher.utility.custom_exceptions import (
     FilesSaveError,
 )
 from src.launcher.utility.file_downloader import FileYOSDownloader, save_file
+from src.launcher.utility.pydantic_models import HashInfo
 
 
 @pytest.fixture
@@ -101,8 +102,14 @@ class TestFileYOSDownloader:
         """Test handling file hash mismatch after download."""
         object_key = "test-object-key"
         dst_path = tmp_path / "file"
-        wrong_hash = "wrong_hash"
-        correct_hash = "correct_hash"
+        correct_hash_info = HashInfo(
+            value="correct_hash",
+            algorithm="sha256",
+        )
+        wrong_hash_info = HashInfo(
+            value="wrong_hash",
+            algorithm="sha256",
+        )
 
         # Mocking download_bytes to return dummy content
         self.file_downloader.download_bytes = MagicMock(
@@ -119,11 +126,11 @@ class TestFileYOSDownloader:
             with mocker.patch.object(
                 file_downloader, "save_file", save_file_mock
             ):
-                mock_hash.return_value = wrong_hash
+                mock_hash.return_value = wrong_hash_info.value
 
                 with pytest.raises(FileHashMismatchError):
                     self.file_downloader.download_file(
-                        object_key, dst_path, correct_hash
+                        object_key, dst_path, correct_hash_info
                     )
 
                 save_file_mock.assert_called_once_with(
@@ -138,8 +145,10 @@ class TestFileYOSDownloader:
         """Test downloading a file successfully when the hash matches."""
         object_key = "test-object-key"
         dst_path = tmp_path / "file"
-        correct_hash = "correct_hash"
-
+        correct_hash_info = HashInfo(
+            value="correct_hash",
+            algorithm="sha256",
+        )
         # Mocking download_bytes to return dummy content
         self.file_downloader.download_bytes = MagicMock(
             return_value=b"dummy data"
@@ -156,12 +165,12 @@ class TestFileYOSDownloader:
                 file_downloader, "save_file", save_file_mock
             ):
                 mock_hash.return_value = (
-                    correct_hash  # Returns the correct hash
+                    correct_hash_info.value  # Returns the correct hash
                 )
 
                 # Call the download_file method and check for exceptions
                 self.file_downloader.download_file(
-                    object_key, dst_path, correct_hash
+                    object_key, dst_path, correct_hash_info
                 )
 
                 # Ensure save_file was called with the expected arguments

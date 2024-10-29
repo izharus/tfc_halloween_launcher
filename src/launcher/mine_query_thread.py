@@ -72,12 +72,12 @@ class MinecraftQueryThread(QThread):
         """
         config = self._config_manager.get_modpack(button.config_name)
         icon_data = config.server_config.server_icon
-        icon_path = LauncherConfig.get_icon_path(icon_data.hash)
+        icon_path = LauncherConfig.get_icon_path(icon_data.hash.value)
         try:
             self._downloader.download_file(
                 icon_data.yan_obj_storage,
                 str(icon_path),
-                icon_data.hash,
+                hash_info=icon_data.hash,
             )
         except FileDownloadError as error:
             log.error(f"Failed to download server icon: {error}")

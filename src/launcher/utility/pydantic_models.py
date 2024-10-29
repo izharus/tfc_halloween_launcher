@@ -17,7 +17,7 @@ class FileInfo(BaseModel):
             the file.
         yan_obj_storage (str): The object key to the file in
             Yandex Object Storage.
-        hash (str): The hash value of the file.
+        hash (HashInfo): Represents filehash.
         dist_file_path (str): The path where the file should
             be downloaded.
     """
@@ -25,7 +25,7 @@ class FileInfo(BaseModel):
     file_name: str
     api_url: str
     yan_obj_storage: str
-    hash: str
+    hash: "HashInfo"
     dist_file_path: str
 
 
@@ -104,3 +104,10 @@ class AuthData(BaseModel):
     username: str
     uuid: str
     accessToken: str
+
+
+class HashInfo(BaseModel):
+    """Represents the hash information."""
+
+    value: str
+    algorithm: str = "sha256"

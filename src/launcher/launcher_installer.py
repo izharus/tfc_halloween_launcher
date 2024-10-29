@@ -182,10 +182,8 @@ class ModsInstaller(QThread):
             self._file_downloader.download_file(
                 file_info.yan_obj_storage,
                 file_path,
-                filehash=file_info.hash,
-                hash_algorithm="sha256",
+                hash_info=file_info.hash,
             )
-            return None
 
         count = 0
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:

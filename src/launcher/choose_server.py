@@ -92,7 +92,7 @@ class ChoseServer(BaseWidget):
                 log.critical(f"Modpack name no found: '{name}'")
                 continue
             icon_image = LauncherConfig.get_icon_file(
-                modpack.server_config.server_icon.hash
+                modpack.server_config.server_icon.hash.value
             )
             button = ServerWidget(
                 config_name=name,

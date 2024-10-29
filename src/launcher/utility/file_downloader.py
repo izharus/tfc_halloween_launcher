@@ -20,6 +20,7 @@ from .custom_exceptions import (
     FileHashMismatchError,
     FilesSaveError,
 )
+from .pydantic_models import HashInfo
 
 
 def calculate_hash(
@@ -95,8 +96,8 @@ class FileDownloaderProtocol(Protocol):
         self,
         object_key: str,
         dst_path: str,
-        filehash: str,
-        hash_algorithm: str = "sha256",
+        hash_info: Optional[HashInfo] = None,
+        callback: Optional[DownloadProgress] = None,
     ) -> None:
         """
         Download and save a file, with integrity verification using a hash.
@@ -200,17 +201,20 @@ class FileYOSDownloader(FileDownloaderProtocol):
         self,
         object_key: str,
         dst_path: Union[str, PathLike],
-        filehash: str,
-        hash_algorithm: str = "sha256",
+        hash_info: Optional[HashInfo] = None,
+        callback: Optional[DownloadProgress] = None,
     ) -> None:
-        
         filepath = Path(dst_path)
-        s  = filepath.absolute()
-        if filepath.exists():
+        if hash_info and filepath.exists():
             log.debug(f"File exists: {filepath}")
             try:
-                if filehash == calculate_hash(filepath, hash_algorithm):
+                if hash_info.value == calculate_hash(
+                    filepath, hash_info.algorithm
+                ):
                     log.debug(f"File hash correct: {filepath}")
+                    if callback:
+                        callback.maximum = 1
+                        callback.current = 1
                     return
                 else:
                     log.error(f"File hash incorrect: {filepath}")
@@ -221,6 +225,8 @@ class FileYOSDownloader(FileDownloaderProtocol):
             file_path=dst_path,
         )
         log.debug(f"File was downloaded: {filepath}")
-        if filehash != calculate_hash(filepath, hash_algorithm):
+        if hash_info and hash_info.value != calculate_hash(
+            filepath, hash_info.algorithm
+        ):
             log.debug(f"File hash incorrect after download: {filepath}")
             raise FileHashMismatchError

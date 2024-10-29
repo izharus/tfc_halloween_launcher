@@ -31,7 +31,7 @@ def mock_file_info():
         "file_name": "test_file1.txt",
         "api_url": "http://example.com/test_file1.txt",
         "yan_obj_storage": "test_object_key1",
-        "hash": "abcdef123456",
+        "hash": {"value": "abcdef123456", "algorithm": "sha256"},
         "dist_file_path": "/path/to/test_file1.txt",
     }
 
@@ -57,7 +57,7 @@ def mock_config_data(mock_file_info):
                         "file_name": "test_file1.txt",
                         "api_url": "http://example.com/test_file1.txt",
                         "yan_obj_storage": "test_object_key1",
-                        "hash": "abcdef123456",
+                        "hash": {"value": "abf123456", "algorithm": "sha256"},
                         "dist_file_path": "/path/to/test_file1.txt",
                     }
                 ],
@@ -79,7 +79,10 @@ def mock_config_data(mock_file_info):
                         "file_name": "test_file2.txt",
                         "api_url": "http://example.com/test_file2.txt",
                         "yan_obj_storage": "test_object_key2",
-                        "hash": "abcdef123456",
+                        "hash": {
+                            "value": "abcde66f123456",
+                            "algorithm": "sha256",
+                        },
                         "dist_file_path": "/path/to/test_file2.txt",
                     }
                 ],
@@ -108,7 +111,7 @@ def mock_modpack_data(mock_file_info):
                 "file_name": "test_file3.txt",
                 "api_url": "http://example.com/test_file3.txt",
                 "yan_obj_storage": "test_object_key3",
-                "hash": "abcdef654321",
+                "hash": {"value": "abcdef123456", "algorithm": "sha256"},
                 "dist_file_path": "/path/to/test_file3.txt",
             }
         ],
