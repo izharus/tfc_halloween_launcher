@@ -6,7 +6,7 @@ shows modpack description and etc.
 from typing import Optional
 
 from loguru import logger as log
-from PySide6.QtCore import Slot
+from qtpy.QtCore import Slot
 
 from .design.design import Ui_MainWindow
 from .design.utility import ServerWidget

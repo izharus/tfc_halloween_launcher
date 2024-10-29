@@ -54,7 +54,7 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
-
+from .utility._helper import is_windows_8_or_older
 
 def hide_console() -> None:
     """
@@ -213,6 +213,13 @@ class Window(QtWidgets.QMainWindow):
         )
 
     def _config_installer_complete(self):
+        if is_windows_8_or_older():
+            self.msg_box.show_message(
+                title="Устаревшая версия Windows",
+                msg="У меня нет ресурсов чтобы полноценно портировать "
+                "лаунчер на Windows 7."
+            )
+
         self.config_manager = self._config_installer_thread.config_manager
         # This widget connects signals in _connect_signals
         self._settings_widget = SettingsWidget(

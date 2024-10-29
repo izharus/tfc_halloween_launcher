@@ -5,7 +5,16 @@ import webbrowser
 from os import PathLike
 from typing import Final, List, Optional, Tuple, Union
 
-from qtpy.QtCore import QBuffer, QByteArray, QPoint, QRect, Qt, QUrl, Slot
+from qtpy.QtCore import (
+    QBuffer,
+    QByteArray,
+    QObject,
+    QPoint,
+    QRect,
+    Qt,
+    QUrl,
+    Slot,
+)
 from qtpy.QtGui import QDesktopServices, QFont, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QDialog,
@@ -230,7 +239,7 @@ def clear_layout(layout: QLayout) -> None:
                 clear_layout(item.layout())
 
 
-class BaseWidget:
+class BaseWidget(QObject):
     """
     A base class for creating a widget with blur effect and an info widget.
 
@@ -239,6 +248,7 @@ class BaseWidget:
     """
 
     def __init__(self, widget: QWidget, parent_widget: QWidget):
+        super().__init__()
         self._widget = widget
         self._parent_widget = parent_widget
         self._blur_effect: QGraphicsBlurEffect
@@ -574,7 +584,7 @@ class LabeledSlider(QWidget):
                 f"Max typos is a positive integer, not: {position}"
             )
 
-        self.setFixedSize(600, 50)
+        self.setFixedSize(600, 100)
         interval = maximum // min(max(1, maximum // 1024), max_typos)
         levels = range(minimum, maximum + interval, interval)
         if labels is not None:
@@ -632,7 +642,7 @@ class LabeledSlider(QWidget):
         self.value_label.setAlignment(Qt.AlignCenter)
         self._update_value()
 
-        self.sl.setStyleSheet(ALLOCATE_RAM_SLIDER)
+        self.setStyleSheet(ALLOCATE_RAM_SLIDER)
         # Change value_label if slider.value changed
         self.sl.valueChanged.connect(self._update_value)
         self.layout.addWidget(self.value_label)
@@ -647,7 +657,7 @@ class LabeledSlider(QWidget):
         info_text = f"Память: {value} МБ"
 
         if not value:
-            info_text = "Авто"
+            info_text = "Память: Авто"
         self.value_label.setText(info_text)
 
     def paintEvent(self, e):  # pylint: disable=C0103, R0914

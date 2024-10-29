@@ -8,14 +8,14 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+from qtpy.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+from qtpy.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
+from qtpy.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow,
     QPushButton, QRadioButton, QScrollArea, QSizePolicy,
     QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
@@ -682,6 +682,7 @@ class Ui_MainWindow(object):
 "  border: 2px solid #4287f5; /* Border color for the group box */\n"
 "  border-radius: 8px; /* Border radius for rounded corners */\n"
 "  margin-top: 10px; /* Adjust margin as needed */\n"
+"  color: white;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -711,8 +712,8 @@ class Ui_MainWindow(object):
 "  border: 2px solid #999;\n"
 "}\n"
 "\n"
-"QGroupBox QRadioButton::indica"
-                        "tor:checked:hover {\n"
+"QGroupBox "
+                        "QRadioButton::indicator:checked:hover {\n"
 "  background-color: #3264ad;\n"
 "}\n"
 "")
@@ -726,6 +727,7 @@ class Ui_MainWindow(object):
 "QCheckBox, QRadioButton {\n"
 "  spacing: 5px;\n"
 "  font-size: 16px;\n"
+"  color: white;\n"
 "}\n"
 "\n"
 "QCheckBox::indicator, QRadioButton::indicator {\n"
@@ -762,6 +764,7 @@ class Ui_MainWindow(object):
 "QCheckBox, QRadioButton {\n"
 "  spacing: 5px;\n"
 "  font-size: 16px;\n"
+"  color: white;\n"
 "}\n"
 "\n"
 "QCheckBox::indicator, QRadioButton::indicator {\n"
@@ -806,6 +809,7 @@ class Ui_MainWindow(object):
 "  border: 2px solid #4287f5; /* Border color for the group box */\n"
 "  border-radius: 8px; /* Border radius for rounded corners */\n"
 "  margin-top: 10px; /* Adjust margin as needed */\n"
+"  color: white;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -835,8 +839,8 @@ class Ui_MainWindow(object):
 "  border: 2px solid #999;\n"
 "}\n"
 "\n"
-"QGroupBox QRadioButton::indica"
-                        "tor:checked:hover {\n"
+"QGroupBox "
+                        "QRadioButton::indicator:checked:hover {\n"
 "  background-color: #3264ad;\n"
 "}\n"
 "")
@@ -1020,7 +1024,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

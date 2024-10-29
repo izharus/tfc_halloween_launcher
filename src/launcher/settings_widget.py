@@ -7,7 +7,7 @@ from typing import Callable, Optional
 
 import psutil
 from loguru import logger as log
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from qtpy.QtCore import QThread, Signal, Slot
 from qtpy.QtWidgets import QFileDialog
 
 from .design.design import Ui_MainWindow
@@ -86,7 +86,7 @@ class UploadWorker(QThread):
         self._function = function
 
 
-class SettingsWidget(QObject, BaseWidget):
+class SettingsWidget(BaseWidget):
     """
     A widget that manages user settings for the launcher interface.
     """
