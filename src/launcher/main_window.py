@@ -46,7 +46,7 @@ from .login_widget import LoginWidget
 from .mine_query_thread import MinecraftQueryThread
 from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
-from .utility._helper import get_version
+from .utility._helper import get_version, init_loguru_logger
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -87,14 +87,8 @@ class Window(QtWidgets.QMainWindow):
 
         logging_dir = self._launcher_config.LOGGING_DIR
         logging_dir /= "launcher_{time:YYYY-MM}.log"
-        log.add(
-            logging_dir,
-            rotation="1 month",
-            retention="1 month",  # Retain log files for 1 month after rotation
-            compression="zip",  # Optional: Enable compression for rotated logs
-            level="DEBUG",
-            serialize=False,
-        )
+        init_loguru_logger(logging_dir)
+
         log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
         self._ui_instance.stackedWidget.setCurrentWidget(
