@@ -5,6 +5,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from loguru import logger as log
 from qtpy.QtCore import QSettings
 from src.launcher.launcher_configs import ServerConfig, ServerConfigManager
 from src.launcher.main_window import Window
@@ -12,6 +13,9 @@ from src.launcher.utility.file_downloader import FileDownloaderProtocol
 from src.launcher.utility.pydantic_models import (
     ServerConfig as PydanticServerConfig,
 )
+
+log.remove()
+
 
 CONFIG_NAME_1 = "TestModpack1"
 CONFIG_NAME_2 = "TestModpack2"
