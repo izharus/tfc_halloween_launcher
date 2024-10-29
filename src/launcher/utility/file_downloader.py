@@ -22,8 +22,28 @@ from .custom_exceptions import (
 )
 
 
-def calculate_hash(file_name, hash_algorithm="sha256"):
-    """Calculate the hash of a file using the specified hash algorithm."""
+def calculate_hash(
+        file_name: Union[str, PathLike],
+        hash_algorithm="sha256",
+        ) -> str:
+    """Calculates the hash of a file using the specified hash algorithm.
+
+    Args:
+        file_name (str): The path to the file whose hash needs
+            to be calculated.
+        hash_algorithm (str, optional): The name of the hash algorithm to use 
+            (e.g., 'sha256', 'md5'). Defaults to 'sha256'.
+
+    Returns:
+        str: The hexadecimal representation of the calculated hash.
+
+    Raises:
+        CalculateHashFailed: If an error occurs while calculating the hash.
+        
+    Example:
+        >>> calculate_hash("example.txt", "md5")
+        'd41d8cd98f00b204e9800998ecf8427e'
+    """
     try:
         # Create a hash object based on the specified algorithm
         hasher = hashlib.new(hash_algorithm)
