@@ -424,19 +424,10 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
     Custom exception handler to catch all exceptions.
     """
-    # if Window.is_working:
-    config = LauncherConfig()
     log.critical("Exception occurred:")
     log.critical(exc_type)
     log.critical(exc_value)
     log.critical(" ".join(traceback.format_tb(exc_traceback)))
-    msg_box = LogMessageBox(None)
-    msg_box.show_message(
-        title="Критическая ошибка!",
-        msg="Отправьте последний текстовый файл разработчику: "
-        + f"{config.DEVELOPER_EMAIL}",
-        close_button_text="закрыть приложение",
-    )
     sys.exit(1)
 
 
