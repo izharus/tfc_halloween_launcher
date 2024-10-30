@@ -38,11 +38,8 @@ from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
     MinecraftOptions,
 )
-from .launcher_configs import (
-    ServerConfig,
-    ServerConfigManager,
-    SettingsManager,
-)
+from .design.thread_data_utils import SettingsManager
+from .launcher_configs import ServerConfig, ServerConfigManager
 from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,
