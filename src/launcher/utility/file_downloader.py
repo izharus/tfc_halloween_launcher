@@ -19,7 +19,7 @@ from .custom_exceptions import (
     FileHashMismatchError,
     FilesSaveError,
 )
-from .pydantic_models import HashInfo
+from .pydantic_models import HashInfo, S3Credentials
 
 
 def calculate_hash(
@@ -235,35 +235,30 @@ class FileYOSDownloader(FileDownloaderProtocol):
 
     def __init__(
         self,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
-        bucket_name: str,
+        s3_credentials: S3Credentials,
     ):
         """
         Initializes the FileYOSDownloader with the necessary
         AWS S3 settings.
 
         Args:
-            aws_access_key_id (str): AWS access key ID for authenticating
-                requests.
-            aws_secret_access_key (str): AWS secret access key for securing
-                requests.
-            bucket_name (str): The name of the S3 bucket to interact with.
-
+            s3_credentials (S3Credentials): The S3 credentials and
+                configuration required for connecting to the S3 bucket.
         Raises:
             DownloadServerHandshakeError: If there's an issue connecting
                 to the S3 server.
         """
-        endpoint_url = "https://storage.yandexcloud.net"
-        self._bucket_name = bucket_name
+        self._bucket_name = s3_credentials.bucket_name
         try:
             self._boto3_client = boto3.client(
                 "s3",
-                endpoint_url=endpoint_url,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
+                endpoint_url=s3_credentials.endpoint_url,
+                aws_access_key_id=s3_credentials.aws_access_key_id,
+                aws_secret_access_key=s3_credentials.aws_secret_access_key,
+                # An empty string raises an exception due fetching objects
+                region_name=s3_credentials.region_name or None,
             )
-        except boto3.exceptions.Boto3Error as error:
+        except (boto3.exceptions.Boto3Error, ValueError) as error:
             raise DownloadServerHandshakeError from error
 
     def download_bytes(

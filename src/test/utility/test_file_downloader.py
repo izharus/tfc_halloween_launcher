@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import boto3
 import pytest
 from pytest_mock import MockerFixture
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
+from src.launcher import boto3_cred
 from src.launcher.launcher_configs import LauncherConfig
 from src.launcher.utility import file_downloader
 from src.launcher.utility.custom_exceptions import (
@@ -17,7 +17,7 @@ from src.launcher.utility.custom_exceptions import (
     FilesSaveError,
 )
 from src.launcher.utility.file_downloader import FileYOSDownloader, save_file
-from src.launcher.utility.pydantic_models import HashInfo
+from src.launcher.utility.pydantic_models import HashInfo, S3Credentials
 
 
 @pytest.fixture
@@ -48,11 +48,13 @@ class TestFileYOSDownloader:
 
     def setup_method(self):
         """Initialize a file_downloader instance."""
-        self.file_downloader = FileYOSDownloader(
-            aws_access_key_id=BOTO3_ACCESS_KEY,
-            aws_secret_access_key=BOTO3_SECRET_KEY,
-            bucket_name=LauncherConfig.BUCKET_NAME,
+        self.credentials = S3Credentials(
+            aws_access_key_id=boto3_cred.BOTO3_ACCESS_KEY,
+            aws_secret_access_key=boto3_cred.BOTO3_SECRET_KEY,
+            bucket_name=boto3_cred.BOTO3_BUCKET_NAME,
+            endpoint_url=boto3_cred.URL_END_POINT,
         )
+        self.file_downloader = FileYOSDownloader(self.credentials)
 
     def test_download_bytes_success(
         self,
@@ -88,6 +90,7 @@ class TestFileYOSDownloader:
             self.file_downloader.get_hash(
                 "non-exists",
             )
+
     def test_download_file_boto3_error(self):
         """Test handling Boto3 errors during file download."""
         bucket_name = LauncherConfig.BUCKET_NAME
@@ -151,7 +154,7 @@ class TestFileYOSDownloader:
         # Mocking save_file to simulate saving the file without error
         save_file_mock = MagicMock()
 
-        # Patch the calculate_hash function to return the wrong hash on first call
+        # Patch the calculate_hash function to return the wrong hash
         mock_hash = MagicMock()
 
         with mocker.patch.object(file_downloader, "calculate_hash", mock_hash):

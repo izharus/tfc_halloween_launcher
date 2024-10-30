@@ -29,7 +29,7 @@ from loguru import logger as log
 from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, QSettings, Qt, Slot
 from qtpy.QtGui import QIcon
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
+from src.launcher import boto3_cred
 
 from .choose_server import ChoseServer
 from .data_validation import Validator
@@ -55,6 +55,7 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
+from .utility.pydantic_models import S3Credentials
 
 
 def hide_console() -> None:
@@ -103,12 +104,14 @@ class Window(QtWidgets.QMainWindow):
         self.msg_box = MessageBox(self._ui_instance.widget_main_window)
         self.log_msg_box = LogMessageBox(self._ui_instance.widget_main_window)
 
+        credentials = S3Credentials(
+            aws_access_key_id=boto3_cred.BOTO3_ACCESS_KEY,
+            aws_secret_access_key=boto3_cred.BOTO3_SECRET_KEY,
+            bucket_name=boto3_cred.BOTO3_BUCKET_NAME,
+            endpoint_url=boto3_cred.URL_END_POINT,
+        )
         try:
-            self.file_downloader = FileYOSDownloader(
-                aws_access_key_id=BOTO3_ACCESS_KEY,
-                aws_secret_access_key=BOTO3_SECRET_KEY,
-                bucket_name=LauncherConfig.BUCKET_NAME,
-            )
+            self.file_downloader = FileYOSDownloader(credentials)
         except DownloadServerHandshakeError as error:
             log.critical(f"Failed to install boto3: {error}")
             self.log_msg_box.show_message(
@@ -350,7 +353,7 @@ class Window(QtWidgets.QMainWindow):
             # After installation user should restart app
             sys.exit(1)
 
-        self._install_thread.start()
+        self._install_thread.run()
 
     def _install_thread_finished(self) -> None:
         """
