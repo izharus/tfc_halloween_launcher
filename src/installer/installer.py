@@ -195,8 +195,7 @@ class DownloaderApp:
             try:
                 subprocess.run(LAUNCHER_BINARY_PATH, check=True)
             except Exception as error:
-                log.critical(f"Failed to launch main app: {error}")
-                messagebox.showerror("Ошибка", "Не удалось запустить лаунчер.")
+                log.critical(f"Main app execution failed: {error}")
             finally:
                 self.root.destroy()
                 sys.exit()
