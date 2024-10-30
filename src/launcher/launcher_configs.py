@@ -54,9 +54,9 @@ BASE_API_URL = URL("http://77.239.232.50:23846/")
 class BinariesObjectKey(Enum):
     """Object keys for launcher binaries."""
 
-    WIN10X64: str = "binary/AuleCraftwin10x64.exe"
-    WIN7X64: str = "binary/AuleCraftwin7x64.exe"
-    WIN7X86: str = "binary/AuleCraftwin7x86.exe"
+    WIN10X64: str = "binary/AuleCraftWin10_64bit.exe"
+    WIN7X64: str = "binary/AuleCraftWin7_64bit.exe"
+    WIN7X86: str = "binary/AuleCraftWin7_32bit.exe"
 
 
 class LauncherConfig:
