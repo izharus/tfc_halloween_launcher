@@ -60,7 +60,9 @@ def calculate_hash(
         # Return the hexadecimal representation of the hash
         return hasher.hexdigest()
     except Exception as error:
-        raise CalculateHashFailed() from error
+        raise CalculateHashFailed(
+            f"Failed to calculate hash: {error}"
+        ) from error
 
 
 def save_file(
@@ -176,8 +178,7 @@ class FileDownloaderProtocol(Protocol):
                 total file size.
 
         Raises:
-            FileHashMismatchError: If the downloaded file's hash does
-                not match the  expected hash after the download.
+            FileDownloadError: IF any error occurs due downloading process.
             CalculateHashFailed: If the hash calculation fails
                 during the hash check.
         """
@@ -330,8 +331,9 @@ class FileYOSDownloader(FileDownloaderProtocol):
                     return
                 else:
                     log.error(f"File hash incorrect: {filepath}")
-            except CalculateHashFailed:
+            except CalculateHashFailed as error:
                 log.error(f"Failed to calculate hash: {filepath}")
+                raise FileDownloadError from error
         save_file(
             file_content=self.download_bytes(object_key, callback=callback),
             file_path=dst_path,
