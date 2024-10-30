@@ -353,7 +353,7 @@ class Window(QtWidgets.QMainWindow):
             # After installation user should restart app
             sys.exit(1)
 
-        self._install_thread.run()
+        self._install_thread.start()
 
     def _install_thread_finished(self) -> None:
         """
