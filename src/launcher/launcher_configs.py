@@ -10,7 +10,7 @@ import json
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Final, Optional
+from typing import TYPE_CHECKING, Final, Optional
 
 from loguru import logger as log
 from pydantic import ValidationError
@@ -18,7 +18,6 @@ from unidecode import unidecode
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .boto3_cred import BOTO3_BUCKET_NAME
-from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -27,6 +26,9 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
+
+if TYPE_CHECKING:
+    from .design.thread_data_utils import SettingsManager
 
 
 class BinariesObjectKey(Enum):
@@ -302,7 +304,7 @@ class ServerConfig:
         internal_name: str,
         modpack: Modpack,
         launcher_config: LauncherConfig,
-        settings: SettingsManager,
+        settings: "SettingsManager",
     ):
         """
         Initializes the ServerConfig instance.
