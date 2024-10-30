@@ -1,4 +1,5 @@
 """A simple launcher for auto updating of main launcher."""
+
 import json
 import os
 import platform
@@ -51,7 +52,7 @@ def get_binary_download_key() -> Optional[BinariesObjectKey]:
 
     if is_64_bit:
         log.debug("64-bit system recognized.")
-        if version in ("6.1", "6.2", "6.3"):
+        if version in ("6.1", "6.2", "6.3", "7"):
             return BinariesObjectKey.WIN7X64
         else:
             return BinariesObjectKey.WIN10X64
