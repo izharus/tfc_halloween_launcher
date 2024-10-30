@@ -31,6 +31,26 @@ if TYPE_CHECKING:
     from .design.thread_data_utils import SettingsManager
 
 
+class URL(str):
+    """
+    A class representing a URL that allows for easy construction
+    and manipulation of URL paths using the division operator.
+    """
+
+    def __init__(self, base_url: str):
+        super().__init__()
+        self.base_url = base_url.rstrip("/")
+
+    def __truediv__(self, other: str):
+        return URL(f"{self.base_url}/{other.lstrip('/')}")
+
+    def __str__(self):
+        return self.base_url
+
+
+BASE_API_URL = URL("http://77.239.232.50:23846/")
+
+
 class BinariesObjectKey(Enum):
     """Object keys for launcher binaries."""
 
@@ -65,9 +85,10 @@ class LauncherConfig:
     LAUNCHER_NAME = "AuleCraft"
     JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
 
-    MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
-    API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
-    API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
+    MINECRAFT_LAUNCHER_IP_ADDR = BASE_API_URL / "launcher"
+    API_URL_PUSH_SKIN = BASE_API_URL / "push_skin"
+    API_URL_PUSH_CAPE = BASE_API_URL / "push_cape"
+    API_URL_S3_INSTALLER_CRED = BASE_API_URL / "get_installer_s3_cred"
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
     LAUNCHER_BINARIES = BinariesObjectKey
