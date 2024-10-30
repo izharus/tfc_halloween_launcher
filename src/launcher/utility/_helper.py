@@ -4,7 +4,11 @@ import os
 import platform
 import subprocess
 import sys
+from os import PathLike
+from pathlib import Path
 from typing import Final
+
+from loguru import logger as log
 
 SUBPROCESS_CREATION_FLAGS: Final = (
     subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
@@ -42,7 +46,7 @@ def get_version():
     """
     # Python version
     res = ""
-
+    platform.win32_ver()
     if platform.python_version().startswith("3.8"):
         res = "win7"
     else:
@@ -55,3 +59,15 @@ def get_version():
         res += "x86"
 
     return res
+
+
+def init_loguru_logger(logging_dir: PathLike) -> None:
+    """Initialize main logger."""
+    log.add(
+        Path(logging_dir) / "launcher_{time:YYYY-MM}.log",
+        rotation="1 month",
+        retention="1 month",  # Retain log files for 1 month after rotation
+        compression="zip",  # Optional: Enable compression for rotated logs
+        level="DEBUG",
+        serialize=False,
+    )

@@ -19,15 +19,10 @@ def get_version():
     res = ""
 
     if platform.python_version().startswith("3.8"):
-        res = "win7"
+        res = "Win7_"
     else:
-        res = "win10"
-
-    # 32 or 64 bit
-    if sys.maxsize > 2**32:
-        res+="x64"
-    else:
-        res+="x86"
+        res = "Win10_"
+    res += platform.architecture()[0]
 
     return res
 

@@ -38,11 +38,8 @@ from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
     MinecraftOptions,
 )
-from .launcher_configs import (
-    ServerConfig,
-    ServerConfigManager,
-    SettingsManager,
-)
+from .design.thread_data_utils import SettingsManager
+from .launcher_configs import ServerConfig, ServerConfigManager
 from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,
@@ -182,10 +179,8 @@ class ModsInstaller(QThread):
             self._file_downloader.download_file(
                 file_info.yan_obj_storage,
                 file_path,
-                filehash=file_info.hash,
-                hash_algorithm="sha256",
+                hash_info=file_info.hash,
             )
-            return None
 
         count = 0
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:

@@ -4,10 +4,9 @@ for safe downloading of files.
 """
 
 import hashlib
-import os
 from os import PathLike
 from pathlib import Path
-from typing import Protocol, Union
+from typing import Callable, Optional, Protocol, Union
 
 import boto3
 import boto3.exceptions
@@ -20,18 +19,19 @@ from .custom_exceptions import (
     FileHashMismatchError,
     FilesSaveError,
 )
+from .pydantic_models import HashInfo, S3Credentials
 
 
 def calculate_hash(
-        file_name: Union[str, PathLike],
-        hash_algorithm="sha256",
-        ) -> str:
+    file_name: Union[str, PathLike],
+    hash_algorithm="sha256",
+) -> str:
     """Calculates the hash of a file using the specified hash algorithm.
 
     Args:
         file_name (str): The path to the file whose hash needs
             to be calculated.
-        hash_algorithm (str, optional): The name of the hash algorithm to use 
+        hash_algorithm (str, optional): The name of the hash algorithm to use
             (e.g., 'sha256', 'md5'). Defaults to 'sha256'.
 
     Returns:
@@ -39,7 +39,7 @@ def calculate_hash(
 
     Raises:
         CalculateHashFailed: If an error occurs while calculating the hash.
-        
+
     Example:
         >>> calculate_hash("example.txt", "md5")
         'd41d8cd98f00b204e9800998ecf8427e'
@@ -60,7 +60,9 @@ def calculate_hash(
         # Return the hexadecimal representation of the hash
         return hasher.hexdigest()
     except Exception as error:
-        raise CalculateHashFailed() from error
+        raise CalculateHashFailed(
+            f"Failed to calculate hash: {error}"
+        ) from error
 
 
 def save_file(
@@ -84,8 +86,67 @@ def save_file(
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_bytes(file_content)
 
-    except Exception as error:
+    except OSError as error:
         raise FilesSaveError from error
+
+
+class DownloadProgress:
+    """
+    A helper class to manage and update download progress
+    values for a UI component.
+
+    Attributes:
+        set_current (Callable[[int], None]): A function to set
+            the current progress value.
+        set_maximum (Callable[[int], None]): A function to set
+            the maximum value of the progress.
+
+    Methods:
+        current(int): Updates the current progress value.
+        maximum(int): Updates the maximum progress value.
+    """
+
+    def __init__(
+        self,
+        set_current: Callable[[int], None],
+        set_maximum: Callable[[int], None],
+    ):
+        """
+        Initializes the DownloadProgress with functions
+        to set maximum and current progress values.
+
+        Args:
+            set_maximum (Callable[[int], None]): A function
+                to set the maximum value of the progress.
+            set_current (Callable[[int], None]): A function
+                to set the current value of the progress.
+        """
+        self._set_current = set_current
+        self._set_maximum = set_maximum
+        self._current = 0
+        self._maximum = 0
+
+    @property
+    def current(self):
+        """Returns the current status"""
+        return self._current
+
+    @current.setter
+    def current(self, current: int):
+        """Updates the current progress value."""
+        self._current = current
+        self._set_current(self._current)
+
+    @property
+    def maximum(self):
+        """Returns the current maximum"""
+        return self._maximum
+
+    @maximum.setter
+    def maximum(self, maximum: int):
+        """Updates the maximum progress value."""
+        self._maximum = maximum
+        self._set_maximum(self._maximum)
 
 
 class FileDownloaderProtocol(Protocol):
@@ -94,36 +155,38 @@ class FileDownloaderProtocol(Protocol):
     def download_file(
         self,
         object_key: str,
-        dst_path: str,
-        filehash: str,
-        hash_algorithm: str = "sha256",
+        dst_path: Union[str, PathLike],
+        hash_info: Optional[HashInfo] = None,
+        callback: Optional[DownloadProgress] = None,
     ) -> None:
         """
-        Download and save a file, with integrity verification using a hash.
-
-        If the file already exists at the specified path, its hash is verified
-        against the provided `filehash`. If the hash is incorrect, the file
-        is re-downloaded. If, after re-downloading, the file's hash still does
-        not match, an exception is raised.
+        Downloads a file from S3 and saves it to the specified
+        destination path.
 
         Args:
-            object_key (str): The key of the object to download.
-            dst_path (str): The path where the file will be saved.
-            filehash (str): The expected hash of the file for integrity
-                verification.
-            hash_algorithm (str, optional): The hashing algorithm to use
-                for verification (e.g., "md5", "sha256"). Default is "sha256".
+            object_key (str): The key of the object in the S3 bucket
+                to be downloaded.
+            dst_path (Union[str, PathLike]): The local path where
+                the file will be saved.
+            hash_info (Optional[HashInfo]): An instance of HashInfo
+                containing the expected hash value
+                and the hash algorithm for verification. If None,
+                    the hash check is skipped.
+            callback (Optional[DownloadProgress]): An optional
+                DownloadProgress instance to track download
+                progress, receiving the bytes downloaded and
+                total file size.
 
         Raises:
-            FileDownloadError: If an error occurs during file download.
-            FileSaveError: If there is an error while saving the file.
-            FileHashMismatchError: If the file's hash does not match
-                `filehash` after re-downloading.
+            FileDownloadError: IF any error occurs due downloading process.
+            CalculateHashFailed: If the hash calculation fails
+                during the hash check.
         """
 
     def download_bytes(
         self,
         object_key: str,
+        callback: Optional[DownloadProgress] = None,
     ) -> bytes:
         """
         Download a file from the S3 bucket and return bytes.
@@ -131,6 +194,10 @@ class FileDownloaderProtocol(Protocol):
         Args:
             object_key (str): The key of the object to download.
             dst_path (str): The path where the file will be saved.
+            callback (Optional[DownloadProgress]): An optional
+                DownloadProgress instance to track download
+                progress, receiving the bytes downloaded and
+                total file size.
 
         Returns:
             bytes: The content of the downloaded file.
@@ -138,6 +205,26 @@ class FileDownloaderProtocol(Protocol):
         Raises:
             FileDownloadError : If there's any error occurs
                 during file download.
+        """
+
+    def get_hash(
+        self,
+        object_key: str,
+    ) -> str:
+        """
+        Retrieves the md5 hash (ETag) of an object from an S3 bucket.
+
+        Args:
+            object_key (str): The key of the object in the S3 bucket whose
+                hash is to be retrieved.
+
+        Returns:
+            str: The ETag of the object, which serves as a hash
+                representation.
+
+        Raises:
+            FileDownloadError: If the file cannot be downloaded
+                from S3 due to connectivity issues or other exceptions.
         """
 
 
@@ -148,47 +235,69 @@ class FileYOSDownloader(FileDownloaderProtocol):
 
     def __init__(
         self,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
-        bucket_name: str,
+        s3_credentials: S3Credentials,
     ):
         """
         Initializes the FileYOSDownloader with the necessary
         AWS S3 settings.
 
         Args:
-            aws_access_key_id (str): AWS access key ID for authenticating
-                requests.
-            aws_secret_access_key (str): AWS secret access key for securing
-                requests.
-            bucket_name (str): The name of the S3 bucket to interact with.
-
+            s3_credentials (S3Credentials): The S3 credentials and
+                configuration required for connecting to the S3 bucket.
         Raises:
             DownloadServerHandshakeError: If there's an issue connecting
                 to the S3 server.
         """
-        endpoint_url = "https://storage.yandexcloud.net"
-        self._bucket_name = bucket_name
+        self._bucket_name = s3_credentials.bucket_name
         try:
             self._boto3_client = boto3.client(
                 "s3",
-                endpoint_url=endpoint_url,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
+                endpoint_url=s3_credentials.endpoint_url,
+                aws_access_key_id=s3_credentials.aws_access_key_id,
+                aws_secret_access_key=s3_credentials.aws_secret_access_key,
+                # An empty string raises an exception due fetching objects
+                region_name=s3_credentials.region_name or None,
             )
-        except boto3.exceptions.Boto3Error as error:
+        except (boto3.exceptions.Boto3Error, ValueError) as error:
             raise DownloadServerHandshakeError from error
 
     def download_bytes(
         self,
         object_key: str,
+        callback: Optional[DownloadProgress] = None,
+        chunk_size: int = 1024 * 1024,
     ) -> bytes:
         try:
             response = self._boto3_client.get_object(
                 Bucket=self._bucket_name,
                 Key=object_key,
             )
-            return response["Body"].read()
+            if callback:
+                callback.maximum = response["ContentLength"]
+
+            data = b""
+            while chunk := response["Body"].read(chunk_size):
+                data += chunk
+                if callback:
+                    callback.current = len(data)
+
+            return data
+
+        except Exception as e:
+            raise FileDownloadError(
+                f"Failed to download file from S3: {e}"
+            ) from e
+
+    def get_hash(
+        self,
+        object_key: str,
+    ) -> str:
+        try:
+            response = self._boto3_client.get_object(
+                Bucket=self._bucket_name,
+                Key=object_key,
+            )
+            return response["ETag"].strip('"')
         # boto3.exceptions.Boto3Error do not catches
         # exceptions if ethernet connection was lost
         except Exception as e:
@@ -200,27 +309,33 @@ class FileYOSDownloader(FileDownloaderProtocol):
         self,
         object_key: str,
         dst_path: Union[str, PathLike],
-        filehash: str,
-        hash_algorithm: str = "sha256",
+        hash_info: Optional[HashInfo] = None,
+        callback: Optional[DownloadProgress] = None,
     ) -> None:
-        
         filepath = Path(dst_path)
-        s  = filepath.absolute()
-        if filepath.exists():
+        if hash_info and filepath.exists():
             log.debug(f"File exists: {filepath}")
             try:
-                if filehash == calculate_hash(filepath, hash_algorithm):
+                if hash_info.value == calculate_hash(
+                    filepath, hash_info.algorithm
+                ):
                     log.debug(f"File hash correct: {filepath}")
+                    if callback:
+                        callback.maximum = 1
+                        callback.current = 1
                     return
                 else:
                     log.error(f"File hash incorrect: {filepath}")
-            except CalculateHashFailed:
+            except CalculateHashFailed as error:
                 log.error(f"Failed to calculate hash: {filepath}")
+                raise FileDownloadError from error
         save_file(
-            file_content=self.download_bytes(object_key),
+            file_content=self.download_bytes(object_key, callback=callback),
             file_path=dst_path,
         )
         log.debug(f"File was downloaded: {filepath}")
-        if filehash != calculate_hash(filepath, hash_algorithm):
+        if hash_info and hash_info.value != calculate_hash(
+            filepath, hash_info.algorithm
+        ):
             log.debug(f"File hash incorrect after download: {filepath}")
             raise FileHashMismatchError

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import boto3
 import pytest
 from pytest_mock import MockerFixture
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
+from src.launcher import boto3_cred
 from src.launcher.launcher_configs import LauncherConfig
 from src.launcher.utility import file_downloader
 from src.launcher.utility.custom_exceptions import (
@@ -17,6 +17,7 @@ from src.launcher.utility.custom_exceptions import (
     FilesSaveError,
 )
 from src.launcher.utility.file_downloader import FileYOSDownloader, save_file
+from src.launcher.utility.pydantic_models import HashInfo, S3Credentials
 
 
 @pytest.fixture
@@ -47,11 +48,13 @@ class TestFileYOSDownloader:
 
     def setup_method(self):
         """Initialize a file_downloader instance."""
-        self.file_downloader = FileYOSDownloader(
-            aws_access_key_id=BOTO3_ACCESS_KEY,
-            aws_secret_access_key=BOTO3_SECRET_KEY,
-            bucket_name=LauncherConfig.BUCKET_NAME,
+        self.credentials = S3Credentials(
+            aws_access_key_id=boto3_cred.BOTO3_ACCESS_KEY,
+            aws_secret_access_key=boto3_cred.BOTO3_SECRET_KEY,
+            bucket_name=boto3_cred.BOTO3_BUCKET_NAME,
+            endpoint_url=boto3_cred.URL_END_POINT,
         )
+        self.file_downloader = FileYOSDownloader(self.credentials)
 
     def test_download_bytes_success(
         self,
@@ -64,6 +67,29 @@ class TestFileYOSDownloader:
 
         assert isinstance(tmp_data, bytes)
         assert len(tmp_data) > 100
+
+    def test_get_hash_success(self, tmp_path: Path):
+        """Test if get_hash returns the correct hahs string."""
+        filepath = tmp_path / "tmp.json"
+        self.file_downloader.download_file(
+            LauncherConfig.MAP_JSON_YOS_OBJ_KEY,
+            dst_path=filepath,
+        )
+        tpm_hash = self.file_downloader.get_hash(
+            LauncherConfig.MAP_JSON_YOS_OBJ_KEY
+        )
+        assert isinstance(tpm_hash, str)
+        assert tpm_hash == file_downloader.calculate_hash(filepath, "md5")
+
+    def test_get_hash_failed(self):
+        """
+        Test if get_hash raises FileDownloadError
+        for non-exists object key.
+        """
+        with pytest.raises(FileDownloadError):
+            self.file_downloader.get_hash(
+                "non-exists",
+            )
 
     def test_download_file_boto3_error(self):
         """Test handling Boto3 errors during file download."""
@@ -83,11 +109,21 @@ class TestFileYOSDownloader:
             Bucket=bucket_name, Key=object_key
         )
 
-    def test_download_file_file_system_error(self):
+    def test_download_file_file_system_error(
+        self,
+        mocker: MockerFixture,
+    ):
         """Test handling Boto3 errors during file download."""
         object_key = "test-object-key"
         boto3_client = MagicMock()
         self.file_downloader._boto3_client = boto3_client
+
+        mocker.patch.object(
+            self.file_downloader,
+            "download_bytes",
+            return_value=b"bytes_content",
+        )
+        mocker.patch.object(Path, "write_bytes", side_effect=PermissionError)
         with pytest.raises(FilesSaveError):
             self.file_downloader.download_file(
                 object_key, "unknown_path", "mock_filehash"
@@ -101,8 +137,14 @@ class TestFileYOSDownloader:
         """Test handling file hash mismatch after download."""
         object_key = "test-object-key"
         dst_path = tmp_path / "file"
-        wrong_hash = "wrong_hash"
-        correct_hash = "correct_hash"
+        correct_hash_info = HashInfo(
+            value="correct_hash",
+            algorithm="sha256",
+        )
+        wrong_hash_info = HashInfo(
+            value="wrong_hash",
+            algorithm="sha256",
+        )
 
         # Mocking download_bytes to return dummy content
         self.file_downloader.download_bytes = MagicMock(
@@ -112,18 +154,18 @@ class TestFileYOSDownloader:
         # Mocking save_file to simulate saving the file without error
         save_file_mock = MagicMock()
 
-        # Patch the calculate_hash function to return the wrong hash on first call
+        # Patch the calculate_hash function to return the wrong hash
         mock_hash = MagicMock()
 
         with mocker.patch.object(file_downloader, "calculate_hash", mock_hash):
             with mocker.patch.object(
                 file_downloader, "save_file", save_file_mock
             ):
-                mock_hash.return_value = wrong_hash
+                mock_hash.return_value = wrong_hash_info.value
 
                 with pytest.raises(FileHashMismatchError):
                     self.file_downloader.download_file(
-                        object_key, dst_path, correct_hash
+                        object_key, dst_path, correct_hash_info
                     )
 
                 save_file_mock.assert_called_once_with(
@@ -138,8 +180,10 @@ class TestFileYOSDownloader:
         """Test downloading a file successfully when the hash matches."""
         object_key = "test-object-key"
         dst_path = tmp_path / "file"
-        correct_hash = "correct_hash"
-
+        correct_hash_info = HashInfo(
+            value="correct_hash",
+            algorithm="sha256",
+        )
         # Mocking download_bytes to return dummy content
         self.file_downloader.download_bytes = MagicMock(
             return_value=b"dummy data"
@@ -156,12 +200,12 @@ class TestFileYOSDownloader:
                 file_downloader, "save_file", save_file_mock
             ):
                 mock_hash.return_value = (
-                    correct_hash  # Returns the correct hash
+                    correct_hash_info.value  # Returns the correct hash
                 )
 
                 # Call the download_file method and check for exceptions
                 self.file_downloader.download_file(
-                    object_key, dst_path, correct_hash
+                    object_key, dst_path, correct_hash_info
                 )
 
                 # Ensure save_file was called with the expected arguments
@@ -181,12 +225,12 @@ def test_save_file_success(tmp_path, mock_file_content):
         assert file.read() == mock_file_content
 
 
-def test_save_file_failure(tmp_path, mock_file_content):
+def test_save_file_failure(tmp_path: Path, mock_file_content: bytes):
     """Test handling file saving failure."""
     file_path = os.path.join(tmp_path, "temp_dir", "test_file.txt")
 
     # Patching open to raise an exception
-    with patch("pathlib.Path.write_bytes", side_effect=Exception("File write error")):
+    with patch("pathlib.Path.write_bytes", side_effect=PermissionError):
         with pytest.raises(FilesSaveError):
             save_file(file_path, mock_file_content)
 

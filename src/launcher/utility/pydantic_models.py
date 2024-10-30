@@ -1,6 +1,6 @@
 """A module with Pydantic models."""
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -17,7 +17,7 @@ class FileInfo(BaseModel):
             the file.
         yan_obj_storage (str): The object key to the file in
             Yandex Object Storage.
-        hash (str): The hash value of the file.
+        hash (HashInfo): Represents filehash.
         dist_file_path (str): The path where the file should
             be downloaded.
     """
@@ -25,7 +25,7 @@ class FileInfo(BaseModel):
     file_name: str
     api_url: str
     yan_obj_storage: str
-    hash: str
+    hash: "HashInfo"
     dist_file_path: str
 
 
@@ -104,3 +104,31 @@ class AuthData(BaseModel):
     username: str
     uuid: str
     accessToken: str
+
+
+class HashInfo(BaseModel):
+    """Represents the hash information."""
+
+    value: str
+    algorithm: str = "sha256"
+
+
+class S3Credentials(BaseModel):
+    """
+    Pydantic model representing AWS S3 credentials for object storage.
+
+    Attributes:
+        aws_access_key_id (str): AWS access key ID for S3 authentication.
+        aws_secret_access_key (str): AWS secret access key for S3
+            authentication.
+        bucket_name (str): Name of the S3 bucket.
+        endpoint_url (str): URL of the S3 endpoint.
+        region_name (Optional[str]): AWS region name. Optional,
+            defaults to None.
+    """
+
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    bucket_name: str
+    endpoint_url: str
+    region_name: Optional[str] = None

@@ -8,8 +8,9 @@ launcher and managing server configurations.
 
 import json
 import os
+from enum import Enum
 from pathlib import Path
-from typing import Final, Optional
+from typing import TYPE_CHECKING, Final, Optional
 
 from loguru import logger as log
 from pydantic import ValidationError
@@ -17,7 +18,6 @@ from unidecode import unidecode
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .boto3_cred import BOTO3_BUCKET_NAME
-from .design.thread_data_utils import SettingsManager
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -26,6 +26,37 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
+
+if TYPE_CHECKING:
+    from .design.thread_data_utils import SettingsManager
+
+
+class URL(str):
+    """
+    A class representing a URL that allows for easy construction
+    and manipulation of URL paths using the division operator.
+    """
+
+    def __init__(self, base_url: str):
+        super().__init__()
+        self.base_url = base_url.rstrip("/")
+
+    def __truediv__(self, other: str):
+        return URL(f"{self.base_url}/{other.lstrip('/')}")
+
+    def __str__(self):
+        return self.base_url
+
+
+BASE_API_URL = URL("http://77.239.232.50:23846/")
+
+
+class BinariesObjectKey(Enum):
+    """Object keys for launcher binaries."""
+
+    WIN10X64: str = "binary/AuleCraftWin10_64bit.exe"
+    WIN7X64: str = "binary/AuleCraftWin7_64bit.exe"
+    WIN7X86: str = "binary/AuleCraftWin7_32bit.exe"
 
 
 class LauncherConfig:
@@ -54,11 +85,13 @@ class LauncherConfig:
     LAUNCHER_NAME = "AuleCraft"
     JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
 
-    MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
-    API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
-    API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
+    MINECRAFT_LAUNCHER_IP_ADDR = BASE_API_URL / "launcher"
+    API_URL_PUSH_SKIN = BASE_API_URL / "push_skin"
+    API_URL_PUSH_CAPE = BASE_API_URL / "push_cape"
+    API_URL_S3_INSTALLER_CRED = BASE_API_URL / "get_installer_s3_cred"
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
+    LAUNCHER_BINARIES = BinariesObjectKey
 
     IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
     LAUNCHER_ROOT_DIR = (
@@ -292,7 +325,7 @@ class ServerConfig:
         internal_name: str,
         modpack: Modpack,
         launcher_config: LauncherConfig,
-        settings: SettingsManager,
+        settings: "SettingsManager",
     ):
         """
         Initializes the ServerConfig instance.

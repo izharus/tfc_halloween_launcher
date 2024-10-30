@@ -29,7 +29,7 @@ from loguru import logger as log
 from qtpy import QtWidgets
 from qtpy.QtCore import QPoint, QSettings, Qt, Slot
 from qtpy.QtGui import QIcon
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
+from src.launcher import boto3_cred
 
 from .choose_server import ChoseServer
 from .data_validation import Validator
@@ -46,7 +46,7 @@ from .login_widget import LoginWidget
 from .mine_query_thread import MinecraftQueryThread
 from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
-from .utility._helper import get_version
+from .utility._helper import get_version, init_loguru_logger
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
@@ -55,6 +55,7 @@ from .utility.custom_exceptions import (
 )
 from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
+from .utility.pydantic_models import S3Credentials
 
 
 def hide_console() -> None:
@@ -85,16 +86,8 @@ class Window(QtWidgets.QMainWindow):
         # For mouse events
         self._mouse_click_pos: Optional[QPoint] = None
 
-        logging_dir = self._launcher_config.LOGGING_DIR
-        logging_dir /= "launcher_{time:YYYY-MM}.log"
-        log.add(
-            logging_dir,
-            rotation="1 month",
-            retention="1 month",  # Retain log files for 1 month after rotation
-            compression="zip",  # Optional: Enable compression for rotated logs
-            level="DEBUG",
-            serialize=False,
-        )
+        init_loguru_logger(self._launcher_config.LOGGING_DIR)
+
         log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
         self._ui_instance.stackedWidget.setCurrentWidget(
@@ -111,12 +104,14 @@ class Window(QtWidgets.QMainWindow):
         self.msg_box = MessageBox(self._ui_instance.widget_main_window)
         self.log_msg_box = LogMessageBox(self._ui_instance.widget_main_window)
 
+        credentials = S3Credentials(
+            aws_access_key_id=boto3_cred.BOTO3_ACCESS_KEY,
+            aws_secret_access_key=boto3_cred.BOTO3_SECRET_KEY,
+            bucket_name=boto3_cred.BOTO3_BUCKET_NAME,
+            endpoint_url=boto3_cred.URL_END_POINT,
+        )
         try:
-            self.file_downloader = FileYOSDownloader(
-                aws_access_key_id=BOTO3_ACCESS_KEY,
-                aws_secret_access_key=BOTO3_SECRET_KEY,
-                bucket_name=LauncherConfig.BUCKET_NAME,
-            )
+            self.file_downloader = FileYOSDownloader(credentials)
         except DownloadServerHandshakeError as error:
             log.critical(f"Failed to install boto3: {error}")
             self.log_msg_box.show_message(
