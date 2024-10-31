@@ -8,11 +8,13 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
+from src.launcher.launcher_configs import ServerConfig
 from src.launcher.launcher_installer import (
     ConfigInstallerThread,
+    InstallThread,
     MinecraftExecutorThread,
 )
-from src.launcher.utility.custom_exceptions import FileDownloadError 
+from src.launcher.utility.custom_exceptions import FileDownloadError
 from src.launcher.utility.pydantic_models import AuthData
 
 
@@ -80,7 +82,7 @@ class TestConfigInstallerThread:
 
         mock_file_downloader = MagicMock()
         mock_file_downloader.download_bytes = MagicMock(
-            side_effect=FileDownloadError 
+            side_effect=FileDownloadError
         )
         installer = ConfigInstallerThread(
             mock_file_downloader, "mock_object_key"
@@ -154,3 +156,56 @@ class TestMinecraftExecutorThread:
             executor_thread.run()
 
         mock_create_options.assert_called_once_with(allocated_ram)
+
+
+class TestInstallThread:
+    """Tests for InstallThread."""
+
+    @pytest.mark.parametrize("initial_state", (False, True))
+    def test_check_is_installed_flag_setting(
+        self,
+        initial_state: bool,
+        mocker: MockerFixture,
+        server_config: ServerConfig,
+    ):
+        """
+        Tests that the `is_minecraft_installed` flag in `server_config`
+        is set to `True` after running the `InstallThread`.
+        """
+        thread = InstallThread(
+            server_config,
+            lambda: True,
+            server_config,
+        )
+        mocker.patch.object(thread, "main_worker")
+
+        server_config.is_minecraft_installed = initial_state
+
+        thread.run()
+
+        assert server_config.is_minecraft_installed is True
+
+    @pytest.mark.parametrize("initial_state", (False, True))
+    def test_check_is_installed_flag_after_failure_installation(
+        self,
+        mocker: MockerFixture,
+        server_config: ServerConfig,
+        initial_state: bool,
+    ):
+        """
+        Tests that the `is_minecraft_installed` flag in `server_config`
+        remains `False` if the `InstallThread` encounters a failure during
+        installation.
+        """
+        thread = InstallThread(
+            server_config,
+            lambda: True,
+            server_config,
+        )
+        mocker.patch.object(thread, "main_worker", side_effect=RuntimeError)
+
+        server_config.is_minecraft_installed = initial_state
+
+        thread.run()
+
+        assert server_config.is_minecraft_installed is False

@@ -266,8 +266,13 @@ class InstallThread(QThread):
         """Call main_worker an handle any exceptions."""
         self.runtime_error = None
         try:
+            if not self.config:
+                raise MinecraftLauncherConfigNotSet()
             self.main_worker()
+            self.config.is_minecraft_installed = True
         except Exception as error:
+            if self.config:
+                self.config.is_minecraft_installed = False
             if self._is_working():
                 log.error(
                     "Unexpected error in InstallThread thread:\n"
@@ -291,8 +296,6 @@ class InstallThread(QThread):
         Returns:
             None
         """
-        if not self.config:
-            raise MinecraftLauncherConfigNotSet()
 
         if not self.config.is_minecraft_installed:
             mine_lib.forge.install_forge_version(

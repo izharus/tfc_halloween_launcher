@@ -270,7 +270,7 @@ QPushButton:pressed {
              <string notr="true"/>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="login_page">
              <layout class="QGridLayout" name="gridLayout_3">
@@ -909,6 +909,36 @@ QPushButton:pressed {
                <layout class="QVBoxLayout" name="verticalLayout_4">
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <item>
+                   <widget class="QPushButton" name="pushButton_check_server_files">
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+  background-color: #FF0000; /* Red color */
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #CC0000; /* Darker red on hover */
+}
+
+QPushButton:pressed {
+  background-color: #990000; /* Even darker red when pressed */
+  border: 1px solid #660000; /* Dark border when pressed */
+}
+</string>
+                    </property>
+                    <property name="text">
+                     <string>безопасный запуск</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <spacer name="horizontalSpacer_8">
                     <property name="orientation">
