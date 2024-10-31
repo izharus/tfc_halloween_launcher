@@ -1,6 +1,6 @@
 """Unit tests for src/launcher/utility/file_downloader.py"""
 
-# pylint: disable=W0201, W0212
+# pylint: disable=W0201, W0212, E0401
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -157,20 +157,18 @@ class TestFileYOSDownloader:
         # Patch the calculate_hash function to return the wrong hash
         mock_hash = MagicMock()
 
-        with mocker.patch.object(file_downloader, "calculate_hash", mock_hash):
-            with mocker.patch.object(
-                file_downloader, "save_file", save_file_mock
-            ):
-                mock_hash.return_value = wrong_hash_info.value
+        mocker.patch.object(file_downloader, "calculate_hash", mock_hash)
+        mocker.patch.object(file_downloader, "save_file", save_file_mock)
+        mock_hash.return_value = wrong_hash_info.value
 
-                with pytest.raises(FileHashMismatchError):
-                    self.file_downloader.download_file(
-                        object_key, dst_path, correct_hash_info
-                    )
+        with pytest.raises(FileHashMismatchError):
+            self.file_downloader.download_file(
+                object_key, dst_path, correct_hash_info
+            )
 
-                save_file_mock.assert_called_once_with(
-                    file_content=b"dummy data", file_path=dst_path
-                )
+        save_file_mock.assert_called_once_with(
+            file_content=b"dummy data", file_path=dst_path
+        )
 
     def test_download_file_success_with_correct_hash(
         self,
@@ -195,23 +193,21 @@ class TestFileYOSDownloader:
         # Patch the calculate_hash function to return the correct hash
         mock_hash = MagicMock()
 
-        with mocker.patch.object(file_downloader, "calculate_hash", mock_hash):
-            with mocker.patch.object(
-                file_downloader, "save_file", save_file_mock
-            ):
-                mock_hash.return_value = (
-                    correct_hash_info.value  # Returns the correct hash
-                )
+        mocker.patch.object(file_downloader, "calculate_hash", mock_hash)
+        mocker.patch.object(file_downloader, "save_file", save_file_mock)
+        mock_hash.return_value = (
+            correct_hash_info.value  # Returns the correct hash
+        )
 
-                # Call the download_file method and check for exceptions
-                self.file_downloader.download_file(
-                    object_key, dst_path, correct_hash_info
-                )
+        # Call the download_file method and check for exceptions
+        self.file_downloader.download_file(
+            object_key, dst_path, correct_hash_info
+        )
 
-                # Ensure save_file was called with the expected arguments
-                save_file_mock.assert_called_once_with(
-                    file_content=b"dummy data", file_path=dst_path
-                )
+        # Ensure save_file was called with the expected arguments
+        save_file_mock.assert_called_once_with(
+            file_content=b"dummy data", file_path=dst_path
+        )
 
 
 def test_save_file_success(tmp_path, mock_file_content):

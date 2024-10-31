@@ -1,6 +1,6 @@
 """Tests fpr src.test.test_launcher_installer.py"""
 
-# pylint: disable=W0212
+# pylint: disable=W0212,E0401
 
 import json
 import subprocess
@@ -148,12 +148,13 @@ class TestMinecraftExecutorThread:
             return_value=allocated_ram,
         )
 
-        with mocker.patch.object(
+        mocker.patch.object(
             subprocess,
             "Popen",
             mock_popen,
-        ):
-            executor_thread.run()
+        )
+
+        executor_thread.run()
 
         mock_create_options.assert_called_once_with(allocated_ram)
 

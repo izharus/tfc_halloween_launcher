@@ -31,12 +31,13 @@ class TestLauncherConfig:
         mocker: MockerFixture,
     ):
         """Test if launcher create initial directories correctly."""
-        with mocker.patch.object(
+        mocker.patch.object(
             mine_lib.utils,
             "get_minecraft_directory",
             return_value=str(tmp_path),
-        ):
-            launcher_config = LauncherConfig()
+        )
+
+        launcher_config = LauncherConfig()
 
         assert launcher_config.LAUNCHER_ROOT_DIR.exists()
         assert launcher_config.LAUNCHER_DATA_DIR.exists()
@@ -53,12 +54,14 @@ class TestLauncherConfig:
         Tests if is_minecraft_installed returns correct value when
         the game directory is non-exists.
         """
-        with mocker.patch.object(
+        mocker.patch.object(
             mine_lib.utils,
             "get_minecraft_directory",
             return_value=str(tmp_path),
-        ):
-            launcher_config = LauncherConfig()
+        )
+
+        launcher_config = LauncherConfig()
+
         for dirname in launcher_config._GENERAL_DIR_NAMES:
             assert Path(launcher_config._general_lib_dir, dirname).exists()
 
@@ -110,19 +113,20 @@ class TestLauncherConfig:
         mocker: MockerFixture,
     ):
         """Test get_icon_file returns correct icon path."""
-        with mocker.patch.object(
+        mocker.patch.object(
             mine_lib.utils,
             "get_minecraft_directory",
             return_value=str(tmp_path),
-        ):
-            launcher_config = LauncherConfig()
-            filehash = "hash"
-            expected_file_content = b"Test_bin_data."
-            tmp_file = launcher_config.LAUNCHER_SERVER_ICONS_DIR / filehash
-            tmp_file.write_bytes(expected_file_content)
-            launcher_config = LauncherConfig()
+        )
 
-            icon_path = launcher_config.get_icon_file(filehash)
+        launcher_config = LauncherConfig()
+        filehash = "hash"
+        expected_file_content = b"Test_bin_data."
+        tmp_file = launcher_config.LAUNCHER_SERVER_ICONS_DIR / filehash
+        tmp_file.write_bytes(expected_file_content)
+        launcher_config = LauncherConfig()
+
+        icon_path = launcher_config.get_icon_file(filehash)
 
         assert (
             icon_path == launcher_config.LAUNCHER_SERVER_ICONS_DIR / filehash
@@ -135,16 +139,17 @@ class TestLauncherConfig:
         mocker: MockerFixture,
     ):
         """Test get_icon_file returns None if icon not exists."""
-        with mocker.patch.object(
+        mocker.patch.object(
             mine_lib.utils,
             "get_minecraft_directory",
             return_value=str(tmp_path),
-        ):
-            launcher_config = LauncherConfig()
-            filehash = "non_exists"
-            launcher_config = LauncherConfig()
+        )
 
-            icon_path = launcher_config.get_icon_file(filehash)
+        launcher_config = LauncherConfig()
+        filehash = "non_exists"
+        launcher_config = LauncherConfig()
+
+        icon_path = launcher_config.get_icon_file(filehash)
 
         assert icon_path is None
 
@@ -185,13 +190,16 @@ class TestServerConfigManager:
         mock_download_bytes = MagicMock(
             return_value=json.dumps(mock_config_data)
         )
-        with mocker.patch.object(
-            mock_file_downloader, "download_bytes", mock_download_bytes
-        ):
-            config_manager = ServerConfigManager(
-                mock_file_downloader,
-                object_key,
-            )
+        mocker.patch.object(
+            mock_file_downloader,
+            "download_bytes",
+            mock_download_bytes,
+        )
+
+        config_manager = ServerConfigManager(
+            mock_file_downloader,
+            object_key,
+        )
         assert config_manager.map_json == MapJson(**mock_config_data)
         mock_download_bytes.assert_called_once_with(
             object_key,
@@ -204,16 +212,17 @@ class TestServerConfigManager:
         """Test update_config method when download failed."""
         object_key = "mock_object_key"
         mock_file_downloader = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
             side_effect=FileDownloadError,
-        ):
-            with pytest.raises(ConfigDownloadError):
-                ServerConfigManager(
-                    mock_file_downloader,
-                    object_key,
-                )
+        )
+
+        with pytest.raises(ConfigDownloadError):
+            ServerConfigManager(
+                mock_file_downloader,
+                object_key,
+            )
 
     def test_update_config_with_invalid_json_data(
         self,
@@ -222,16 +231,17 @@ class TestServerConfigManager:
         """Test update_config method with valid JSON data."""
         object_key = "mock_object_key"
         mock_file_downloader = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
             return_value=b'{"some_key": 1}',
-        ):
-            with pytest.raises(ConfigProcessingError):
-                ServerConfigManager(
-                    mock_file_downloader,
-                    object_key,
-                )
+        )
+
+        with pytest.raises(ConfigProcessingError):
+            ServerConfigManager(
+                mock_file_downloader,
+                object_key,
+            )
 
     def test_update_config_with_invalid_json_data_type(
         self,
@@ -240,16 +250,17 @@ class TestServerConfigManager:
         """Test update_config method with valid JSON data."""
         object_key = "mock_object_key"
         mock_file_downloader = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
             return_value="1",
-        ):
-            with pytest.raises(ConfigProcessingError):
-                ServerConfigManager(
-                    mock_file_downloader,
-                    object_key,
-                )
+        )
+
+        with pytest.raises(ConfigProcessingError):
+            ServerConfigManager(
+                mock_file_downloader,
+                object_key,
+            )
 
     def test_update_config_with_incorrect_json(
         self,
@@ -258,16 +269,17 @@ class TestServerConfigManager:
         """Test update_config method with valid JSON data."""
         object_key = "mock_object_key"
         mock_file_downloader = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             mock_file_downloader,
             "download_bytes",
             return_value="{{{{1",
-        ):
-            with pytest.raises(ConfigProcessingError):
-                ServerConfigManager(
-                    mock_file_downloader,
-                    object_key,
-                )
+        )
+
+        with pytest.raises(ConfigProcessingError):
+            ServerConfigManager(
+                mock_file_downloader,
+                object_key,
+            )
 
     def test_get_modpack_success(
         self,
@@ -395,13 +407,14 @@ class TestServerConfig:
         if minecraft_directory exists.
         """
         mock_init = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             server_config._launcher_config,
             "init_server_directory",
             mock_init,
-        ):
-            server_config.minecraft_directory = tmp_path
-            status = server_config.is_minecraft_installed
+        )
+
+        server_config.minecraft_directory = tmp_path
+        status = server_config.is_minecraft_installed
 
         assert not status
         mock_init.assert_called_once_with(server_config.minecraft_directory)
@@ -417,13 +430,14 @@ class TestServerConfig:
         if minecraft_directory is not exist.
         """
         mock_init = MagicMock()
-        with mocker.patch.object(
+        mocker.patch.object(
             server_config._launcher_config,
             "init_server_directory",
             mock_init,
-        ):
-            server_config.minecraft_directory = Path("non-exists")
-            status = server_config.is_minecraft_installed
+        )
+
+        server_config.minecraft_directory = Path("non-exists")
+        status = server_config.is_minecraft_installed
 
         assert not status
         mock_init.assert_called_once_with(server_config.minecraft_directory)

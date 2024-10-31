@@ -130,18 +130,20 @@ class TestAuthenticateUser:
         config.minecraft_launcher_ip_addr = "https://test_api_url"
         response_json = ["invalid_json_type"]
         mock_response = mocker.Mock(spec=requests.Response)
-        with mocker.patch.object(
-            mock_response, "json", return_value=response_json
-        ):
-            with requests_mock.Mocker() as m:
-                # Mock the requests.post method for an unexpected status code
-                m.post(config.minecraft_launcher_ip_addr, status_code=200)
-                with pytest.raises(InvalidAuthenticationResponse):
-                    authenticate_user(
-                        config.minecraft_launcher_ip_addr,
-                        "login",
-                        "pass",
-                    )
+        mocker.patch.object(
+            mock_response,
+            "json",
+            return_value=response_json,
+        )
+        with requests_mock.Mocker() as m:
+            # Mock the requests.post method for an unexpected status code
+            m.post(config.minecraft_launcher_ip_addr, status_code=200)
+            with pytest.raises(InvalidAuthenticationResponse):
+                authenticate_user(
+                    config.minecraft_launcher_ip_addr,
+                    "login",
+                    "pass",
+                )
 
     def test_authenticate_user_with_invalid_response_json_data(self, mocker):
         """
@@ -156,18 +158,20 @@ class TestAuthenticateUser:
             "accessToken": "token",
         }
         mock_response = mocker.Mock(spec=requests.Response)
-        with mocker.patch.object(
-            mock_response, "json", return_value=response_json
-        ):
-            with requests_mock.Mocker() as m:
-                # Mock the requests.post method for an unexpected status code
-                m.post(config.minecraft_launcher_ip_addr, status_code=200)
-                with pytest.raises(InvalidAuthenticationResponse):
-                    authenticate_user(
-                        config.minecraft_launcher_ip_addr,
-                        "login",
-                        "pass",
-                    )
+        mocker.patch.object(
+            mock_response,
+            "json",
+            return_value=response_json,
+        )
+        with requests_mock.Mocker() as m:
+            # Mock the requests.post method for an unexpected status code
+            m.post(config.minecraft_launcher_ip_addr, status_code=200)
+            with pytest.raises(InvalidAuthenticationResponse):
+                authenticate_user(
+                    config.minecraft_launcher_ip_addr,
+                    "login",
+                    "pass",
+                )
 
 
 class TestSkinUploader:
@@ -303,8 +307,8 @@ class TestSkinUploader:
         mock_path = "path"
         mock_is_slim = True
         mock__push_img = MagicMock()
-        with mocker.patch.object(skin_uploader, "_push_img", mock__push_img):
-            skin_uploader.push_skin(mock_path, mock_is_slim)
+        mocker.patch.object(skin_uploader, "_push_img", mock__push_img)
+        skin_uploader.push_skin(mock_path, mock_is_slim)
 
         mock__push_img.assert_called_once_with(
             api_url=skin_uploader._push_skin_api_url,
@@ -323,8 +327,8 @@ class TestSkinUploader:
         mock_path = "path"
         mock_is_slim = True
         mock__push_img = MagicMock()
-        with mocker.patch.object(skin_uploader, "_push_img", mock__push_img):
-            skin_uploader.push_cape(mock_path, mock_is_slim)
+        mocker.patch.object(skin_uploader, "_push_img", mock__push_img)
+        skin_uploader.push_cape(mock_path, mock_is_slim)
 
         mock__push_img.assert_called_once_with(
             api_url=skin_uploader._push_cape_api_url,
