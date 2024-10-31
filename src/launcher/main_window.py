@@ -172,7 +172,6 @@ class Window(QtWidgets.QMainWindow):
             self._login_widget.enable_ui
         )
 
-        self._install_thread.finished.connect(self._install_thread_finished)
         self.setWindowTitle(self._launcher_config.LAUNCHER_NAME)
         self._ui_instance.pushButton_close_app.clicked.connect(self.close)
         self._ui_instance.pushButton_collapse_app.clicked.connect(
@@ -222,8 +221,15 @@ class Window(QtWidgets.QMainWindow):
             config=self.config_manager,
             ui_instance=self._ui_instance,
         )
+        self._server_page.check_game_files.connect(
+            lambda modpack_name: self._install_minecraft_multi_thread(
+                modpack_name=modpack_name,
+                check_only=True,
+            )
+        )
         self._choose_server = ChoseServer(
-            self._ui_instance, self.config_manager
+            self._ui_instance,
+            self.config_manager,
         )
         self._minecraft_query_thread = MinecraftQueryThread(
             self._choose_server.server_buttons,
@@ -234,6 +240,7 @@ class Window(QtWidgets.QMainWindow):
         self._choose_server.launch_game.connect(
             self._install_minecraft_multi_thread
         )
+        self._install_thread.finished.connect(self._choose_server.enable_ui)
         self._choose_server.switch_to_server_page.connect(
             self._server_page.switch_to_server_page
         )
@@ -293,7 +300,9 @@ class Window(QtWidgets.QMainWindow):
             # event.accept()
 
     @Slot(str)
-    def _install_minecraft_multi_thread(self, modpack_name: str) -> None:
+    def _install_minecraft_multi_thread(
+        self, modpack_name: str, check_only=False
+    ) -> None:
         """
         Initiates the multi-threaded installation of Minecraft.
 
@@ -341,6 +350,12 @@ class Window(QtWidgets.QMainWindow):
             self._launcher_config,
             self._settings,
         )
+
+        if check_only:
+            self._choose_server.info_label.setText("Проверка файлов...")
+            self._server_config.is_minecraft_installed = False
+        else:
+            self._install_thread.finished.connect(self._launch_minecraft)
         self._install_thread.set_config(self._server_config)
 
         if not self._validator.is_java_installed():
@@ -355,7 +370,8 @@ class Window(QtWidgets.QMainWindow):
 
         self._install_thread.start()
 
-    def _install_thread_finished(self) -> None:
+    @Slot()
+    def _launch_minecraft(self) -> None:
         """
         Handle the completion of the installation thread.
 
@@ -366,6 +382,8 @@ class Window(QtWidgets.QMainWindow):
         Returns:
             None
         """
+        self._choose_server.disable_ui()
+        self._install_thread.finished.disconnect(self._launch_minecraft)
         if self._install_thread.runtime_error:
             msg_title = "Не удалось установить майнкрафт."
             log.error(msg_title)
@@ -375,7 +393,6 @@ class Window(QtWidgets.QMainWindow):
             )
             self._choose_server.enable_ui()
             return
-        self._server_config.is_minecraft_installed = True
         self.hide()
         auth_data = self._login_widget.auth_data
         if not auth_data:
