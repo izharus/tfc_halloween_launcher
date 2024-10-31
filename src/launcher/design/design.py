@@ -8,14 +8,14 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from qtpy.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from qtpy.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from qtpy.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
+from PySide6.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow,
     QPushButton, QRadioButton, QScrollArea, QSizePolicy,
     QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
@@ -587,6 +587,32 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.pushButton_check_server_files = QPushButton(self.server_settings_page)
+        self.pushButton_check_server_files.setObjectName(u"pushButton_check_server_files")
+        self.pushButton_check_server_files.setStyleSheet(u"QPushButton {\n"
+"  background-color: #FF0000; /* Red color */\n"
+"  border: none;\n"
+"  border-radius: 15px;\n"
+"  padding: 12px 24px;\n"
+"  color: #FFFFFF;\n"
+"  font-weight: bold;\n"
+"  text-align: center;\n"
+"  text-decoration: none;\n"
+"  font-size: 16px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"  background-color: #CC0000; /* Darker red on hover */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"  background-color: #990000; /* Even darker red when pressed */\n"
+"  border: 1px solid #660000; /* Dark border when pressed */\n"
+"}\n"
+"")
+
+        self.horizontalLayout_4.addWidget(self.pushButton_check_server_files)
+
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_8)
@@ -1024,7 +1050,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1045,6 +1071,7 @@ class Ui_MainWindow(object):
         self.pushButton_settings.setText("")
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 2", None))
+        self.pushButton_check_server_files.setText(QCoreApplication.translate("MainWindow", u"\u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0444\u0430\u0439\u043b\u044b", None))
         self.pushButton_back_from_server_settings.setText("")
         self.label_server_description.setText(QCoreApplication.translate("MainWindow", u"\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0441\u0435\u0440\u0432\u0435\u0440\u0430", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0422\u0438\u043f \u0441\u043a\u0438\u043d\u0430", None))
