@@ -9,8 +9,8 @@ from loguru import logger as log
 from qtpy.QtCore import QObject, Signal, Slot
 
 from .design.design import Ui_MainWindow
-from .design.utility import ServerWidget
-from .launcher_configs import ServerConfigManager
+from .design.utility import ServerWidget, open_directory
+from .launcher_configs import LauncherConfig, ServerConfigManager
 from .utility.custom_exceptions import ModpackNotfound
 
 
@@ -51,6 +51,9 @@ class ServerWidgetPage(QObject):
         )
         self._ui.pushButton_check_server_files.clicked.connect(
             self._restore_server_files
+        )
+        self._ui.pushButton_open_modpack_dir.clicked.connect(
+            self._open_current_modpack_dir
         )
 
     @Slot()
@@ -103,6 +106,17 @@ class ServerWidgetPage(QObject):
 
     @Slot(str)
     def _restore_server_files(self):
+        """Start the process of checking game files."""
+
         modpack_name = self._server_widget.config_name
         log.debug(f"Check files started for: {modpack_name}")
         self.check_game_files.emit(modpack_name)
+
+    @Slot()
+    def _open_current_modpack_dir(self):
+        """Open the directory of current server."""
+
+        modpack_name = self._server_widget.config_name
+        modpack_dir = LauncherConfig().get_servers_data_dir(modpack_name)
+        if modpack_dir.exists():
+            open_directory(modpack_dir)

@@ -57,6 +57,8 @@ from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.pydantic_models import S3Credentials
 
+APP_VERSION = "3.0.0-RC1"
+
 
 def hide_console() -> None:
     """
@@ -87,7 +89,7 @@ class Window(QtWidgets.QMainWindow):
         self._mouse_click_pos: Optional[QPoint] = None
 
         init_loguru_logger(self._launcher_config.LOGGING_DIR)
-
+        log.debug(f"Current app version: {APP_VERSION}")
         log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
         self._ui_instance.stackedWidget.setCurrentWidget(

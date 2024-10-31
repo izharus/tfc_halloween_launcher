@@ -669,7 +669,7 @@ QPushButton:pressed {
 </string>
                    </property>
                    <property name="text">
-                    <string>Папка с игрой</string>
+                    <string>Папка лаунчера</string>
                    </property>
                   </widget>
                  </item>
@@ -935,7 +935,7 @@ QPushButton:pressed {
 </string>
                     </property>
                     <property name="text">
-                     <string>безопасный запуск</string>
+                     <string>Проверка файлов</string>
                     </property>
                    </widget>
                   </item>
@@ -951,6 +951,37 @@ QPushButton:pressed {
                      </size>
                     </property>
                    </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_open_modpack_dir">
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+  background-color: #3A92F7;
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+QPushButton:hover {
+  background-color: #303EF7;
+}
+
+
+QPushButton:pressed {
+  background-color: #1000F7;
+  border: 1px solid #00274D;
+}
+</string>
+                    </property>
+                    <property name="text">
+                     <string>Папка игры</string>
+                    </property>
+                   </widget>
                   </item>
                   <item>
                    <widget class="QPushButton" name="pushButton_back_from_server_settings">

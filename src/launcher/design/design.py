@@ -617,6 +617,33 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_8)
 
+        self.pushButton_open_modpack_dir = QPushButton(self.server_settings_page)
+        self.pushButton_open_modpack_dir.setObjectName(u"pushButton_open_modpack_dir")
+        self.pushButton_open_modpack_dir.setStyleSheet(u"QPushButton {\n"
+"  background-color: #3A92F7;\n"
+"  border: none;\n"
+"  border-radius: 15px;\n"
+"  padding: 12px 24px;\n"
+"  color: #FFFFFF;\n"
+"  font-weight: bold;\n"
+"  text-align: center;\n"
+"  text-decoration: none;\n"
+"  font-size: 16px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"  background-color: #303EF7;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed {\n"
+"  background-color: #1000F7;\n"
+"  border: 1px solid #00274D;\n"
+"}\n"
+"")
+
+        self.horizontalLayout_4.addWidget(self.pushButton_open_modpack_dir)
+
         self.pushButton_back_from_server_settings = QPushButton(self.server_settings_page)
         self.pushButton_back_from_server_settings.setObjectName(u"pushButton_back_from_server_settings")
         self.pushButton_back_from_server_settings.setMinimumSize(QSize(64, 64))
@@ -1066,12 +1093,13 @@ class Ui_MainWindow(object):
         self.lineEdit_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
         self.label_creat_account.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442", None))
         self.pushButton_error_info.setText(QCoreApplication.translate("MainWindow", u"ERROR_BUTTON", None))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0441 \u0438\u0433\u0440\u043e\u0439", None))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u043b\u0430\u0443\u043d\u0447\u0435\u0440\u0430", None))
         self.pushButton_logout.setText("")
         self.pushButton_settings.setText("")
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 2", None))
-        self.pushButton_check_server_files.setText(QCoreApplication.translate("MainWindow", u"\u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0444\u0430\u0439\u043b\u044b", None))
+        self.pushButton_check_server_files.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0444\u0430\u0439\u043b\u043e\u0432", None))
+        self.pushButton_open_modpack_dir.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0438\u0433\u0440\u044b", None))
         self.pushButton_back_from_server_settings.setText("")
         self.label_server_description.setText(QCoreApplication.translate("MainWindow", u"\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0441\u0435\u0440\u0432\u0435\u0440\u0430", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0422\u0438\u043f \u0441\u043a\u0438\u043d\u0430", None))
