@@ -6,7 +6,7 @@ shows modpack description and etc.
 from typing import Optional
 
 from loguru import logger as log
-from qtpy.QtCore import Slot
+from qtpy.QtCore import QObject, Signal, Slot
 
 from .design.design import Ui_MainWindow
 from .design.utility import ServerWidget
@@ -14,10 +14,12 @@ from .launcher_configs import ServerConfigManager
 from .utility.custom_exceptions import ModpackNotfound
 
 
-class ServerWidgetPage:
+class ServerWidgetPage(QObject):
     """
     A widget page for managing server configurations.
     """
+
+    check_game_files = Signal(str)
 
     def __init__(
         self,
@@ -46,6 +48,9 @@ class ServerWidgetPage:
         """Sets up signal connections for UI components."""
         self._ui.pushButton_back_from_server_settings.clicked.connect(
             self.back_arrow
+        )
+        self._ui.pushButton_check_server_files.clicked.connect(
+            self._restore_server_files
         )
 
     @Slot()
@@ -95,3 +100,9 @@ class ServerWidgetPage:
         self._last_layout_pos = self._ui.horizontalLayout_2.indexOf(widget)
         self._server_widget = widget
         self._ui.gridLayout.addWidget(widget)
+
+    @Slot(str)
+    def _restore_server_files(self):
+        modpack_name = self._server_widget.config_name
+        log.debug(f"Check files started for: {modpack_name}")
+        self.check_game_files.emit(modpack_name)

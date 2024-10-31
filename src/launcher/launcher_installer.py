@@ -272,7 +272,7 @@ class InstallThread(QThread):
             self.config.is_minecraft_installed = True
         except Exception as error:
             if self.config:
-                self.config.is_minecraft_installed = True
+                self.config.is_minecraft_installed = False
             if self._is_working():
                 log.error(
                     "Unexpected error in InstallThread thread:\n"
