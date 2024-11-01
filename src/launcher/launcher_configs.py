@@ -83,7 +83,7 @@ class LauncherConfig:
 
     DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
     LAUNCHER_NAME = "AuleCraft"
-    JAVA_INSTALL_URL = "https://www.java.com/download/ie_manual.jsp"
+    JAVA_INSTALL_URL = "https://www.java.com/ru/download/"
 
     MINECRAFT_LAUNCHER_IP_ADDR = BASE_API_URL / "launcher"
     API_URL_PUSH_SKIN = BASE_API_URL / "push_skin"

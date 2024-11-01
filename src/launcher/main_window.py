@@ -363,7 +363,8 @@ class Window(QtWidgets.QMainWindow):
             java_install_url = self._launcher_config.JAVA_INSTALL_URL
             self.msg_box.show_message(
                 title="Ошибка Java",
-                msg="Загрузите последнюю версию Java.\n" + java_install_url,
+                msg="Загрузите последнюю версию Java. "
+                "Ссылка для 64bit:\n" + java_install_url,
                 close_button_text="закрыть приложение",
             )
             # After installation user should restart app
