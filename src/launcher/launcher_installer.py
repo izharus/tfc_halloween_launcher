@@ -399,6 +399,7 @@ class MinecraftExecutorThread(QThread):
             self._settings.get_ui_value("slider_ram_settings", int),
         )
         try:
+            self._config.create_default_options()
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
                 self._config.server_config.minecraft_profile,
@@ -422,6 +423,7 @@ class MinecraftExecutorThread(QThread):
                     log.error(f"Minecraft stderr: {stderr}")
                 else:
                     log.debug("Minecraft stderr is empty")
+                self._config.update_default_options()
         except Exception as error:
             self.runtime_error = error
             log.debug(

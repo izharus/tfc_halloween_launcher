@@ -424,3 +424,33 @@ class ServerConfig:
         self._settings.set_user_value(
             self._is_minecraft_installed_key, int(other)
         )
+
+    @property
+    def minecraft_options_path(self) -> Path:
+        """Return the minecraft options Path."""
+        return self.minecraft_directory / "options.txt"
+
+    def create_default_options(self) -> None:
+        """Create an options for the current server."""
+        if not self.minecraft_options_path.exists():
+            try:
+                self.minecraft_options_path.write_text(
+                    self._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+                )
+            except OSError:
+                log.error(
+                    "Failed to create a default options "
+                    f"in the server: {self.internal_name}."
+                )
+
+    def update_default_options(self) -> None:
+        """Update the Minecraft options when the game is closed."""
+        log.debug("Updating default minecraft options.")
+        try:
+            new_options = self.minecraft_options_path.read_text()
+            if new_options:
+                self._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+                    new_options,
+                )
+        except OSError:
+            log.error("Failed to update default minecraft options.")
