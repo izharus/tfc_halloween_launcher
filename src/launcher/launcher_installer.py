@@ -373,8 +373,10 @@ class MinecraftExecutorThread(QThread):
         options["username"] = self._auth_data.username
         options["uuid"] = self._auth_data.uuid
         options["token"] = self._auth_data.accessToken
-        options["server"] = self._config.server_config.minecraft_server_ip
-        options["port"] = self._config.server_config.minecraft_server_port
+
+        # auto-connect to the server:
+        #  options["server"] = self._config.server_config.minecraft_server_ip
+        #  options["port"] = self._config.server_config.minecraft_server_port
 
         if allocate_ram:
             log.debug(f"Allocating RAM: {allocate_ram}m")
