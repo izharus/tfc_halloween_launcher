@@ -435,7 +435,7 @@ class Ui_MainWindow(object):
         self.pushButton_minecraft_dir_disable_long_tern_save = QPushButton(self.widget)
         self.pushButton_minecraft_dir_disable_long_tern_save.setObjectName(u"pushButton_minecraft_dir_disable_long_tern_save")
         self.pushButton_minecraft_dir_disable_long_tern_save.setMinimumSize(QSize(175, 50))
-        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(150, 50))
+        self.pushButton_minecraft_dir_disable_long_tern_save.setMaximumSize(QSize(200, 50))
         self.pushButton_minecraft_dir_disable_long_tern_save.setStyleSheet(u"QPushButton {\n"
 "  background-color: #3A92F7;\n"
 "  border: none;\n"
@@ -1077,7 +1077,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
