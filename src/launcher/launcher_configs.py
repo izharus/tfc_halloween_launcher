@@ -6,6 +6,8 @@ launcher and managing server configurations.
 
 """
 
+# pylint: disable=C0103
+
 import json
 import os
 from enum import Enum
@@ -29,6 +31,8 @@ from .utility.pydantic_models import MapJson, Modpack
 
 if TYPE_CHECKING:
     from .design.thread_data_utils import SettingsManager
+
+DEFAULT_USER_SETTINGS = "lang:ru_ru"
 
 
 class URL(str):
@@ -108,6 +112,9 @@ class LauncherConfig:
     MINECRAFT_CAPE_DIR = LAUNCHER_DATA_DIR / "capes"
     LAUNCHER_SERVER_ICONS_DIR = LAUNCHER_DATA_DIR / "icons"
 
+    # Path to the file with default user game settings
+    DEFAULT_OPTIONS_PATH = LAUNCHER_DATA_DIR / "default_options.txt"
+
     # Directory with "assets", "runtime", "libraries", "versions"
 
     _GENERAL_DIR: Final = "general_libs"
@@ -127,6 +134,7 @@ class LauncherConfig:
         Initialize directories and load launcher data from file if available.
         """
         self._create_launcher_dirs()
+        self._create_default_options()
         self.set_download_dir(self.LAUNCHER_ROOT_DIR)
 
     @classmethod
@@ -182,6 +190,54 @@ class LauncherConfig:
             (self._general_lib_dir / dirname).mkdir(
                 parents=True,
                 exist_ok=True,
+            )
+
+    def _create_default_options(self) -> None:
+        """Create default game options if they do not exist."""
+
+        # Check if default options already exist
+        if self.DEFAULT_OPTIONS_PATH.exists():
+            log.debug("Default game settings already exist.")
+            return
+
+        options_path = (
+            Path(mine_lib.utils.get_minecraft_directory()) / "options.txt"
+        )
+        log.debug(
+            "Default game settings not found, "
+            "attempting to create default options."
+        )
+
+        # Ensure the directory for default options exists
+        try:
+            self.DEFAULT_OPTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            log.error(
+                "Failed to create the default options directory "
+                f"'{self.DEFAULT_OPTIONS_PATH.parent}': {error}"
+            )
+            return
+
+        # Attempt to read user game settings from options file
+        try:
+            if options_path.exists():
+                log.debug(f"Parsing user game settings from: {options_path}")
+                content = options_path.read_text(encoding="utf-8")
+                self.DEFAULT_OPTIONS_PATH.write_text(content)
+                return
+        except OSError as error:
+            log.error(
+                "Failed to read default game settings from "
+                f"'{options_path}': {error}"
+            )
+
+        # If all else fails, write default user settings
+        try:
+            self.DEFAULT_OPTIONS_PATH.write_text(DEFAULT_USER_SETTINGS)
+        except OSError as error:
+            log.error(
+                "Failed to create default user game settings at "
+                f"'{self.DEFAULT_OPTIONS_PATH}': {error}"
             )
 
     def get_servers_data_dir(self, server_name: str) -> Path:
@@ -368,3 +424,33 @@ class ServerConfig:
         self._settings.set_user_value(
             self._is_minecraft_installed_key, int(other)
         )
+
+    @property
+    def minecraft_options_path(self) -> Path:
+        """Return the minecraft options Path."""
+        return self.minecraft_directory / "options.txt"
+
+    def create_default_options(self) -> None:
+        """Create an options for the current server."""
+        if not self.minecraft_options_path.exists():
+            try:
+                self.minecraft_options_path.write_text(
+                    self._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+                )
+            except OSError as error:
+                log.error(
+                    "Failed to create a default options "
+                    f"in the server '{self.internal_name}': {error}."
+                )
+
+    def update_default_options(self) -> None:
+        """Update the Minecraft options when the game is closed."""
+        log.debug("Updating default minecraft options.")
+        try:
+            new_options = self.minecraft_options_path.read_text()
+            if new_options:
+                self._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+                    new_options,
+                )
+        except OSError:
+            log.error("Failed to update default minecraft options.")
