@@ -119,4 +119,4 @@ class ServerWidgetPage(QObject):
         modpack_name = self._server_widget.config_name
         modpack_dir = LauncherConfig().get_servers_data_dir(modpack_name)
         if modpack_dir.exists():
-            open_directory(modpack_dir)
+            open_directory(str(modpack_dir))
