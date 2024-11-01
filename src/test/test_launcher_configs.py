@@ -1,6 +1,6 @@
 """Tests for src/launcher_config.py"""
 
-# pylint: disable=W0212,W0613,E0401,C0411
+# pylint: disable=W0212,W0613,E0401,C0411,C0103
 import json
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -9,6 +9,7 @@ import pytest
 import src.minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import (
+    DEFAULT_USER_SETTINGS,
     LauncherConfig,
     ServerConfig,
     ServerConfigManager,
@@ -174,6 +175,77 @@ class TestLauncherConfig:
             expected_target = launcher_config._general_lib_dir / dirname
             assert symlink.is_symlink()
             assert symlink.resolve() == expected_target
+
+    def test_create_default_options_minecraft_dir_exists(
+        self,
+        tmp_path: Path,
+        mocker: MockerFixture,
+    ):
+        """
+        Test that default options are created correctly when
+        the Minecraft directory exists.
+        """
+        launcher_config = LauncherConfig()
+        expected_options = "options_content"
+
+        launcher_config.DEFAULT_OPTIONS_PATH = tmp_path / "d" / "options.txt"
+
+        mock_options = tmp_path / "options.txt"
+        mock_options.write_text(expected_options)
+
+        mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=mock_options.parent,
+        )
+        launcher_config._create_default_options()
+
+        current_options = launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+        assert current_options == expected_options
+
+    def test_create_default_options_minecraft_not_exists(
+        self,
+        tmp_path: Path,
+        mocker: MockerFixture,
+    ):
+        """
+        Test that default options are created when
+        the Minecraft directory does not exist.
+        """
+        launcher_config = LauncherConfig()
+        expected_options = DEFAULT_USER_SETTINGS
+        launcher_config.DEFAULT_OPTIONS_PATH = tmp_path / "d" / "options.txt"
+
+        mock_options = tmp_path / "options.txt"
+
+        mocker.patch.object(
+            mine_lib.utils,
+            "get_minecraft_directory",
+            return_value=mock_options.parent,
+        )
+        launcher_config._create_default_options()
+
+        current_options = launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+        assert current_options == expected_options
+
+    def test_create_default_options_called_during_initialization(
+        self,
+        mocker: MockerFixture,
+    ):
+        """
+        Test that `_create_default_options` is called during
+        the initialization of `LauncherConfig`.
+        """
+
+        mock_create_default_options = MagicMock()
+        mocker.patch.object(
+            LauncherConfig,
+            "_create_default_options",
+            mock_create_default_options,
+        )
+        LauncherConfig()
+
+        mock_create_default_options.assert_called_once()
 
 
 class TestServerConfigManager:
