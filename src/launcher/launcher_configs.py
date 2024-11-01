@@ -437,10 +437,10 @@ class ServerConfig:
                 self.minecraft_options_path.write_text(
                     self._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
                 )
-            except OSError:
+            except OSError as error:
                 log.error(
                     "Failed to create a default options "
-                    f"in the server: {self.internal_name}."
+                    f"in the server '{self.internal_name}': {error}."
                 )
 
     def update_default_options(self) -> None:

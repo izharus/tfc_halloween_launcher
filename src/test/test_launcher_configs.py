@@ -513,3 +513,103 @@ class TestServerConfig:
 
         assert not status
         mock_init.assert_called_once_with(server_config.minecraft_directory)
+
+    def test_create_default_options_for_non_exists_options(
+        self,
+        tmp_path: Path,
+        server_config: ServerConfig,
+    ):
+        """
+        Test that `create_default_options` writes default options to the
+        Minecraft options file when it does not already exist.
+        """
+        default_options = "some_def_options"
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH = (
+            tmp_path / "default_options.txt"
+        )
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+            default_options,
+        )
+        server_config.minecraft_directory = tmp_path
+
+        server_config.create_default_options()
+        current_options = server_config.minecraft_options_path.read_text()
+
+        assert current_options == default_options
+
+    def test_create_default_options_for_exists_options(
+        self,
+        tmp_path: Path,
+        server_config: ServerConfig,
+    ):
+        """
+        Test that `create_default_options` does not overwrite existing options
+        when the options file is already present.
+        """
+        default_options = "some_def_options"
+        expected_options = "expected_options"
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH = (
+            tmp_path / "default_options.txt"
+        )
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+            default_options,
+        )
+        server_config.minecraft_directory = tmp_path
+        server_config.minecraft_options_path.write_text(expected_options)
+
+        server_config.create_default_options()
+        current_options = server_config.minecraft_options_path.read_text()
+
+        assert current_options == expected_options
+
+    def test_update_default_options_with_new_options(
+        self,
+        tmp_path: Path,
+        server_config: ServerConfig,
+    ):
+        """
+        Test that `update_default_options` updates the default options
+        file with new options if changes are detected.
+        """
+        default_options = "some_def_options"
+        new_options = "expected_options"
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH = (
+            tmp_path / "default_options.txt"
+        )
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+            default_options,
+        )
+        server_config.minecraft_directory = tmp_path
+        server_config.minecraft_options_path.write_text(new_options)
+
+        server_config.update_default_options()
+        current_options = (
+            server_config._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+        )
+
+        assert current_options == new_options
+
+    def test_update_default_options_for_non_exists_new_options(
+        self,
+        tmp_path: Path,
+        server_config: ServerConfig,
+    ):
+        """
+        Test that `update_default_options` does not modify the default
+        options file when new options are not available.
+        """
+        default_options = "some_def_options"
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH = (
+            tmp_path / "default_options.txt"
+        )
+        server_config._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+            default_options,
+        )
+        server_config.minecraft_directory = tmp_path
+
+        server_config.update_default_options()
+        current_options = (
+            server_config._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+        )
+
+        assert current_options == default_options

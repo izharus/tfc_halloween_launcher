@@ -158,6 +158,29 @@ class TestMinecraftExecutorThread:
 
         mock_create_options.assert_called_once_with(allocated_ram)
 
+    def test_create_default_options_called_in_run_due_exception(
+        self,
+        executor_thread: MinecraftExecutorThread,
+        mocker: MockerFixture,
+    ):
+        """
+        Test that create_default_options and update_default_options
+        are called when run is executed.
+        """
+
+        mocker.patch.object(
+            subprocess,
+            "Popen",
+            side_effect=RuntimeError,
+        )
+        executor_thread._config.create_default_options = MagicMock()
+        executor_thread._config.update_default_options = MagicMock()
+
+        executor_thread.run()
+
+        executor_thread._config.create_default_options.assert_called_once()
+        executor_thread._config.update_default_options.assert_called_once()
+
 
 class TestInstallThread:
     """Tests for InstallThread."""

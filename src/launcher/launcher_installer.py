@@ -423,10 +423,10 @@ class MinecraftExecutorThread(QThread):
                     log.error(f"Minecraft stderr: {stderr}")
                 else:
                     log.debug("Minecraft stderr is empty")
-                self._config.update_default_options()
         except Exception as error:
             self.runtime_error = error
             log.debug(
                 "Unexpected error wile executing minecraft:\n"
                 f"{traceback.format_exc()}"
             )
+            self._config.update_default_options()
