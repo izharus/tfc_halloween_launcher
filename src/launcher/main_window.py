@@ -88,7 +88,6 @@ class Window(QtWidgets.QMainWindow):
         # For mouse events
         self._mouse_click_pos: Optional[QPoint] = None
 
-        init_loguru_logger(self._launcher_config.LOGGING_DIR)
         log.debug(f"Current app version: {APP_VERSION}")
         log.debug(f"Current platform: {get_version()}")
         self._ui_instance.setupUi(self)
@@ -454,6 +453,7 @@ def main():
     """Start application main loot"""
 
     # Set the custom exception handler
+    init_loguru_logger(LauncherConfig.LOGGING_DIR)
     sys.excepthook = handle_exception
     elevate(show_console=False)
     app = QtWidgets.QApplication(sys.argv)
