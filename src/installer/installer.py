@@ -30,6 +30,17 @@ LAUNCHER_BINARY_PATH = (
     launcher_config.LAUNCHER_ROOT_DIR / f"{launcher_config.LAUNCHER_NAME}.exe"
 )
 
+INSTALLER_VERSION = "1.0.0"
+
+
+def write_os_version():
+    """Write OS version to the log."""
+    system_name = platform.system()
+    release = platform.release()
+    version = platform.version()
+    system_alias = platform.system_alias(system_name, release, version)
+    log.debug(f"OS: {system_alias}")
+
 
 def get_binary_download_key() -> Optional[BinariesObjectKey]:
     """
@@ -225,6 +236,9 @@ class DownloaderApp:
 def main():
     """Main entry point."""
     init_loguru_logger(launcher_config.LOGGING_DIR)
+    log.debug("====================INSTALLER STARTED====================")
+    log.debug(f"Installer version: {INSTALLER_VERSION}")
+    write_os_version()
     root = tk.Tk()
     root.eval("tk::PlaceWindow . center")
     DownloaderApp(root)
