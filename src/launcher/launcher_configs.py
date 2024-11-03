@@ -52,9 +52,6 @@ class URL(str):
         return self.base_url
 
 
-BASE_API_URL = URL("http://77.239.232.50:23846/")
-
-
 class BinariesObjectKey(Enum):
     """Object keys for launcher binaries."""
 
@@ -68,6 +65,7 @@ class LauncherConfig:
     Configuration settings for the Minecraft launcher.
 
     Attributes:
+        BASE_API_URL (str): Domain of auth service.
         DEVELOPER_EMAIL (str): Complain about bugs here.
         LAUNCHER_NAME (str): The name of the Minecraft launcher.
         DATA_DIR (Path): The directory for storing launcher data.
@@ -84,6 +82,8 @@ class LauncherConfig:
             was authenticated, 0 otherwise
 
     """
+
+    BASE_API_URL = URL("https://auth.aulecraft.ru/")
 
     DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
     LAUNCHER_NAME = "AuleCraft"
