@@ -31,9 +31,9 @@ def main():
         # Binaries for main launcher for different systems
         run_pyinstaller_in_env(env, LAUNCHER_SPEC_FILE)
 
-    for env in (WIN7X64_ENV, WIN7X86_ENV):
-        # Binaries for installers
-        run_pyinstaller_in_env(env, INSTALLER_SPEC_FILE)
+    # for env in (WIN7X64_ENV, WIN7X86_ENV):
+    #     # Binaries for installers
+    #     run_pyinstaller_in_env(env, INSTALLER_SPEC_FILE)
 
 
 if "__main__" == __name__:
