@@ -19,6 +19,7 @@ icon, and provides safety timers for updating input data from the UI.
 import os
 import sys
 import traceback
+import webbrowser
 from typing import Optional
 
 import win32con
@@ -57,7 +58,7 @@ from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.pydantic_models import S3Credentials
 
-APP_VERSION = "3.0.0-RC2"
+APP_VERSION = "3.0.0-RC3"
 
 
 def hide_console() -> None:
@@ -187,10 +188,10 @@ class Window(QtWidgets.QMainWindow):
 
         self.setWindowIcon(QIcon(self.icon_file_path))
         self._executor: MinecraftExecutorThread
-        self._init_background()
+        self._setup_ui()
         hide_console()
 
-    def _init_background(self):
+    def _setup_ui(self):
         self.setWindowFlags(
             Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint
         )
@@ -208,6 +209,10 @@ class Window(QtWidgets.QMainWindow):
             }
             """
         )
+        self._ui_instance.label_creat_account.mousePressEvent = (
+            lambda _: webbrowser.open(self._launcher_config.REGISTER_URL)
+        )
+        self._ui_instance.label_reset_password.hide()
 
     def _config_installer_complete(self):
 
