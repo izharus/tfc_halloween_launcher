@@ -182,5 +182,7 @@ def auth_window(mock_settings, mock_config_data) -> Window:
         file_downloader=downloader,
         map_object_key="mock_key",
     )
+    window._login_widget._auth_data = MagicMock()
+    window._login_widget._auth_data.username = "mock_username"
     window._config_installer_complete()
     return window

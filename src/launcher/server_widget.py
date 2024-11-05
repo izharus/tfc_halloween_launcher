@@ -25,6 +25,7 @@ class ServerWidgetPage(QObject):
         self,
         config: ServerConfigManager,
         ui_instance: Ui_MainWindow,
+        login: str,
     ):
         """Initializes the ServerWidgetPage.
 
@@ -33,6 +34,7 @@ class ServerWidgetPage(QObject):
                 for server settings.
             ui_instance (Ui_MainWindow): The UI instance containing
                 all UI components.
+            login (str): User login.
         """
         super().__init__()
         self._config = config
@@ -43,6 +45,7 @@ class ServerWidgetPage(QObject):
         self._server_widget: Optional[ServerWidget] = None
         # Position of self._server_widget in last layout
         self._last_layout_pos = 0
+        self._ui.label_player_name.setText(login)
 
     def _create_signals(self):
         """Sets up signal connections for UI components."""

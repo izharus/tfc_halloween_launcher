@@ -628,7 +628,87 @@ QLabel:hover {
                   <number>0</number>
                  </property>
                  <item>
-                  <widget class="QWidget" name="widget_4" native="true"/>
+                  <widget class="QWidget" name="widget_4" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="QLabel" name="label_player_name">
+                      <property name="styleSheet">
+                       <string notr="true">QLabel {
+    color: #FFFFFF;                    /* Белый цвет текста для контраста */
+    background-color: #1E3A8A;         /* Темно-синий фон */
+    border: 1px solid #3B82F6;         /* Голубой контур */
+    border-radius: 15px;                /* Округление краев */
+    padding: 8px 12px;                 /* Отступы для создания пространства вокруг текста */
+    font-size: 18px;                   /* Размер шрифта */
+    font-weight: bold;                 /* Жирный шрифт для выделения ника */
+    text-align: center;                /* Центрирование текста */
+}
+</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_logout">
+                      <property name="minimumSize">
+                       <size>
+                        <width>64</width>
+                        <height>64</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>64</width>
+                        <height>64</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;Выйти из аккаунта&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+    background-image: url(:/data/background/logout.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none; /* Убираем границы */
+    border-radius: 10px; /* Скругляем углы кнопки */
+    padding: 10px; /* Добавляем внутренние отступы */
+    color: white; /* Устанавливаем цвет текста */
+    font-size: 16px; /* Устанавливаем размер шрифта */
+    font-weight: bold; /* Устанавливаем жирный шрифт */
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
+}
+</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_10">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="pushButton_minecraft_dir_disable_long_tern_save">
@@ -670,47 +750,6 @@ QPushButton:pressed {
                    </property>
                    <property name="text">
                     <string>Папка лаунчера</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButton_logout">
-                   <property name="minimumSize">
-                    <size>
-                     <width>64</width>
-                     <height>64</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>64</width>
-                     <height>64</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-    background-image: url(:/data/background/logout.png);
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none; /* Убираем границы */
-    border-radius: 10px; /* Скругляем углы кнопки */
-    padding: 10px; /* Добавляем внутренние отступы */
-    color: white; /* Устанавливаем цвет текста */
-    font-size: 16px; /* Устанавливаем размер шрифта */
-    font-weight: bold; /* Устанавливаем жирный шрифт */
-}
-
-QPushButton:hover {
-    background-color: rgba(255, 255, 255, 0.2); /* Добавляем эффект при наведении */
-}
-
-QPushButton:pressed {
-    background-color: rgba(255, 255, 255, 0.4); /* Добавляем эффект при нажатии */
-}
-</string>
-                   </property>
-                   <property name="text">
-                    <string/>
                    </property>
                   </widget>
                  </item>
@@ -1037,7 +1076,7 @@ QPushButton:pressed {
                      <x>0</x>
                      <y>0</y>
                      <width>588</width>
-                     <height>348</height>
+                     <height>398</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_7">
