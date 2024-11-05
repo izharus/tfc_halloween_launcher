@@ -21,13 +21,14 @@ from qtpy.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
     QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
 from resources import resources
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(1050, 600)
-        MainWindow.setMinimumSize(QSize(1050, 600))
+        MainWindow.resize(1050, 625)
+        MainWindow.setMinimumSize(QSize(1050, 625))
         MainWindow.setMaximumSize(QSize(1050, 600))
         MainWindow.setStyleSheet(u"#scrollArea, #scrollArea_2, #scrollAreaWidgetContents, #scrollAreaWidgetContents_2 {\n"
 "    background-color: rgba(255, 255, 255, 0);  /* \u041f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u043f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u044b\u0439 \u0444\u043e\u043d */\n"
@@ -114,14 +115,14 @@ class Ui_MainWindow(object):
 "")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.centralwidget.setMinimumSize(QSize(1050, 550))
+        self.centralwidget.setMinimumSize(QSize(1050, 625))
         self.centralwidget.setMaximumSize(QSize(1050, 550))
         self.centralwidget.setStyleSheet(u"")
         self.gridLayout_5 = QGridLayout(self.centralwidget)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.widget_main_window = QWidget(self.centralwidget)
         self.widget_main_window.setObjectName(u"widget_main_window")
-        self.widget_main_window.setMinimumSize(QSize(950, 525))
+        self.widget_main_window.setMinimumSize(QSize(950, 575))
         self.widget_main_window.setMaximumSize(QSize(950, 500))
         self.widget_main_window.setStyleSheet(u"#widget_main_window {\n"
 "background-image: url(:/data/background/main_back.jpg);\n"
@@ -525,14 +526,14 @@ class Ui_MainWindow(object):
 
         self.scrollArea = QScrollArea(self.choose_server_page)
         self.scrollArea.setObjectName(u"scrollArea")
-        self.scrollArea.setMinimumSize(QSize(0, 350))
-        self.scrollArea.setMaximumSize(QSize(16777215, 350))
+        self.scrollArea.setMinimumSize(QSize(0, 390))
+        self.scrollArea.setMaximumSize(QSize(16777215, 16777215))
         self.scrollArea.setStyleSheet(u"")
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setAlignment(Qt.AlignmentFlag.AlignBottom|Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 6180, 340))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 6180, 380))
         self.horizontalLayout_2 = QHBoxLayout(self.scrollAreaWidgetContents)
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")

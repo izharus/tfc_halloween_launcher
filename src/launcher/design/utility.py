@@ -374,7 +374,7 @@ class ServerWidget(QPushButton):
     Template widget for server data: Image, server information, play button.
     """
 
-    WIDGET_H_SIZE: Final = 350
+    WIDGET_H_SIZE: Final = 385
     WIDGET_W_SIZE: Final = 200
 
     ICON_H_SIZE: Final = 240
