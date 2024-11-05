@@ -28,9 +28,19 @@ class JavaServerData:
             timeout (int, optional): Connection timeout in seconds.
                 Defaults to 3.
         """
+
+        server_ip = server_config.minecraft_server_ip
+        try:
+            port = int(server_config.minecraft_server_port)
+        except Exception as error:
+            log.error(f"Failed to fetch port for: {server_ip}")
+            log.error(error)
+            return
+
+        log.info(f"'{server_ip}', '{port}'")
         self._server = mcstatus.JavaServer(
-            host=server_config.minecraft_server_ip,
-            port=int(server_config.minecraft_server_port),
+            host=server_ip,
+            port=port,
             timeout=timeout,
         )
 
