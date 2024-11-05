@@ -30,7 +30,7 @@ LAUNCHER_BINARY_PATH = (
     launcher_config.LAUNCHER_ROOT_DIR / f"{launcher_config.LAUNCHER_NAME}.exe"
 )
 
-INSTALLER_VERSION = "1.0.0"
+INSTALLER_VERSION = "1.0.1"
 
 
 def write_os_version():
@@ -240,6 +240,7 @@ def main():
     log.debug(f"Installer version: {INSTALLER_VERSION}")
     write_os_version()
     root = tk.Tk()
+    root.geometry("300x30")
     root.eval("tk::PlaceWindow . center")
     DownloaderApp(root)
     root.mainloop()
