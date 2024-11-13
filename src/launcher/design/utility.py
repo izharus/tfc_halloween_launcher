@@ -125,6 +125,11 @@ class MessageBox(QDialog):
         )
         self.exec()
 
+    @property
+    def close_button(self) -> QPushButton:
+        """Return close button."""
+        return self._close_button
+
 
 class LogMessageBox(MessageBox):
     """
