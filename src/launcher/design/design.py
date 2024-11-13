@@ -8,6 +8,7 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
+
 from qtpy.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -110,6 +111,28 @@ class Ui_MainWindow(object):
 "QScrollBar::add-page:vertical,\n"
 "QScrollBar::sub-page:vertical {\n"
 "    background: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0444\u043e\u043d \u0434\u043b\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u0438 \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u043a\u0438 */\n"
+"}\n"
+"\n"
+"#pushButton_restore_password_back, #pushButton_back_from_server_settings {\n"
+"    background-image: url(:/data/background/back_arrow.png);\n"
+"    background-position: center;\n"
+"    background-repeat: no-repeat;\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
+"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
+"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b"
+                        "\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
+"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
+"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431"
+                        "\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
 "}\n"
 "")
         self.centralwidget = QWidget(MainWindow)
@@ -220,41 +243,39 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
 
-        self.widget_login = QWidget(self.login_page)
-        self.widget_login.setObjectName(u"widget_login")
-        self.widget_login.setMinimumSize(QSize(450, 0))
-        self.widget_login.setMaximumSize(QSize(450, 16777215))
-        self.widget_login.setStyleSheet(u"#widget_login {\n"
+        self.stackedWidget_auth = QStackedWidget(self.login_page)
+        self.stackedWidget_auth.setObjectName(u"stackedWidget_auth")
+        self.stackedWidget_auth.setStyleSheet(u"#widget_login, #widget_restore_password {\n"
 "	\n"
 "	background-image: url(:/data/background/login_back.jpg);\n"
 "	border-radius: 50px;\n"
 "}\n"
 "\n"
-"/* \u0421\u0442\u0438\u043b\u044c \u0434\u043b\u044f \u043a\u043d\u043e\u043f\u043a\u0438 \u0441 \u0441\u0438\u043d\u0438\u043c \u0446\u0432\u0435\u0442\u043e\u043c */\n"
-"QPushButton {\n"
-"    background-color: #FF77A3; \n"
-"    border: 2px solid #FF77A3;;\n"
-"    color: rgb(181, 255, 214); \n"
-"    padding: 10px 20px; /* \u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
-"    text-align: center;\n"
-"    font-size: 24px;\n"
-"	font-weight: bold; /* \u0416\u0438\u0440\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 */\n"
-"    border-radius: 10px; /* \u0417\u0430\u043a\u0440\u0443\u0433\u043b\u0435\u043d\u043d\u044b\u0435 \u0443\u0433\u043b\u044b */\n"
+"\n"
+"/* Modern Style QLineEdit */\n"
+".QLineEdit {\n"
+"  border: 2px solid #ccc;\n"
+"  background-color: #f9f9f9;\n"
+"  color: #333;\n"
+"  padding: 10px;\n"
+"  font-size: 16px;\n"
+"  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
 "}\n"
 "\n"
-"QPushButton:hover {\n"
-"    background-color: #FF4DA3; /* \u0411\u043e\u043b\u0435\u0435 \u0442\u0451\u043c\u043d\u044b\u0439 \u0441\u0438\u043d\u0438\u0439 \u043f\u0440"
-                        "\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+".QLineEdit:focus {\n"
+"  outline: none;\n"
+"  border-color: #4287f5;\n"
+"  background-color: #fff;\n"
 "}\n"
 "\n"
-"QPushButton:pressed {\n"
-"    background-color:  #FF00A3; /* \u0415\u0449\u0451 \u0431\u043e\u043b\u0435\u0435 \u0442\u0451\u043c\u043d\u044b\u0439 \u0441\u0438\u043d\u0438\u0439 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
+".QLineEdit::placeholder {\n"
+"  color: #999;\n"
 "}\n"
-"QPushButton:disabled {\n"
-"    background-color: #D3D3D3; /* \u0421\u0435\u0440\u044b\u0439 \u0446\u0432\u0435\u0442 \u0444\u043e\u043d\u0430 */\n"
-"    border: 2px solid #A9A9A9; /* \u0421\u0435\u0440\u044b\u0439 \u0446\u0432\u0435\u0442 \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
-"    color: #A9A9A9; /* \u0421\u0435\u0440\u044b\u0439 \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
+"\n"
+".QLineEdit:hover {\n"
+"  border-color: #999;\n"
 "}\n"
+"\n"
 "\n"
 "QLabel {\n"
 "    color: rgb(19, 255, 19);\n"
@@ -262,9 +283,9 @@ class Ui_MainWindow(object):
 "    font-size: 18px; /* \u0420\u0430\u0437\u043c\u0435\u0440 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
 "}\n"
 "QLabel:hover {\n"
-"    color: rgb(0, 255, 255); /* \u0426\u0432\u0435\u0442"
-                        " \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
-"    font-size: 20px; /* \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u0440\u0430\u0437\u043c\u0435\u0440\u0430 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 (\u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e) */\n"
+"    color: rgb(0, 255, 255); /* \u0426\u0432\u0435\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
+"    font-s"
+                        "ize: 20px; /* \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u0440\u0430\u0437\u043c\u0435\u0440\u0430 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 (\u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e) */\n"
 "    text-decoration: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u043f\u043e\u0434\u0447\u0435\u0440\u043a\u0438\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
 "}\n"
 "\n"
@@ -276,12 +297,13 @@ class Ui_MainWindow(object):
 "    border-radius: 5px; /* Rounded corners */\n"
 "    padding: 10px; /* Internal padding */\n"
 "    font-weight: bold; /* Bold font */\n"
-"    text-align: center; /* Centered te"
-                        "xt */\n"
+"    text-align: center; /* Centered text */\n"
+"    font-size: 20px;\n"
 "}\n"
 "\n"
 "/* Optional: Hover state for button */\n"
-"#pushButton_error_info:hover {\n"
+"#pu"
+                        "shButton_error_info:hover {\n"
 "    background-color: rgba(220, 50, 50, 1); /* Fully opaque red on hover */\n"
 "}\n"
 "\n"
@@ -289,26 +311,58 @@ class Ui_MainWindow(object):
 "#pushButton_error_info:pressed {\n"
 "    background-color: rgba(180, 30, 30, 0.8); /* Darker red on press */\n"
 "}\n"
+"/* \u041e\u0431\u0449\u0438\u0439 \u0441\u0442\u0438\u043b\u044c \u0434\u043b\u044f \u043e\u0431\u0435\u0438\u0445 \u043a\u043d\u043e\u043f\u043e\u043a */\n"
+"#pushButton_login, #pushButton_restore_password {\n"
+"    background-color: #FF77A3;\n"
+"    border: 2px solid #FF77A3;\n"
+"    color: rgb(181, 255, 214);\n"
+"    padding: 10px 20px;\n"
+"    text-align: center;\n"
+"    font-size: 24px;\n"
+"    font-weight: bold;\n"
+"    border-radius: 10px;\n"
+"}\n"
+"\n"
+"/* \u0421\u0442\u0438\u043b\u044c \u0434\u043b\u044f \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u044f \u043a\u0443\u0440\u0441\u043e\u0440\u0430 */\n"
+"#pushButton_login:hover, #pushButton_restore_password:hover {\n"
+"    background-color: #FF4DA3;\n"
+"}\n"
+"\n"
+"/*"
+                        " \u0421\u0442\u0438\u043b\u044c \u0434\u043b\u044f \u043d\u0430\u0436\u0430\u0442\u0438\u044f */\n"
+"#pushButton_login:pressed, #pushButton_restore_password:pressed {\n"
+"    background-color: #FF00A3;\n"
+"}\n"
+"\n"
+"/* \u0421\u0442\u0438\u043b\u044c \u0434\u043b\u044f \u043e\u0442\u043a\u043b\u044e\u0447\u0451\u043d\u043d\u043e\u0433\u043e \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u044f */\n"
+"#pushButton_login:disabled, #pushButton_restore_password:disabled {\n"
+"    background-color: #D3D3D3;\n"
+"    border: 2px solid #A9A9A9;\n"
+"    color: #A9A9A9;\n"
+"}\n"
+"\n"
 "")
+        self.page_auth = QWidget()
+        self.page_auth.setObjectName(u"page_auth")
+        self.page_auth.setStyleSheet(u"")
+        self.verticalLayout_9 = QVBoxLayout(self.page_auth)
+        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.widget_login = QWidget(self.page_auth)
+        self.widget_login.setObjectName(u"widget_login")
+        self.widget_login.setMinimumSize(QSize(450, 0))
+        self.widget_login.setMaximumSize(QSize(450, 16777215))
+        self.widget_login.setStyleSheet(u"")
         self.verticalLayout_8 = QVBoxLayout(self.widget_login)
         self.verticalLayout_8.setSpacing(0)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4 = QGridLayout()
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setHorizontalSpacing(6)
         self.gridLayout_4.setVerticalSpacing(12)
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_4, 1, 0, 1, 1)
-
         self.verticalSpacer = QSpacerItem(20, 50, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_4.addItem(self.verticalSpacer, 0, 1, 1, 1)
-
-        self.pushButton_login = QPushButton(self.widget_login)
-        self.pushButton_login.setObjectName(u"pushButton_login")
-
-        self.gridLayout_4.addWidget(self.pushButton_login, 5, 1, 1, 1)
 
         self.label_reset_password = QLabel(self.widget_login)
         self.label_reset_password.setObjectName(u"label_reset_password")
@@ -316,68 +370,26 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.label_reset_password, 4, 1, 1, 1)
 
-        self.lineEdit_password = QLineEdit(self.widget_login)
-        self.lineEdit_password.setObjectName(u"lineEdit_password")
-        self.lineEdit_password.setMinimumSize(QSize(250, 0))
-        self.lineEdit_password.setMaximumSize(QSize(300, 16777215))
-        self.lineEdit_password.setStyleSheet(u"/* Modern Style QLineEdit */\n"
-".QLineEdit {\n"
-"  border: 2px solid #ccc;\n"
-"  background-color: #f9f9f9;\n"
-"  color: #333;\n"
-"  padding: 10px;\n"
-"  font-size: 16px;\n"
-"  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
-"}\n"
-"\n"
-".QLineEdit:focus {\n"
-"  outline: none;\n"
-"  border-color: #4287f5;\n"
-"  background-color: #fff;\n"
-"}\n"
-"\n"
-".QLineEdit::placeholder {\n"
-"  color: #999;\n"
-"}\n"
-"\n"
-".QLineEdit:hover {\n"
-"  border-color: #999;\n"
-"}\n"
-"")
-        self.lineEdit_password.setEchoMode(QLineEdit.EchoMode.Password)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addWidget(self.lineEdit_password, 2, 1, 1, 1)
+        self.gridLayout_4.addItem(self.horizontalSpacer_3, 1, 2, 1, 1)
 
         self.lineEdit_nickname = QLineEdit(self.widget_login)
         self.lineEdit_nickname.setObjectName(u"lineEdit_nickname")
         self.lineEdit_nickname.setMinimumSize(QSize(250, 0))
         self.lineEdit_nickname.setMaximumSize(QSize(300, 16777215))
-        self.lineEdit_nickname.setStyleSheet(u"/* Modern Style QLineEdit */\n"
-".QLineEdit {\n"
-"  border: 2px solid #ccc;\n"
-"  background-color: #f9f9f9;\n"
-"  color: #333;\n"
-"  padding: 10px;\n"
-"  font-size: 16px;\n"
-"  border-radius: 15px; /* Adjust the value to control the corner smoothness */\n"
-"}\n"
-"\n"
-".QLineEdit:focus {\n"
-"  outline: none;\n"
-"  border-color: #4287f5;\n"
-"  background-color: #fff;\n"
-"}\n"
-"\n"
-".QLineEdit::placeholder {\n"
-"  color: #999;\n"
-"}\n"
-"\n"
-".QLineEdit:hover {\n"
-"  border-color: #999;\n"
-"}\n"
-"")
+        self.lineEdit_nickname.setStyleSheet(u"")
 
         self.gridLayout_4.addWidget(self.lineEdit_nickname, 1, 1, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_4, 1, 0, 1, 1)
+
+        self.pushButton_login = QPushButton(self.widget_login)
+        self.pushButton_login.setObjectName(u"pushButton_login")
+
+        self.gridLayout_4.addWidget(self.pushButton_login, 5, 1, 1, 1)
 
         self.label_creat_account = QLabel(self.widget_login)
         self.label_creat_account.setObjectName(u"label_creat_account")
@@ -385,9 +397,14 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.label_creat_account, 3, 1, 1, 1)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_password = QLineEdit(self.widget_login)
+        self.lineEdit_password.setObjectName(u"lineEdit_password")
+        self.lineEdit_password.setMinimumSize(QSize(250, 0))
+        self.lineEdit_password.setMaximumSize(QSize(300, 16777215))
+        self.lineEdit_password.setStyleSheet(u"")
+        self.lineEdit_password.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer_3, 1, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.lineEdit_password, 2, 1, 1, 1)
 
 
         self.verticalLayout_8.addLayout(self.gridLayout_4)
@@ -395,27 +412,102 @@ class Ui_MainWindow(object):
         self.widget_3 = QWidget(self.widget_login)
         self.widget_3.setObjectName(u"widget_3")
         self.widget_3.setEnabled(True)
-        self.widget_3.setMinimumSize(QSize(250, 150))
+        self.widget_3.setMinimumSize(QSize(250, 100))
         self.widget_3.setMaximumSize(QSize(800, 50))
         self.widget_3.setStyleSheet(u"")
         self.gridLayout_6 = QGridLayout(self.widget_3)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.gridLayout_6.setContentsMargins(-1, 0, -1, -1)
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_6.addItem(self.verticalSpacer_2, 1, 0, 1, 1)
-
+        self.gridLayout_6.setContentsMargins(-1, 0, 10, -1)
         self.pushButton_error_info = QPushButton(self.widget_3)
         self.pushButton_error_info.setObjectName(u"pushButton_error_info")
         self.pushButton_error_info.setEnabled(True)
 
         self.gridLayout_6.addWidget(self.pushButton_error_info, 0, 0, 1, 1)
 
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_6.addItem(self.verticalSpacer_2, 1, 0, 1, 1)
+
 
         self.verticalLayout_8.addWidget(self.widget_3)
 
 
-        self.gridLayout_3.addWidget(self.widget_login, 0, 1, 1, 1)
+        self.verticalLayout_9.addWidget(self.widget_login)
+
+        self.stackedWidget_auth.addWidget(self.page_auth)
+        self.page_restore_password = QWidget()
+        self.page_restore_password.setObjectName(u"page_restore_password")
+        self.verticalLayout_10 = QVBoxLayout(self.page_restore_password)
+        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.widget_restore_password = QWidget(self.page_restore_password)
+        self.widget_restore_password.setObjectName(u"widget_restore_password")
+        self.verticalLayout_12 = QVBoxLayout(self.widget_restore_password)
+        self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_6.addItem(self.horizontalSpacer_11)
+
+        self.pushButton_restore_password_back = QPushButton(self.widget_restore_password)
+        self.pushButton_restore_password_back.setObjectName(u"pushButton_restore_password_back")
+        self.pushButton_restore_password_back.setMinimumSize(QSize(64, 64))
+        self.pushButton_restore_password_back.setMaximumSize(QSize(64, 64))
+
+        self.horizontalLayout_6.addWidget(self.pushButton_restore_password_back)
+
+
+        self.verticalLayout_12.addLayout(self.horizontalLayout_6)
+
+        self.verticalSpacer_7 = QSpacerItem(20, 50, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+
+        self.verticalLayout_12.addItem(self.verticalSpacer_7)
+
+        self.gridLayout_9 = QGridLayout()
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.verticalLayout_11 = QVBoxLayout()
+        self.verticalLayout_11.setSpacing(15)
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.verticalLayout_11.setContentsMargins(10, 10, 10, 10)
+        self.lineEdit_restore_password_nickname = QLineEdit(self.widget_restore_password)
+        self.lineEdit_restore_password_nickname.setObjectName(u"lineEdit_restore_password_nickname")
+
+        self.verticalLayout_11.addWidget(self.lineEdit_restore_password_nickname)
+
+        self.lineEdit_restore_password_email = QLineEdit(self.widget_restore_password)
+        self.lineEdit_restore_password_email.setObjectName(u"lineEdit_restore_password_email")
+
+        self.verticalLayout_11.addWidget(self.lineEdit_restore_password_email)
+
+        self.pushButton_restore_password = QPushButton(self.widget_restore_password)
+        self.pushButton_restore_password.setObjectName(u"pushButton_restore_password")
+
+        self.verticalLayout_11.addWidget(self.pushButton_restore_password)
+
+
+        self.gridLayout_9.addLayout(self.verticalLayout_11, 0, 1, 1, 1)
+
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_9.addItem(self.horizontalSpacer_13, 0, 2, 1, 1)
+
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_9.addItem(self.horizontalSpacer_12, 0, 0, 1, 1)
+
+
+        self.verticalLayout_12.addLayout(self.gridLayout_9)
+
+        self.verticalSpacer_8 = QSpacerItem(20, 97, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_12.addItem(self.verticalSpacer_8)
+
+
+        self.verticalLayout_10.addWidget(self.widget_restore_password)
+
+        self.stackedWidget_auth.addWidget(self.page_restore_password)
+
+        self.gridLayout_3.addWidget(self.stackedWidget_auth, 0, 1, 1, 1)
 
         self.stackedWidget.addWidget(self.login_page)
         self.choose_server_page = QWidget()
@@ -673,27 +765,7 @@ class Ui_MainWindow(object):
         self.pushButton_back_from_server_settings.setObjectName(u"pushButton_back_from_server_settings")
         self.pushButton_back_from_server_settings.setMinimumSize(QSize(64, 64))
         self.pushButton_back_from_server_settings.setMaximumSize(QSize(64, 64))
-        self.pushButton_back_from_server_settings.setStyleSheet(u"QPushButton {\n"
-"    background-image: url(:/data/background/back_arrow.png);\n"
-"    background-position: center;\n"
-"    background-repeat: no-repeat;\n"
-"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
-"    border-radius: 10px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u044f\u0435\u043c \u0443\u0433\u043b\u044b \u043a\u043d\u043e\u043f\u043a\u0438 */\n"
-"    padding: 10px; /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0435 \u043e\u0442\u0441\u0442\u0443\u043f\u044b */\n"
-"    color: white; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0446\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430 */\n"
-"    font-size: 16px; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0440\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 */\n"
-"    font-weight: bold; /* \u0423\u0441\u0442\u0430\u043d\u0430"
-                        "\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0436\u0438\u0440\u043d\u044b\u0439 \u0448\u0440\u0438\u0444\u0442 */\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgba(255, 255, 255, 0.2); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgba(255, 255, 255, 0.4); /* \u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u043c \u044d\u0444\u0444\u0435\u043a\u0442 \u043f\u0440\u0438 \u043d\u0430\u0436\u0430\u0442\u0438\u0438 */\n"
-"}\n"
-"")
+        self.pushButton_back_from_server_settings.setStyleSheet(u"")
 
         self.horizontalLayout_4.addWidget(self.pushButton_back_from_server_settings)
 
@@ -1103,6 +1175,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget_auth.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1112,12 +1185,16 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.pushButton_collapse_app.setText("")
         self.pushButton_close_app.setText("")
-        self.pushButton_login.setText(QCoreApplication.translate("MainWindow", u"\u0412\u041e\u0419\u0422\u0418", None))
         self.label_reset_password.setText(QCoreApplication.translate("MainWindow", u"\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0430\u0440\u043e\u043b\u044c", None))
-        self.lineEdit_password.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u0440\u043e\u043b\u044c", None))
         self.lineEdit_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
+        self.pushButton_login.setText(QCoreApplication.translate("MainWindow", u"\u0412\u041e\u0419\u0422\u0418", None))
         self.label_creat_account.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442", None))
+        self.lineEdit_password.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u0440\u043e\u043b\u044c", None))
         self.pushButton_error_info.setText(QCoreApplication.translate("MainWindow", u"ERROR_BUTTON", None))
+        self.pushButton_restore_password_back.setText("")
+        self.lineEdit_restore_password_nickname.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041d\u0438\u043a \u0438\u0433\u0440\u043e\u043a\u0430", None))
+        self.lineEdit_restore_password_email.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u041f\u043e\u0447\u0442\u0430", None))
+        self.pushButton_restore_password.setText(QCoreApplication.translate("MainWindow", u"\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0430\u0440\u043e\u043b\u044c", None))
         self.label_player_name.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_logout.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:16pt;\">\u0412\u044b\u0439\u0442\u0438 \u0438\u0437 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430</span></p></body></html>", None))
