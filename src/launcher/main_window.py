@@ -19,7 +19,6 @@ icon, and provides safety timers for updating input data from the UI.
 import os
 import sys
 import traceback
-import webbrowser
 from typing import Optional
 
 import win32con
@@ -43,7 +42,7 @@ from .launcher_installer import (
     InstallThread,
     MinecraftExecutorThread,
 )
-from .login_widget import LoginWidget
+from .login_widget import LoginRecoveryWidget
 from .mine_query_thread import MinecraftQueryThread
 from .server_widget import ServerWidgetPage
 from .settings_widget import SettingsWidget
@@ -95,6 +94,9 @@ class Window(QtWidgets.QMainWindow):
         self._ui_instance.stackedWidget.setCurrentWidget(
             self._ui_instance.login_page,
         )
+        self._ui_instance.stackedWidget_auth.setCurrentWidget(
+            self._ui_instance.page_auth,
+        )
         self.resize(500, 125)  # Adjust 800 to your desired width
 
         script_dir = os.getcwd()
@@ -141,7 +143,7 @@ class Window(QtWidgets.QMainWindow):
         # This widget connects signals in _connect_signals
         self._settings_widget = SettingsWidget
         # This widget connects signals in _connect_signals
-        self._login_widget = LoginWidget(
+        self._login_widget = LoginRecoveryWidget(
             self._ui_instance,
             self._launcher_config,
             settings=self._settings,
@@ -209,10 +211,6 @@ class Window(QtWidgets.QMainWindow):
             }
             """
         )
-        self._ui_instance.label_creat_account.mousePressEvent = (
-            lambda _: webbrowser.open(self._launcher_config.REGISTER_URL)
-        )
-        self._ui_instance.label_reset_password.hide()
 
     def _config_installer_complete(self):
 

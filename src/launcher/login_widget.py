@@ -1,11 +1,13 @@
 """Implementation of launcher login logic."""
 
 import time
-from typing import Optional
+import webbrowser
+from typing import List, Optional
 
+import requests
 from loguru import logger as log
 from qtpy.QtCore import QThread, QTimer, Signal, Slot
-from qtpy.QtWidgets import QPushButton
+from qtpy.QtWidgets import QLineEdit, QPushButton
 
 from .design.design import Ui_MainWindow
 from .design.thread_data_utils import SettingsManager
@@ -195,6 +197,12 @@ class LoginWidget(BaseWidget):
 
     def _connect_signals(self):
         """Connect UI elements to their respective slots."""
+
+        # Label for registration
+        self._ui.label_creat_account.mousePressEvent = (
+            lambda _: webbrowser.open(self._launcher_config.REGISTER_URL)
+        )
+
         self._ui.pushButton_login.clicked.connect(
             lambda _: self.disable_ui(True, False)
         )
@@ -207,11 +215,12 @@ class LoginWidget(BaseWidget):
         self._worker.success.connect(self._complete_authentication)
 
         self._ui.lineEdit_nickname.textChanged.connect(
-            self._validate_user_input
+            self._validate_user_input_login
         )
         self._ui.lineEdit_password.textChanged.connect(
-            self._validate_user_input
+            self._validate_user_input_login
         )
+        self._ui.lineEdit_nickname.textChanged.emit(True)
 
         self._ui.pushButton_error_info.clicked.connect(
             self._ui.pushButton_error_info.hide
@@ -231,8 +240,6 @@ class LoginWidget(BaseWidget):
         """Initialize the user interface components."""
         self._ui.pushButton_error_info.hide()
 
-        self._validate_user_input()
-
     @Slot()
     def _logout_user(self):
         self._settings.set_user_value(
@@ -245,13 +252,19 @@ class LoginWidget(BaseWidget):
         self._ui.stackedWidget.setCurrentWidget(self._ui.login_page)
 
     @Slot()
-    def _validate_user_input(self):
+    def _validate_user_input_login(self):
         """Validate user input for login fields."""
-        self._ui.pushButton_login.setEnabled(
-            bool(
-                len(self._ui.lineEdit_nickname.text()) > 3
-                and len(self._ui.lineEdit_password.text()) > 3
-            )
+        self._validate_user_input(
+            self._ui.pushButton_login,
+            [self._ui.lineEdit_nickname, self._ui.lineEdit_password],
+        )
+
+    def _validate_user_input(
+        self, button: QPushButton, line_edit: List[QLineEdit], min_length=5
+    ):
+        """Validate user input."""
+        button.setEnabled(
+            all(len(line.text()) >= min_length for line in line_edit)
         )
 
     @Slot()
@@ -279,3 +292,153 @@ class LoginWidget(BaseWidget):
     def _erase_auth_data(self) -> None:
         """Erase authentication data before logout."""
         self._auth_data = None
+
+
+class ResetPasswordWorker(QThread):  # pylint: disable=R0903
+    """A worker thread for sending a reset password request"""
+
+    success = Signal()
+    write_error = Signal(str)
+
+    def __init__(self, username: str, email: str, recovery_pwd_url: str):
+        super().__init__()
+        self._username = username
+        self._email = email
+        self._recovery_pwd_url = recovery_pwd_url
+
+    def run(self):
+        """Send a password reset request and wait for an answer."""
+        try:
+            resp = requests.post(
+                self._recovery_pwd_url,
+                json={
+                    "username": self._username,
+                    "email": self._email,
+                },
+                timeout=3,
+            )
+        except Exception as error:
+            self.write_error.emit("indefinite")
+            log.error(f"Failed make restore email request: {error}")
+            return
+        if resp.status_code == 200:
+            self.success.emit()
+        else:
+            self.write_error.emit(str(resp.status_code))
+
+
+class LoginRecoveryWidget(LoginWidget):
+    """
+    A widget for user login and password recovery interface.
+
+    This widget extends the functionality of `LoginWidget` by adding password
+    recovery features. It handles user input for both login and password
+    recovery processes, providing an integrated interface
+    for user authentication.
+    """
+
+    def __init__(
+        self,
+        main_window: Ui_MainWindow,
+        launcher_config: LauncherConfig,
+        settings: SettingsManager,
+    ):
+        self._msg_box = MessageBox(main_window.widget_main_window)
+        super().__init__(
+            main_window,
+            launcher_config,
+            settings,
+        )
+        self._reset_password_worker: Optional[ResetPasswordWorker] = None
+
+    def _connect_signals(self):
+        super()._connect_signals()
+
+        self._ui.lineEdit_restore_password_nickname.textChanged.connect(
+            self._validate_user_input_restore_password
+        )
+        self._ui.lineEdit_restore_password_email.textChanged.connect(
+            self._validate_user_input_restore_password
+        )
+
+        # Make button active or inactive depending on input fields
+        self._ui.lineEdit_restore_password_nickname.textChanged.emit(True)
+
+        # Label for restoring user password
+        self._ui.label_reset_password.mousePressEvent = (
+            self._setup_reset_password_page
+        )
+        # Back to the auth page from the restoring password page
+        self._ui.pushButton_restore_password_back.clicked.connect(
+            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
+        # Send a restore password request when the button clicked
+        self._ui.pushButton_restore_password.clicked.connect(
+            self._send_reset_password_request
+        )
+
+        # Goto the login page after clicking on the restore password button
+        self._ui.pushButton_restore_password.clicked.connect(
+            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
+        # Enable ui when info widget closed
+        self._msg_box.close_button.clicked.connect(self.enable_ui)
+
+    @Slot()
+    def _send_reset_password_request(self):
+        """Send a reset password request and wait for an answer"""
+        self.disable_ui(show_progress=False)
+        self.info_label.setText("Восстанавливаю...")
+        self._reset_password_worker = ResetPasswordWorker(
+            self._ui.lineEdit_restore_password_nickname.text(),
+            self._ui.lineEdit_restore_password_email.text(),
+            self._launcher_config.RECOVERY_PWD_URL,
+        )
+        self._reset_password_worker.success.connect(self._show_message_success)
+        self._reset_password_worker.write_error.connect(
+            self._show_message_error
+        )
+
+        self._reset_password_worker.start()
+
+    @Slot()
+    def _show_message_success(self):
+        self._msg_box.show_message(
+            "Готово!",
+            "Если вы ввели верные данные - вам было отправлено письмо на почту, следуйте инструкциям в нем. Не забудьте проверить папку 'спам'.",  # pylint: disable=C0301
+        )
+
+    @Slot()
+    def _show_message_error(self, code: str):
+        self._msg_box.show_message(
+            "Ошибка!",
+            f"Не удалось отправить письмо на почту, код ошибки: {code}",
+        )
+
+    @Slot()
+    def _setup_reset_password_page(self, _):
+        """Initialize a reset password page."""
+        self._ui.lineEdit_restore_password_nickname.setText(
+            self._ui.lineEdit_nickname.text(),
+        )
+        self._ui.lineEdit_restore_password_email.setText("")
+        self._ui.stackedWidget_auth.setCurrentWidget(
+            self._ui.page_restore_password,
+        )
+
+    @Slot()
+    def _validate_user_input_restore_password(self):
+        """Validate user input for restore password fields."""
+        self._validate_user_input(
+            self._ui.pushButton_restore_password,
+            [
+                self._ui.lineEdit_restore_password_nickname,
+                self._ui.lineEdit_restore_password_email,
+            ],
+        )

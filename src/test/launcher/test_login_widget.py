@@ -4,9 +4,12 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+import requests
 import requests_mock
+from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import LauncherConfig
-from src.launcher.login_widget import AuthenticationWorker
+from src.launcher.login_widget import AuthenticationWorker, ResetPasswordWorker
 from src.launcher.main_window import Window
 from src.launcher.utility.pydantic_models import AuthData
 
@@ -124,12 +127,12 @@ class TestLoginWidget:
         widget = main_window._login_widget
         widget._ui.lineEdit_nickname.setText("abc")
         widget._ui.lineEdit_password.setText("123")
-        widget._validate_user_input()  # Call method directly
+        widget._validate_user_input_login()  # Call method directly
         assert not widget._ui.pushButton_login.isEnabled()
 
-        widget._ui.lineEdit_nickname.setText("abcd")
-        widget._ui.lineEdit_password.setText("1234")
-        widget._validate_user_input()
+        widget._ui.lineEdit_nickname.setText("abcd11")
+        widget._ui.lineEdit_password.setText("1234111")
+        widget._validate_user_input_login()
         assert widget._ui.pushButton_login.isEnabled()
 
     def test_blur_effect_on_login(self, main_window: Window, qtbot):
@@ -200,3 +203,74 @@ class TestLoginWidget:
 
         window = Window(settings=settings)
         qtbot.wait_signal(window._ui_instance.pushButton_login.clicked)
+
+
+class TestResetPasswordWorker:
+    """Tests for ResetPasswordWorker class."""
+
+    def setup_method(self):
+        """Setup every test method."""
+        self.mock_url = "https://restore"
+        self.username = "test_username"
+        self.email = "test@email.com"
+        self.worker = ResetPasswordWorker(
+            self.username,
+            self.email,
+            self.mock_url,
+        )
+        self.expected_json = {
+            "username": self.username,
+            "email": self.email,
+        }
+        self.worker.success = MagicMock()
+        self.worker.success.emit = MagicMock()
+        self.worker.write_error = MagicMock()
+        self.worker.write_error.emit = MagicMock()
+
+    def test_rest_password_success(
+        self,
+    ):
+        """Test successful password reset request with expected JSON."""
+        with requests_mock.Mocker() as m:
+            m.post(
+                self.mock_url,
+                status_code=200,
+            )
+            self.worker.run()
+
+            request = m.request_history[0]
+            assert request.json() == self.expected_json
+        self.worker.success.emit.assert_called_once_with()
+        self.worker.write_error.emit.assert_not_called()
+
+    @pytest.mark.parametrize("error_code", (409, 404, 500))
+    def test_rest_password_error_code(
+        self,
+        error_code: int,
+    ):
+        """
+        Test password reset request handling for HTTP different error codes.
+        """
+        with requests_mock.Mocker() as m:
+            m.post(
+                self.mock_url,
+                status_code=error_code,
+            )
+            self.worker.run()
+
+            request = m.request_history[0]
+            assert request.json() == self.expected_json
+        self.worker.success.emit.assert_not_called()
+        self.worker.write_error.emit.assert_called_once_with(str(error_code))
+
+    def test_rest_password_internal_error(
+        self,
+        mocker: MockerFixture,
+    ):
+        """Test password reset request handling for an internal error."""
+        mocker.patch.object(requests, "post", side_effect=RuntimeError)
+
+        self.worker.run()
+
+        self.worker.success.emit.assert_not_called()
+        self.worker.write_error.emit.assert_called_once_with("indefinite")

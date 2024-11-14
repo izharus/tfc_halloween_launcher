@@ -95,6 +95,7 @@ class LauncherConfig:
     API_URL_PUSH_CAPE = BASE_API_URL / "push_cape"
     API_URL_S3_INSTALLER_CRED = BASE_API_URL / "get_installer_s3_cred"
     REGISTER_URL = BASE_WEBSITE_URL / "register"
+    RECOVERY_PWD_URL = BASE_API_URL / "reset-password-request"
 
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
