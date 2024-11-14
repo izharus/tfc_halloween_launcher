@@ -291,3 +291,117 @@ class LoginWidget(BaseWidget):
     def _erase_auth_data(self) -> None:
         """Erase authentication data before logout."""
         self._auth_data = None
+
+
+class ResetPasswordWorker(QThread):
+    """A worker thread for sending a reset password request"""
+
+    def __init__(self, username: str, email: str):
+        super().__init__()
+        self._username = username
+        self._email = email
+
+    def run(self):
+        """Send a password reset request and wait for an answer."""
+
+
+class LoginRecoveryWidget(LoginWidget):
+    """
+    A widget for user login and password recovery interface.
+
+    This widget extends the functionality of `LoginWidget` by adding password
+    recovery features. It handles user input for both login and password
+    recovery processes, providing an integrated interface
+    for user authentication.
+    """
+
+    def __init__(
+        self,
+        main_window: Ui_MainWindow,
+        launcher_config: LauncherConfig,
+        settings: SettingsManager,
+    ):
+        self._msg_box = MessageBox(main_window.widget_main_window)
+        super().__init__(
+            main_window,
+            launcher_config,
+            settings,
+        )
+        self._reset_password_worker: Optional[ResetPasswordWorker] = None
+
+    def _connect_signals(self):
+        super()._connect_signals()
+
+        self._ui.lineEdit_restore_password_nickname.textChanged.connect(
+            self._validate_user_input_restore_password
+        )
+        self._ui.lineEdit_restore_password_email.textChanged.connect(
+            self._validate_user_input_restore_password
+        )
+
+        # Make button active or inactive depending on input fields
+        self._ui.lineEdit_restore_password_nickname.textChanged.emit(True)
+
+        # Label for restoring user password
+        self._ui.label_reset_password.mousePressEvent = (
+            self._setup_reset_password_page
+        )
+        # Back to the auth page from the restoring password page
+        self._ui.pushButton_restore_password_back.clicked.connect(
+            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
+        # Send a restore password request when the button clicked
+        self._ui.pushButton_restore_password.clicked.connect(
+            self._send_reset_password_request
+        )
+
+        # Goto the login page after clicking on the restore password button
+        self._ui.pushButton_restore_password.clicked.connect(
+            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
+        # Enable ui when info widget closed
+        self._msg_box.close_button.clicked.connect(self.enable_ui)
+
+    @Slot()
+    def _send_reset_password_request(self):
+        """Send a reset password request and wait for an answer"""
+        self.disable_ui(show_progress=False)
+        self.info_label.setText("Восстанавливаю...")
+        self._reset_password_worker = ResetPasswordWorker("1234", "1234")
+        self._reset_password_worker.finished.connect(self._show_message)
+        self._reset_password_worker.start()
+
+    @Slot()
+    def _show_message(self):
+        self._msg_box.show_message(
+            "Готово!",
+            "Если вы ввели верные данные - вам было отправлено письмо на почту, следуйте инструкциям в нем. Не забудьте проверить папку 'спам'.",  # pylint: disable=C0301
+        )
+
+    @Slot()
+    def _setup_reset_password_page(self, _):
+        """Initialize a reset password page."""
+        self._ui.lineEdit_restore_password_nickname.setText(
+            self._ui.lineEdit_nickname.text(),
+        )
+        self._ui.lineEdit_restore_password_email.setText("")
+        self._ui.stackedWidget_auth.setCurrentWidget(
+            self._ui.page_restore_password,
+        )
+
+    @Slot()
+    def _validate_user_input_restore_password(self):
+        """Validate user input for restore password fields."""
+        self._validate_user_input(
+            self._ui.pushButton_restore_password,
+            [
+                self._ui.lineEdit_restore_password_nickname,
+                self._ui.lineEdit_restore_password_email,
+            ],
+        )
