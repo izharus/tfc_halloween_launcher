@@ -19,7 +19,6 @@ icon, and provides safety timers for updating input data from the UI.
 import os
 import sys
 import traceback
-import webbrowser
 from typing import Optional
 
 import win32con
@@ -212,10 +211,6 @@ class Window(QtWidgets.QMainWindow):
             }
             """
         )
-        self._ui_instance.label_creat_account.mousePressEvent = (
-            lambda _: webbrowser.open(self._launcher_config.REGISTER_URL)
-        )
-        self._ui_instance.label_reset_password.hide()
 
     def _config_installer_complete(self):
 

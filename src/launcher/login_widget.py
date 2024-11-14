@@ -1,11 +1,12 @@
 """Implementation of launcher login logic."""
 
 import time
-from typing import Optional
+import webbrowser
+from typing import List, Optional
 
 from loguru import logger as log
 from qtpy.QtCore import QThread, QTimer, Signal, Slot
-from qtpy.QtWidgets import QPushButton
+from qtpy.QtWidgets import QLineEdit, QPushButton
 
 from .design.design import Ui_MainWindow
 from .design.thread_data_utils import SettingsManager
@@ -195,6 +196,12 @@ class LoginWidget(BaseWidget):
 
     def _connect_signals(self):
         """Connect UI elements to their respective slots."""
+
+        # Label for registration
+        self._ui.label_creat_account.mousePressEvent = (
+            lambda _: webbrowser.open(self._launcher_config.REGISTER_URL)
+        )
+
         self._ui.pushButton_login.clicked.connect(
             lambda _: self.disable_ui(True, False)
         )
@@ -207,11 +214,12 @@ class LoginWidget(BaseWidget):
         self._worker.success.connect(self._complete_authentication)
 
         self._ui.lineEdit_nickname.textChanged.connect(
-            self._validate_user_input
+            self._validate_user_input_login
         )
         self._ui.lineEdit_password.textChanged.connect(
-            self._validate_user_input
+            self._validate_user_input_login
         )
+        self._ui.lineEdit_nickname.textChanged.emit(True)
 
         self._ui.pushButton_error_info.clicked.connect(
             self._ui.pushButton_error_info.hide
@@ -231,8 +239,6 @@ class LoginWidget(BaseWidget):
         """Initialize the user interface components."""
         self._ui.pushButton_error_info.hide()
 
-        self._validate_user_input()
-
     @Slot()
     def _logout_user(self):
         self._settings.set_user_value(
@@ -245,13 +251,19 @@ class LoginWidget(BaseWidget):
         self._ui.stackedWidget.setCurrentWidget(self._ui.login_page)
 
     @Slot()
-    def _validate_user_input(self):
+    def _validate_user_input_login(self):
         """Validate user input for login fields."""
-        self._ui.pushButton_login.setEnabled(
-            bool(
-                len(self._ui.lineEdit_nickname.text()) > 3
-                and len(self._ui.lineEdit_password.text()) > 3
-            )
+        self._validate_user_input(
+            self._ui.pushButton_login,
+            [self._ui.lineEdit_nickname, self._ui.lineEdit_password],
+        )
+
+    def _validate_user_input(
+        self, button: QPushButton, line_edit: List[QLineEdit], min_length=5
+    ):
+        """Validate user input."""
+        button.setEnabled(
+            all(len(line.text()) >= min_length for line in line_edit)
         )
 
     @Slot()
