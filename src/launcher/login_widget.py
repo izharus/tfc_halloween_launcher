@@ -4,6 +4,7 @@ import time
 import webbrowser
 from typing import List, Optional
 
+import requests
 from loguru import logger as log
 from qtpy.QtCore import QThread, QTimer, Signal, Slot
 from qtpy.QtWidgets import QLineEdit, QPushButton
@@ -293,16 +294,37 @@ class LoginWidget(BaseWidget):
         self._auth_data = None
 
 
-class ResetPasswordWorker(QThread):
+class ResetPasswordWorker(QThread):  # pylint: disable=R0903
     """A worker thread for sending a reset password request"""
 
-    def __init__(self, username: str, email: str):
+    success = Signal()
+    write_error = Signal(str)
+
+    def __init__(self, username: str, email: str, recovery_pwd_url: str):
         super().__init__()
         self._username = username
         self._email = email
+        self._recovery_pwd_url = recovery_pwd_url
 
     def run(self):
         """Send a password reset request and wait for an answer."""
+        try:
+            resp = requests.post(
+                self._recovery_pwd_url,
+                json={
+                    "username": self._username,
+                    "email": self._email,
+                },
+                timeout=3,
+            )
+        except Exception as error:
+            self.write_error.emit("indefinite")
+            log.error(f"Failed make restore email request: {error}")
+            return
+        if resp.status_code == 200:
+            self.success.emit()
+        else:
+            self.write_error.emit(str(resp.status_code))
 
 
 class LoginRecoveryWidget(LoginWidget):
@@ -373,15 +395,30 @@ class LoginRecoveryWidget(LoginWidget):
         """Send a reset password request and wait for an answer"""
         self.disable_ui(show_progress=False)
         self.info_label.setText("Восстанавливаю...")
-        self._reset_password_worker = ResetPasswordWorker("1234", "1234")
-        self._reset_password_worker.finished.connect(self._show_message)
+        self._reset_password_worker = ResetPasswordWorker(
+            self._ui.lineEdit_restore_password_nickname.text(),
+            self._ui.lineEdit_restore_password_email.text(),
+            self._launcher_config.RECOVERY_PWD_URL,
+        )
+        self._reset_password_worker.success.connect(self._show_message_success)
+        self._reset_password_worker.write_error.connect(
+            self._show_message_error
+        )
+
         self._reset_password_worker.start()
 
     @Slot()
-    def _show_message(self):
+    def _show_message_success(self):
         self._msg_box.show_message(
             "Готово!",
             "Если вы ввели верные данные - вам было отправлено письмо на почту, следуйте инструкциям в нем. Не забудьте проверить папку 'спам'.",  # pylint: disable=C0301
+        )
+
+    @Slot()
+    def _show_message_error(self, code: str):
+        self._msg_box.show_message(
+            "Ошибка!",
+            f"Не удалось отправить письмо на почту, код ошибки: {code}",
         )
 
     @Slot()
