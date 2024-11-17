@@ -91,6 +91,8 @@ class SettingsWidget(BaseWidget):
     A widget that manages user settings for the launcher interface.
     """
 
+    IS_UI_INSTALLED = False
+
     def __init__(
         self,
         main_window: Ui_MainWindow,
@@ -129,18 +131,10 @@ class SettingsWidget(BaseWidget):
         )
         self._upload_worker = UploadWorker()
 
-        # Configure RAM slider
-        max_ram = psutil.virtual_memory().total // (1024 * 1024)  # RAM in MB
-        self._memory_slider = LabeledSlider(
-            minimum=0, maximum=max_ram, max_typos=20
-        )
-        self._ui.verticalLayout_main_settings.insertWidget(
-            0, self._memory_slider
-        )
+        if not self.__class__.IS_UI_INSTALLED:
+            self._setup_ui()
+            self.__class__.IS_UI_INSTALLED = True
         self._settings.update_ui_inputs()
-
-        self._memory_slider.show()
-
         self._connect_signals()
 
     def _connect_signals(self):
@@ -224,3 +218,14 @@ class SettingsWidget(BaseWidget):
         self.disable_ui()
         self._upload_worker.set_function(function)
         self._upload_worker.start()
+
+    def _setup_ui(self):
+        # Configure RAM slider
+        max_ram = psutil.virtual_memory().total // (1024 * 1024)  # RAM in MB
+        self._memory_slider = LabeledSlider(
+            minimum=0, maximum=max_ram, max_typos=20
+        )
+        self._ui.verticalLayout_main_settings.insertWidget(
+            0, self._memory_slider
+        )
+        self._memory_slider.show()
