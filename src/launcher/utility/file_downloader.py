@@ -314,12 +314,12 @@ class FileYOSDownloader(FileDownloaderProtocol):
     ) -> None:
         filepath = Path(dst_path)
         if hash_info and filepath.exists():
-            log.debug(f"File exists: {filepath}")
+            # log.debug(f"File exists: {filepath}")
             try:
                 if hash_info.value == calculate_hash(
                     filepath, hash_info.algorithm
                 ):
-                    log.debug(f"File hash correct: {filepath}")
+                    # log.debug(f"File hash correct: {filepath}")
                     if callback:
                         callback.maximum = 1
                         callback.current = 1

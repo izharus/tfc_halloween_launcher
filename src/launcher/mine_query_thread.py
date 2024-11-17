@@ -106,8 +106,14 @@ class MinecraftQueryThread(QThread):
                 cur_online,
                 max_online,
             )
+            log.info(
+                f"Players fetched for '{button.config_name}'': "
+                f"{cur_online}/{max_online}"
+            )
         except ServerQueryStatusError as error:
-            log.error(f"Failed to fetch players: {error}")
+            log.error(
+                f"Failed to fetch players for '{button.config_name}': {error}"
+            )
             self.set_offline_status.emit(button)
 
     def _connect_signals(self):

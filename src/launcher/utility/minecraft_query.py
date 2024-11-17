@@ -37,7 +37,7 @@ class JavaServerData:
             log.error(error)
             return
 
-        log.info(f"'{server_ip}', '{port}'")
+        log.info(f"'{server_ip}'")
         self._server = mcstatus.JavaServer(
             host=server_ip,
             port=port,
