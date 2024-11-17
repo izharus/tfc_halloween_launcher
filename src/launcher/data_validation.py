@@ -5,33 +5,11 @@ import traceback
 
 from loguru import logger as log
 
-from .design.utility import MessageBoxManager
+from .utility._helper import SUBPROCESS_CREATION_FLAGS
 
 
 class Validator:
-    """Validatin data in MainWindow."""
-
-    def __init__(
-        self,
-        icon_path: str,
-    ):
-        self.msg_box = MessageBoxManager(icon_path)
-
-    def is_valid_nickname(self, nickname: str) -> bool:
-        """
-        Check if nickname is valid.
-
-        Args:
-            nickname (int): nickname check for.
-
-        Returns:
-            bool: True if nickname is valid, False otherwise.
-        """
-        if len(nickname) < 3:
-            msg_title = "Никнейм отсутствует или слишком короткий."
-            self.msg_box.warn(msg_title)
-            return False
-        return True
+    """Validation data in MainWindow."""
 
     @staticmethod
     def is_java_installed() -> bool:
@@ -50,6 +28,7 @@ class Validator:
                 ["java", "-version"],
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
+                creationflags=SUBPROCESS_CREATION_FLAGS,
             )
             return True
         except Exception as error:

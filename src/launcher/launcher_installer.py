@@ -28,39 +28,95 @@ launching a customized Minecraft environment.
 import os
 import subprocess
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Dict, List, Optional
 
-import boto3
-import boto3.exceptions
-import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
-from minecraft_launcher_lib.types import MinecraftOptions
-from PyQt6.QtCore import QThread, pyqtSignal
+from qtpy.QtCore import QThread, Signal
 
-from .launcher_configs import ServerConfig
+from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
+from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
+    MinecraftOptions,
+)
+from .design.thread_data_utils import SettingsManager
+from .launcher_configs import ServerConfig, ServerConfigManager
+from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,
+    ConfigDownloadError,
+    ConfigProcessingError,
+    FileDownloadError,
     FilesSaveError,
     MinecraftLauncherConfigNotSet,
-    RequestDownloadError,
 )
-from .utility.file_downloader import FileDownloader
-from .utility.pydantic_models import FileInfo
+from .utility.file_downloader import FileDownloaderProtocol
+from .utility.pydantic_models import AuthData, FileInfo
+
+MAX_WORKERS = (os.cpu_count() or 4) * 4
 
 
-class ModsInstaller(QThread, FileDownloader):
+class ConfigInstallerThread(QThread):
+    """QThread for installing ServerConfigManager."""
+
+    success = Signal()
+    finished = Signal()
+    write_error = Signal(str)
+    write_info = Signal(str)
+
+    def __init__(
+        self,
+        file_downloader: FileDownloaderProtocol,
+        map_json_object_key: str,
+    ):
+
+        super().__init__()
+        self._config_manager: Optional[ServerConfigManager] = None
+        self._file_downloader = file_downloader
+        self._map_json_object_key = map_json_object_key
+
+    def run(self):
+        """Attempt to install ServerConfigManager."""
+        try:
+            log.info("ConfigInstallerThread stared.")
+            self.write_info.emit("Загружается список серверов...")
+            self._config_manager = ServerConfigManager(
+                self._file_downloader,
+                self._map_json_object_key,
+            )
+            log.info("ConfigInstallerThread completed successfully.")
+            self.write_info.emit("Список серверов загружен.")
+            self.success.emit()
+        except ConfigProcessingError as e:
+            log.critical(f"Failed to process config failed: {e}")
+            self.write_error.emit("Ошибка на моей стороне )=")
+        except ConfigDownloadError as e:
+            log.critical(f"Failed to download a config file: {e}")
+            self.write_error.emit("Обновление не удалось")
+        finally:
+            self.finished.emit()
+
+    @property
+    def config_manager(self) -> Optional[ServerConfigManager]:
+        """Return a ServerConfigManager instance or None."""
+        return self._config_manager
+
+
+class ModsInstaller(QThread):
     """Class for save downloading and deleting unknown files"""
 
     def __init__(
         self,
         files_info_list: List[FileInfo],
         minecraft_directory: str,
+        file_downloader: FileDownloaderProtocol,
         mods_directory: str = "mods",
     ):
         QThread.__init__(self)
         self.files_info_list = files_info_list
         self.minecraft_directory = minecraft_directory
         self.mods_directory = os.path.join(minecraft_directory, mods_directory)
+
+        self._file_downloader = file_downloader
 
     def delete_unknown_mods(self):
         """
@@ -96,76 +152,58 @@ class ModsInstaller(QThread, FileDownloader):
     def check_and_download(
         self,
         callback: Optional[Dict[str, Callable]] = None,
-        boto3_client: Optional[boto3.client] = None,
-        bucket_name: Optional[str] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
         them again if hash incorrect or if files do not exist.
         Args:
+            bucket_name: (str): A bucket name for downloading from
+                object storage.
+            boto3_client: (boto3.client): A boto3 client instance.
             callback (dict): A dictionary of callback functions for
             updating the UI.
-            boto3_client: (Optional[boto3.client]): A boto3 client instance.
-            bucket_name: (Optional[str]): A bucket name for downloading from
-                object storage.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
         if callback:
             callback["setMax"](len(self.files_info_list))
-            progress_bar_index = 0
-        for file_info in self.files_info_list:
+
+        def install_file(file_info: FileInfo) -> None:
             file_name = file_info.file_name
             dist_file_path = file_info.dist_file_path
             file_path = os.path.join(self.minecraft_directory, dist_file_path)
-            if callback:
-                callback["setProgress"](progress_bar_index)
-                callback["setStatus"](f"Checking file hash: {file_name}...")
-                progress_bar_index += 1
-            if os.path.exists(file_path):
-                try:
-                    file_hash = self.calculate_hash(file_path)
-                except CalculateHashFailed:
-                    log.error(f"Failed to calculate hash for: {file_name}.")
-                    return False
-                if file_hash == file_info.hash:
-                    # log.info(f"File hash correct: {file_name}")
-                    continue
-                log.info(f"File hash incorrect: {file_name}")
+
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
-            try:
-                self.save_file(
-                    file_path, self.download_file_from_url(file_info.api_url)
-                )
-                log.info(f"File was downloaded from url: {file_name}")
-                continue
-            except (FilesSaveError, RequestDownloadError):
-                log.error(
-                    f"Failed to download file from github url: {file_name}."
-                )
-                if boto3_client and bucket_name:
-                    try:
-                        self.save_file(
-                            file_path,
-                            self.download_file_from_yos(
-                                boto3_client,
-                                bucket_name,
-                                file_info.yan_obj_storage,
-                            ),
-                        )
-                        log.info(
-                            "File was downloaded from object storage: "
-                            f"{file_name}"
-                        )
-                        continue
-                    except boto3.exceptions.Boto3Error as error:
-                        log.error(
-                            "Failed to download file from object storage: "
-                            f"{error}"
-                        )
-                return False
 
+            self._file_downloader.download_file(
+                file_info.yan_obj_storage,
+                file_path,
+                hash_info=file_info.hash,
+            )
+
+        count = 0
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = [
+                executor.submit(install_file, file_info)
+                for file_info in self.files_info_list
+            ]
+
+            for future in futures:
+                try:
+                    future.result()
+                except CalculateHashFailed as error:
+                    log.error(f"Failed to calculate hash for: {error}.")
+                    return False
+                except (FileDownloadError, FilesSaveError) as error:
+                    log.error(
+                        "Failed to download file from object storage: "
+                        f"{error}"
+                    )
+                    return False
+                if callback:
+                    count += 1
+                    callback["setProgress"](count)
         return True
 
 
@@ -195,11 +233,16 @@ class InstallThread(QThread):
             thread.
     """
 
-    progress_max = pyqtSignal("int")
-    progress = pyqtSignal("int")
-    text = pyqtSignal("QString")
+    progress_max = Signal("int")
+    progress = Signal("int")
+    text = Signal("QString")
 
-    def __init__(self, config: Optional[ServerConfig] = None) -> None:
+    def __init__(
+        self,
+        file_downloader: FileDownloaderProtocol,
+        is_working: Callable[..., bool],
+        config: Optional[ServerConfig] = None,
+    ) -> None:
         QThread.__init__(self)
         self.config = config
         self._callback_dict = {
@@ -209,13 +252,9 @@ class InstallThread(QThread):
             ),
             "setProgress": lambda progress: self.progress.emit(progress),
         }
-        self.is_working = False
+        self._is_working = is_working
         self.runtime_error: Optional[Exception] = None
-        self.is_install_shaders = False
-
-    def change_install_shaders_status(self, is_install_shaders: bool):
-        """Indicates if shaders should be installed."""
-        self.is_install_shaders = is_install_shaders
+        self._file_downloader = file_downloader
 
     def set_config(self, config: ServerConfig):
         """
@@ -227,13 +266,22 @@ class InstallThread(QThread):
         """Call main_worker an handle any exceptions."""
         self.runtime_error = None
         try:
+            if not self.config:
+                raise MinecraftLauncherConfigNotSet()
             self.main_worker()
+            self.config.is_minecraft_installed = True
         except Exception as error:
-            log.error(
-                "Unexpected error in InstallThread thread:\n"
-                f"{traceback.format_exc()}"
-            )
-            self.runtime_error = error
+            if self.config:
+                self.config.is_minecraft_installed = False
+            if self._is_working():
+                log.error(
+                    "Unexpected error in InstallThread thread:\n"
+                    f"{traceback.format_exc()}"
+                )
+                self.runtime_error = error
+            else:
+                log.error("closeEvent was triggered, installation failed.")
+                self.runtime_error = error
 
     def main_worker(self):
         """
@@ -248,8 +296,6 @@ class InstallThread(QThread):
         Returns:
             None
         """
-        if not self.config:
-            raise MinecraftLauncherConfigNotSet()
 
         if not self.config.is_minecraft_installed:
             mine_lib.forge.install_forge_version(
@@ -258,29 +304,18 @@ class InstallThread(QThread):
                 callback=self._callback_dict,
             )
         map_dirs = self.config.main_data
-        if self.is_install_shaders:
-            if "client_data_shaders" in self.config.client_additional_data:
-                map_dirs += self.config.client_additional_data[
-                    "client_data_shaders"
-                ]
-            else:
-                log.error(
-                    "Shaders couldn't be installed for "
-                    f"{self.config.internal_name}"
-                )
-                self.runtime_error = True
-                return
 
-        downloader = ModsInstaller(map_dirs, self.config.minecraft_directory)
-        status = downloader.check_and_download(
+        installer = ModsInstaller(
+            files_info_list=map_dirs,
+            minecraft_directory=self.config.minecraft_directory,
+            file_downloader=self._file_downloader,
+        )
+        status = installer.check_and_download(
             callback=self._callback_dict,
-            boto3_client=self.config.boto3_client,
-            # pylint: disable=W0212
-            bucket_name=self.config._launcher_config.BUCKET_NAME,
         )
         if not status:
             self.runtime_error = True
-        status = downloader.delete_unknown_mods()
+        status = installer.delete_unknown_mods()
         if not status:
             self.runtime_error = True
         self._callback_dict["setStatus"]("Launching minecraft...")
@@ -294,27 +329,27 @@ class MinecraftExecutorThread(QThread):
     configuration and execution of Minecraft with a specified nickname.
 
     Attributes:
-        nickname (str): The nickname to be used in the Minecraft game.
-        uuid (str): The UUID of the user.
-        access_token (str): User access token.
-
+        auth_data (AuthData): Represents user credential data.
+        server_config (ServerConfig): Current server config data.
+        settings (SettingsManager): An instance of SettingsManager.
     """
 
     def __init__(
         self,
-        nickname: str,
-        uuid: str,
-        access_token: str,
-        config: ServerConfig,
+        auth_data: AuthData,
+        server_config: ServerConfig,
+        settings: SettingsManager,
     ):
         QThread.__init__(self)
-        self.nickname = nickname
-        self.uuid = uuid
-        self.config = config
-        self.access_token = access_token
+        self._auth_data = auth_data
+        self._config = server_config
+        self._settings = settings
+
         self.runtime_error: Optional[Exception] = None
 
-    def create_launcher_options(self) -> MinecraftOptions:
+    def create_launcher_options(
+        self, allocate_ram: Optional[int] = None
+    ) -> MinecraftOptions:
         """
         Create launcher options for connecting to a Minecraft server.
 
@@ -323,6 +358,9 @@ class MinecraftExecutorThread(QThread):
         username, server IP, and port based on the attributes of the current
         instance.
 
+        Args:
+            allocate_ram: Optional[int]: Amount of RAM in MB to allocate
+                for the game.
         Returns:
             MinecraftOptions: A dictionary containing options for Minecraft
                 server connection, including the username, server IP, and port.
@@ -332,11 +370,19 @@ class MinecraftExecutorThread(QThread):
             connection to a Minecraft server.
         """
         options = mine_lib.utils.generate_test_options()
-        options["username"] = self.nickname
-        options["uuid"] = self.uuid
-        options["token"] = self.access_token
-        options["server"] = self.config.server_config.minecraft_server_ip
-        options["port"] = self.config.server_config.minecraft_server_port
+        options["username"] = self._auth_data.username
+        options["uuid"] = self._auth_data.uuid
+        options["token"] = self._auth_data.accessToken
+
+        # auto-connect to the server:
+        #  options["server"] = self._config.server_config.minecraft_server_ip
+        #  options["port"] = self._config.server_config.minecraft_server_port
+
+        if allocate_ram:
+            log.debug(f"Allocating RAM: {allocate_ram}m")
+            options["jvmArguments"] = [f"-Xmx{allocate_ram}m"]
+        else:
+            log.debug("Allocating RAM: auto")
         return options
 
     def run(self):
@@ -349,22 +395,22 @@ class MinecraftExecutorThread(QThread):
 
         """
         self.runtime_error = None
+        options = self.create_launcher_options(
+            self._settings.get_ui_value("slider_ram_settings", int),
+        )
         try:
+            self._config.create_default_options()
             # options["gameDirectory"] = self.minecraft_directory
             minecraft_command = mine_lib.command.get_minecraft_command(
-                self.config.server_config.minecraft_profile,
-                self.config.minecraft_directory,
-                self.create_launcher_options(),
-            )
-            # Hide the console window
-            creation_flags = (
-                subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+                self._config.server_config.minecraft_profile,
+                self._config.minecraft_directory,
+                options,
             )
 
             with subprocess.Popen(
                 minecraft_command,
-                cwd=self.config.minecraft_directory,
-                creationflags=creation_flags,
+                cwd=self._config.minecraft_directory,
+                creationflags=SUBPROCESS_CREATION_FLAGS,
                 # Redirect stdout to PIPE to capture output
                 # stdout=subprocess.PIPE,
                 # Redirect stderr to PIPE to capture error output
@@ -383,3 +429,4 @@ class MinecraftExecutorThread(QThread):
                 "Unexpected error wile executing minecraft:\n"
                 f"{traceback.format_exc()}"
             )
+            self._config.update_default_options()

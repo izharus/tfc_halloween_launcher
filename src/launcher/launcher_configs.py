@@ -5,28 +5,59 @@ This module defines classes and methods for configuring the Minecraft
 launcher and managing server configurations.
 
 """
+
+# pylint: disable=C0103
+
 import json
 import os
-import shelve
-import traceback
-from typing import Any, Dict, List, Optional
+from enum import Enum
+from pathlib import Path
+from typing import TYPE_CHECKING, Final, Optional
 
-import boto3
-import boto3.exceptions
-import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
+from pydantic import ValidationError
 from unidecode import unidecode
-from src.launcher.boto3_cred import BOTO3_ACCESS_KEY, BOTO3_SECRET_KEY
 
-
+from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .boto3_cred import BOTO3_BUCKET_NAME
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
-    RequestDownloadError,
+    FileDownloadError,
+    ModpackNotfound,
 )
-from .utility.file_downloader import FileDownloader
+from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import MapJson, Modpack
+
+if TYPE_CHECKING:
+    from .design.thread_data_utils import SettingsManager
+
+DEFAULT_USER_SETTINGS = "lang:ru_ru"
+
+
+class URL(str):
+    """
+    A class representing a URL that allows for easy construction
+    and manipulation of URL paths using the division operator.
+    """
+
+    def __init__(self, base_url: str):
+        super().__init__()
+        self.base_url = base_url.rstrip("/")
+
+    def __truediv__(self, other: str):
+        return URL(f"{self.base_url}/{other.lstrip('/')}")
+
+    def __str__(self):
+        return self.base_url
+
+
+class BinariesObjectKey(Enum):
+    """Object keys for launcher binaries."""
+
+    WIN10X64: str = "binary/AuleCraftWin10_64bit.exe"
+    WIN7X64: str = "binary/AuleCraftWin7_64bit.exe"
+    WIN7X86: str = "binary/AuleCraftWin7_32bit.exe"
 
 
 class LauncherConfig:
@@ -34,460 +65,396 @@ class LauncherConfig:
     Configuration settings for the Minecraft launcher.
 
     Attributes:
+        BASE_API_URL (str): Domain of auth service.
+        DEVELOPER_EMAIL (str): Complain about bugs here.
         LAUNCHER_NAME (str): The name of the Minecraft launcher.
-        DATA_DIR (str): The directory for storing launcher data.
-        SERVERS_DIR (str): The directory where server configurations
+        DATA_DIR (Path): The directory for storing launcher data.
+        SERVERS_DIR (Path): The directory where server configurations
             are stored.
         JAVA_INSTALL_URL (str): The URL for Java installation.
         MINECRAFT_LAUNCHER_IP_ADDR (str): The API URL for accessing UUID
             and access token.
         API_URL_PUSH_SKIN (str): The API URL for pushing user skin.
         API_URL_PUSH_CAPE (str): The API URL for pushing user cape.
-        minecraft_skin_directory = (str): Dir for choosing user skins.
-        minecraft_cape_directory = (str): Dir for choosing user capes.
+        minecraft_skin_directory = (Path): Dir for choosing user skins.
+        minecraft_cape_directory = (Path): Dir for choosing user capes.
+        IS_AUTHENTICATED_KEY (str): A key for SettingsManager, 1 if user
+            was authenticated, 0 otherwise
+
     """
 
-    LAUNCHER_NAME = "tfc_halloween"
-    DATA_DIR = "halloween_data"
-    SERVERS_DIR = "servers"
-    JAVA_INSTALL_URL = "https://java-for-minecraft.com/ru/"
-    MINECRAFT_LAUNCHER_IP_ADDR = "http://77.239.232.50:23846/launcher"
-    API_URL_PUSH_SKIN = "http://77.239.232.50:23846/push_skin"
-    API_URL_PUSH_CAPE = "http://77.239.232.50:23846/push_cape"
-    MAP_JSON_URL = "https://raw.githubusercontent.com/izharus/hallowen_modpacks/main/map.json"  # pylint: disable=C0301
+    BASE_API_URL = URL("https://auth.aulecraft.ru/")
+    BASE_WEBSITE_URL = URL("https://aulecraft.ru/")
+
+    DEVELOPER_EMAIL = "ruslan.izhakovskij@gmail.com"
+    LAUNCHER_NAME = "AuleCraft"
+    JAVA_INSTALL_URL = "https://www.java.com/ru/download/"
+
+    MINECRAFT_LAUNCHER_IP_ADDR = BASE_API_URL / "launcher"
+    API_URL_PUSH_SKIN = BASE_API_URL / "push_skin"
+    API_URL_PUSH_CAPE = BASE_API_URL / "push_cape"
+    API_URL_S3_INSTALLER_CRED = BASE_API_URL / "get_installer_s3_cred"
+    REGISTER_URL = BASE_WEBSITE_URL / "register"
+    RECOVERY_PWD_URL = BASE_API_URL / "reset-password-request"
+
     MAP_JSON_YOS_OBJ_KEY = "modpacks/map.json"
     BUCKET_NAME = BOTO3_BUCKET_NAME
+    LAUNCHER_BINARIES = BinariesObjectKey
+
+    IS_AUTHENTICATED_KEY = "is_authenticated"  # A key for SettingsManager
+    LAUNCHER_ROOT_DIR = (
+        Path(
+            unidecode(
+                os.path.dirname(mine_lib.utils.get_minecraft_directory())
+            )
+        )
+        / LAUNCHER_NAME
+    )
+    LOGGING_DIR = LAUNCHER_ROOT_DIR / "logs"
+    LAUNCHER_DATA_DIR = LAUNCHER_ROOT_DIR / "data"
+    MINECRAFT_SKIN_DIR = LAUNCHER_DATA_DIR / "skins"
+    MINECRAFT_CAPE_DIR = LAUNCHER_DATA_DIR / "capes"
+    LAUNCHER_SERVER_ICONS_DIR = LAUNCHER_DATA_DIR / "icons"
+
+    # Path to the file with default user game settings
+    DEFAULT_OPTIONS_PATH = LAUNCHER_DATA_DIR / "default_options.txt"
+
+    # Directory with "assets", "runtime", "libraries", "versions"
+
+    _GENERAL_DIR: Final = "general_libs"
+    _GENERAL_DIR_NAMES: Final = [
+        "assets",
+        "libraries",
+        "runtime",
+        "versions",
+    ]
+    _DOWNLOADS_DIR = Path("downloads")
+    _servers_data_dir: Path
+    _downloads_dir: Path
+    _general_lib_dir: Path
 
     def __init__(self):
         """
         Initialize directories and load launcher data from file if available.
         """
-        _minecraft_root_directory = (
-            mine_lib.utils.get_minecraft_directory() + f"_{self.LAUNCHER_NAME}"
-        )
-        log.info(
-            "Original minecraft_root_directory: "
-            f"{_minecraft_root_directory}"
-        )
-        self._minecraft_root_directory = unidecode(_minecraft_root_directory)
-        log.info(
-            "Current minecraft_root_directory: "
-            f"{self._minecraft_root_directory}"
-        )
+        self._create_launcher_dirs()
+        self._create_default_options()
+        self.set_download_dir(self.LAUNCHER_ROOT_DIR)
 
-        os.makedirs(self._minecraft_root_directory, exist_ok=True)
-        self._ui_data_path = os.path.join(
-            self._minecraft_root_directory,
-            self.DATA_DIR,
-            "ui_inputs_data",
-            "input_data",
-        )
-        os.makedirs(os.path.dirname(self._ui_data_path), exist_ok=True)
-        self._launcher_data_path = os.path.join(
-            self._minecraft_root_directory, self.DATA_DIR, "launcher_data.bin"
-        )
-
-        self._logging_dir = os.path.join(
-            self._minecraft_root_directory, self.DATA_DIR, "logs"
-        )
-        os.makedirs(self._logging_dir, exist_ok=True)
-        self._launcher_data = self._get_launcher_data()
-        self.minecraft_skin_directory = os.path.join(
-            self.minecraft_root_directory,
-            "skins",
-        )
-        self.minecraft_cape_directory = os.path.join(
-            self.minecraft_root_directory,
-            "capes",
-        )
-
-    @property
-    def minecraft_root_directory(self) -> str:
+    @classmethod
+    def get_icon_path(cls, filehash: str) -> Path:
         """
-        Get the Minecraft root directory.
-        """
-
-        return self._minecraft_root_directory
-
-    @property
-    def ui_data_path(self) -> str:
-        """
-        Get the UI data path.
-        """
-
-        return self._ui_data_path
-
-    @property
-    def launcher_data_path(self) -> str:
-        """Get the path to the launcher data file."""
-
-        return self._launcher_data_path
-
-    @property
-    def logging_dir(self) -> str:
-        """
-        Get the logging directory.
-        """
-
-        return self._logging_dir
-
-    @property
-    def launcher_data(self) -> Dict:
-        """Get the launcher data."""
-        return self._launcher_data
-
-    def set_launcher_data_value(
-        self,
-        data_key: str,
-        data_value: Any,
-    ) -> None:
-        """
-        Set a value in the launcher data.
+        Generate the icon path.
 
         Args:
-            data_key: The key of the data to set.
-            data_value: The value to set.
-        """
-        self._launcher_data[data_key] = data_value
-        self._update_launcher_data()
+            filehash (str): Hash of the icon file.
 
-    def get_launcher_data_value(
-        self,
-        data_key: str,
-    ) -> Any:
+        Returns:
+            Optional[Path]: Path where icon should be saved.
         """
-        Get a value from the launcher data.
+        return cls.LAUNCHER_SERVER_ICONS_DIR / filehash
+
+    @classmethod
+    def get_icon_file(cls, filehash: str) -> Optional[Path]:
+        """
+        Get icon file path by its filehash.
 
         Args:
-            data_key: The key of the data to get.
-        """
-        value = self._launcher_data.get(data_key, None)
-        if not value:
-            log.debug(f"Failed to get '{data_key}' from launcher_data.")
-        return value
-
-    def _get_launcher_data(self) -> Dict:
-        """
-        Get launcher data from the file.
+            filehash (str): Hash of the icon file.
 
         Returns:
-            dict: The launcher data.
+            Optional[Path]: Path to the icon or None if icon not exists.
         """
-        try:
-            with shelve.open(self._launcher_data_path) as launcher_data:
-                return dict(launcher_data)
-        except Exception as error:
-            log.error(f"Failed to get launcher_data: {error}")
-            log.debug(traceback.format_exc)
-            return {}
+        path = cls.get_icon_path(filehash)
+        if path.exists():
+            return path
+        return None
 
-    def _update_launcher_data(self) -> None:
-        """
-        Update launcher data in the file.
-        """
-        try:
-            with shelve.open(self._launcher_data_path) as launcher_data:
-                launcher_data.update(self._launcher_data)
-        except Exception as error:
-            log.error(f"Failed to update launcher_data: {error}")
-            log.debug(traceback.format_exc)
+    def set_download_dir(self, download_path: Path) -> None:
+        """Set directory for downloads."""
+        self._downloads_dir = download_path / self._DOWNLOADS_DIR
+        self._servers_data_dir = self._downloads_dir / "servers"
+        self._general_lib_dir = self._downloads_dir / "general"
 
+        self._downloads_dir.mkdir(parents=True, exist_ok=True)
+        self._servers_data_dir.mkdir(parents=True, exist_ok=True)
+        self._general_lib_dir.mkdir(parents=True, exist_ok=True)
 
-class ConfigLoader:
-    """
-    A class for loading modpacks configuration data.
+        self._create_general_dirs()
 
-    Args:
-        launcher_config (LauncherConfig): An instance of LauncherConfig
-            containing configuration parameters.
-    """
+    def _create_launcher_dirs(self):
+        self.LAUNCHER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+        self.LOGGING_DIR.mkdir(parents=True, exist_ok=True)
+        self.MINECRAFT_SKIN_DIR.mkdir(parents=True, exist_ok=True)
+        self.MINECRAFT_CAPE_DIR.mkdir(parents=True, exist_ok=True)
+        self.LAUNCHER_SERVER_ICONS_DIR.mkdir(parents=True, exist_ok=True)
 
-    def __init__(self, launcher_config: LauncherConfig) -> None:
-        """
-        Initializes the ConfigLoader instance.
-
-        Args:
-            launcher_config (LauncherConfig): An instance of LauncherConfig
-                containing modpacks configuration parameters.
-        """
-        self._boto3_client: Optional[boto3.client] = None
-        self._install_boto3_instance()
-        self._launcher_config = launcher_config
-
-    def _install_boto3_instance(self):
-        """
-        Install boto3 client instance if not already installed.
-        """
-        if not self._boto3_client:
-            try:
-                self._boto3_client = boto3.client(
-                    "s3",
-                    endpoint_url="https://storage.yandexcloud.net",
-                    aws_access_key_id=BOTO3_ACCESS_KEY,
-                    aws_secret_access_key=BOTO3_SECRET_KEY,
-                )
-            except boto3.exceptions.Boto3Error as error:
-                log.error(f"Failed to create an s3 instance: {error}")
-
-    @property
-    def boto3_client(self) -> Optional[boto3.client]:
-        """
-        Returns the boto3 client instance.
-
-        Returns:
-            Optional[boto3.client]: The boto3 client instance.
-        """
-        self._install_boto3_instance()
-        return self._boto3_client
-
-    @staticmethod
-    def _create_model_from_bytes(
-        bytes_file_data: bytes,
-    ) -> Dict:
-        """
-        Creates a MapJson model instance from bytes file data.
-
-        Args:
-            bytes_file_data (bytes): The bytes file data containing JSON data.
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error processing
-                the configuration data.
-        """
-        try:
-            config = json.loads(bytes_file_data)
-        except Exception as error:
-            log.error(f"Failed to load json from config file: {error}")
-            raise ConfigProcessingError from error
-        return config
-
-    def get_from_url(
-        self,
-    ) -> Dict:
-        """
-        Retrieves configuration data from a URL.
-
-        Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error
-                processing the configuration data.
-        """
-        try:
-            bytes_file_data = FileDownloader.download_file_from_url(
-                self._launcher_config.MAP_JSON_URL
+    def _create_general_dirs(self) -> None:
+        for dirname in self._GENERAL_DIR_NAMES:
+            (self._general_lib_dir / dirname).mkdir(
+                parents=True,
+                exist_ok=True,
             )
-        except RequestDownloadError as error:
-            log.error("Failed to load a config file.")
-            raise ConfigDownloadError from error
-        return self._create_model_from_bytes(bytes_file_data)
 
-    def get_from_yos(
-        self,
-    ) -> Dict:
+    def _create_default_options(self) -> None:
+        """Create default game options if they do not exist."""
+
+        # Check if default options already exist
+        if self.DEFAULT_OPTIONS_PATH.exists():
+            log.debug("Default game settings already exist.")
+            return
+
+        options_path = (
+            Path(mine_lib.utils.get_minecraft_directory()) / "options.txt"
+        )
+        log.debug(
+            "Default game settings not found, "
+            "attempting to create default options."
+        )
+
+        # Ensure the directory for default options exists
+        try:
+            self.DEFAULT_OPTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            log.error(
+                "Failed to create the default options directory "
+                f"'{self.DEFAULT_OPTIONS_PATH.parent}': {error}"
+            )
+            return
+
+        # Attempt to read user game settings from options file
+        try:
+            if options_path.exists():
+                log.debug(f"Parsing user game settings from: {options_path}")
+                content = options_path.read_text(encoding="utf-8")
+                self.DEFAULT_OPTIONS_PATH.write_text(content)
+                return
+        except OSError as error:
+            log.error(
+                "Failed to read default game settings from "
+                f"'{options_path}': {error}"
+            )
+
+        # If all else fails, write default user settings
+        try:
+            self.DEFAULT_OPTIONS_PATH.write_text(DEFAULT_USER_SETTINGS)
+        except OSError as error:
+            log.error(
+                "Failed to create default user game settings at "
+                f"'{self.DEFAULT_OPTIONS_PATH}': {error}"
+            )
+
+    def get_servers_data_dir(self, server_name: str) -> Path:
         """
-        Retrieves configuration data from YOS (Yandex Object Storage).
+        Get the directory path for the specified server's data.
+
+        Args:
+            server_name (str): The name of the server.
 
         Returns:
-            Dict: A Dict with the modpack config.
-
-        Raises:
-            ConfigProcessingError: If there is an error processing
-                the configuration data.
+            Path: The path to the server's data directory.
         """
-        self._install_boto3_instance()
-        if not self._boto3_client:
-            log.error("Failed, boto3_client is None.")
-            raise ConfigDownloadError()
-        try:
-            bytes_file_data = FileDownloader.download_file_from_yos(
-                self._boto3_client,
-                self._launcher_config.BUCKET_NAME,
-                self._launcher_config.MAP_JSON_YOS_OBJ_KEY,
+        return self._servers_data_dir / server_name
+
+    def init_server_directory(self, server_data_path: Path) -> None:
+        """
+        Initializes the server directory by creating symbolic
+        links to general directories.
+
+        This method ensures that the specified server data path exists
+        and creates symbolic links for each directory listed in
+        `_GENERAL_DIR_NAMES` from the general library directory.
+
+        Args:
+            server_data_path (Path): The path to the server data directory
+                where symbolic links will be created.
+        """
+        self._create_general_dirs()
+        server_data_path.mkdir(parents=True, exist_ok=True)
+        for general_dir_name in self._GENERAL_DIR_NAMES:
+            src_general_path = self._general_lib_dir / general_dir_name
+            dst_general_path = server_data_path / general_dir_name
+            if dst_general_path.exists() and dst_general_path.is_symlink():
+                dst_general_path.unlink()
+            dst_general_path.symlink_to(
+                src_general_path, target_is_directory=True
             )
-        except RequestDownloadError as error:
-            log.error(f"Failed to load a config file. {error}")
-            raise ConfigDownloadError from error
-        return self._create_model_from_bytes(bytes_file_data)
 
 
-class ConfigGetter:
+class ServerConfigManager:
     """
-    A class for managing server configurations.
-
-    Attributes:
-        _launcher_config (LauncherConfig): The launcher configuration.
-        _modpacks_configs (Dict): A dictionary of modpack configurations.
-        _active_config_display_name (str): The name of the active modpack
-            configuration.
+    Manages server configurations, including downloading, validating,
+    and retrieving modpack data.
     """
 
     def __init__(
         self,
-        config_data: Dict,
-        launcher_config: LauncherConfig,
-        boto3_client: Optional[boto3.client] = None,
+        file_downloader: FileDownloaderProtocol,
+        map_object_key: str,
     ):
         """
         Initializes the ConfigGetter instance.
 
         Args:
-            config_data (Dict): Configuration data for the server.
-            launcher_config (LauncherConfig): The launcher configuration.
-            boto3_client: (Optional[boto3.client]): A boto3 client instance.
+            file_downloader (FileDownloaderProtocol): An instance of the class
+                for downloading files.
+            map_object_key (str): An object key of map.json in object_storage
 
         Raises:
-            ValidationError: If the config_data fails Pydantic validation.
+            ConfigProcessingError: If the config_data fails
+                Pydantic validation.
+            ConfigDownloadError: If failed to download config.
         """
-        self._launcher_config = launcher_config
-        map_json = MapJson(**config_data)
-        self._modpacks_configs = config_data["modpacks"]
 
-        self._display_names_list = list(
-            config.server_config.display_name
-            for config in map_json.modpacks.values()
-        )
-        self._active_config_display_name: str = self._display_names_list[0]
-        self._configs_map = dict(
-            zip(self._display_names_list, map_json.modpacks.keys())
-        )
-        self._boto3_client = boto3_client
+        self._file_downloader = file_downloader
+        self._object_key = map_object_key
+        self._map_json: MapJson
+
+        self.update_config()
+
+    def update_config(self):
+        """
+        Downloads and validates the configuration map JSON.
+
+        Downloads the file specified by the launcher config key, validates it
+        using the `MapJson` Pydantic model, and stores the validated data.
+
+        Raises:
+            ConfigDownloadError: If the file download fails.
+            ConfigProcessingError: If the file contents are invalid JSON or
+                                fail validation.
+        """
+        try:
+            bytes_file_data = self._file_downloader.download_bytes(
+                self._object_key,
+            )
+            self._map_json = MapJson.model_validate(
+                json.loads(bytes_file_data)
+            )
+        except FileDownloadError as download_error:
+            log.error(f"Failed to download file for key: {self._object_key}")
+            raise ConfigDownloadError from download_error
+        except json.JSONDecodeError as json_error:
+            log.error(
+                "Invalid JSON received for key "
+                f"'{self._object_key}': {json_error}"
+            )
+            raise ConfigProcessingError("Invalid JSON format.") from json_error
+        except ValidationError as validation_error:
+            log.error(f"Validation failed for map JSON: {validation_error}")
+            raise ConfigProcessingError from validation_error
 
     @property
-    def active(self) -> "ServerConfig":
+    def map_json(self) -> "MapJson":
         """
-        Returns the active server configuration.
+        Returns the `MapJson` object containing
+        the configuration of all servers.
 
         Returns:
-            ServerConfig: The active server configuration.
+            MapJson: An MapJson instance with server configuration data.
         """
-        return ServerConfig(
-            self._configs_map[self._active_config_display_name],
-            self._modpacks_configs[
-                self._configs_map[self._active_config_display_name]
-            ],
-            self._launcher_config,
-            boto3_client=self._boto3_client,
-        )
+        return self._map_json
 
-    @property
-    def config_list(self) -> List[str]:
+    def get_modpack(self, modpack_name: str) -> "Modpack":
         """
-        Returns the list of available server configurations.
+        Retrieves a specific modpack configuration by its name.
 
         Returns:
-            List[str]: The list of available server configurations.
+            Modpack: The modpack configuration if found,
+                otherwise `None`.
+
+        Raises:
+            ModpackNotfound: If modpack was not found with the provided
+                modpack name.
         """
-        return list(self._display_names_list)
-
-    def set_active(self, display_name: str) -> bool:
-        """
-        Sets the active server configuration.
-
-        Args:
-            display_name (str): The name of the configuration to set as active.
-
-        Returns:
-            bool: True if the configuration was successfully set
-                as active, False otherwise.
-        """
-        if display_name in self._configs_map:
-            self._active_config_display_name = display_name
-            return True
-        return False
+        try:
+            return self._map_json.modpacks[modpack_name]
+        except KeyError as error:
+            log.error(f"Modpack was not found: {modpack_name}")
+            raise ModpackNotfound from error
 
 
-class ServerConfig(Modpack):
+class ServerConfig:
     """
     Represents a Minecraft server configuration.
-
-    Inherits from Modpack.
-
-    Attributes:
-        _launcher_config (LauncherConfig): The launcher configuration.
-        _minecraft_directory (str): The directory where Minecraft server
-            data is stored.
-        internal_name (str): Internal name for current config.
     """
 
-    internal_name: str
-
+    # pylint: disable=R0902
     def __init__(
         self,
         internal_name: str,
-        modpack_data: Dict,
+        modpack: Modpack,
         launcher_config: LauncherConfig,
-        boto3_client: Optional[boto3.client] = None,
+        settings: "SettingsManager",
     ):
         """
         Initializes the ServerConfig instance.
 
         Args:
             internal_name (str): Internal name for current config.
+            modpack (Modpack): An instance of Modpack class with modpack data.
             modpack_data (Dict): Configuration data for the modpack.
             launcher_config (LauncherConfig): The launcher configuration.
         """
-        super().__init__(**modpack_data, internal_name=internal_name)
+        self.main_data: Final = modpack.main_data
+        self.client_additional_data: Final = modpack.client_additional_data
+        self.server_config: Final = modpack.server_config
+        self.internal_name: Final = internal_name
         self._launcher_config = launcher_config
-        self._minecraft_directory = self._generate_minecraft_directory()
-        self._boto3_client = boto3_client
-
-    @property
-    def boto3_client(self) -> Optional[boto3.client]:
-        """Return a boto3_client instance if it exists."""
-        return self._boto3_client
-
-    def _generate_minecraft_directory(self) -> str:
-        """
-        Generates the Minecraft directory based on the active configuration.
-
-        Returns:
-            str: The Minecraft directory.
-        """
-        return os.path.join(
-            self._launcher_config.minecraft_root_directory,
-            self._launcher_config.SERVERS_DIR,
-            self.internal_name,
+        self.minecraft_directory: Final = (
+            self._launcher_config.get_servers_data_dir(self.internal_name)
         )
+        self._settings = settings
 
-    @property
-    def minecraft_directory(self) -> str:
-        """
-        Returns the Minecraft directory for the current configuration.
-
-        Returns:
-            str: The Minecraft directory.
-        """
-        return self._minecraft_directory
+        self._is_minecraft_installed_key: Final = "/".join(
+            [self.internal_name, "is_installed"]
+        )
 
     @property
     def is_minecraft_installed(
         self,
     ) -> bool:
-        """
-        Checks if Minecraft is already installed for the current configuration.
-
-        Returns:
-            bool: True if Minecraft is installed, False otherwise.
-        """
+        """True if current minecraft server is installed, False otherwise."""
+        if not self.minecraft_directory.exists():
+            self.is_minecraft_installed = False
+        self._launcher_config.init_server_directory(self.minecraft_directory)
         return bool(
-            self._launcher_config.get_launcher_data_value(
-                f"{self.internal_name}_is_installed"
-            )
+            self._settings.get_user_value(self._is_minecraft_installed_key)
         )
 
     @is_minecraft_installed.setter
     def is_minecraft_installed(self, other: bool) -> None:
-        """
-        Sets the flag indicating whether Minecraft is installed
-        for the current configuration.
+        """Change _is_minecraft_installed state for current server."""
+        self._settings.set_user_value(
+            self._is_minecraft_installed_key, int(other)
+        )
 
-        Args:
-            other (bool, optional): The value to set for the flag.
-        """
-        key = f"{self.internal_name}_is_installed"
-        self._launcher_config.set_launcher_data_value(key, other)
+    @property
+    def minecraft_options_path(self) -> Path:
+        """Return the minecraft options Path."""
+        return self.minecraft_directory / "options.txt"
+
+    def create_default_options(self) -> None:
+        """Create an options for the current server."""
+        if not self.minecraft_options_path.exists():
+            try:
+                self.minecraft_options_path.write_text(
+                    self._launcher_config.DEFAULT_OPTIONS_PATH.read_text()
+                )
+            except OSError as error:
+                log.error(
+                    "Failed to create a default options "
+                    f"in the server '{self.internal_name}': {error}."
+                )
+
+    def update_default_options(self) -> None:
+        """Update the Minecraft options when the game is closed."""
+        log.debug("Updating default minecraft options.")
+        try:
+            new_options = self.minecraft_options_path.read_text()
+            if new_options:
+                self._launcher_config.DEFAULT_OPTIONS_PATH.write_text(
+                    new_options,
+                )
+        except OSError:
+            log.error("Failed to update default minecraft options.")

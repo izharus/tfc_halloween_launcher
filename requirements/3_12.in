@@ -1,0 +1,17 @@
+PySide6
+QtPy
+pypiwin32 # show/hode console
+loguru
+boto3
+pydantic
+unidecode
+psutil
+elevate
+mcstatus
+
+pyinstaller
+pytest
+pytest-mock
+requests_mock
+pytest-qt
+pylint

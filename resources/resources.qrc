@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/">
+    <file>data/background/back_arrow.png</file>
+    <file>data/background/logout.png</file>
+    <file>data/background/close_icon.png</file>
+    <file>data/background/collapse_icon.png</file>
+    <file>data/background/server-icon.png</file>
+    <file>data/background/login_back.jpg</file>
+    <file>data/background/settings.png</file>
+    <file>data/background/main_back.jpg</file>
+  </qresource>
+</RCC>

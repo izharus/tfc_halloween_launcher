@@ -1,5 +1,6 @@
 """A module with Pydantic models."""
-from typing import Dict, List
+
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -16,7 +17,7 @@ class FileInfo(BaseModel):
             the file.
         yan_obj_storage (str): The object key to the file in
             Yandex Object Storage.
-        hash (str): The hash value of the file.
+        hash (HashInfo): Represents filehash.
         dist_file_path (str): The path where the file should
             be downloaded.
     """
@@ -24,7 +25,7 @@ class FileInfo(BaseModel):
     file_name: str
     api_url: str
     yan_obj_storage: str
-    hash: str
+    hash: "HashInfo"
     dist_file_path: str
 
 
@@ -41,6 +42,7 @@ class ServerConfig(BaseModel):
         minecraft_profile (str): The name of the Minecraft profile.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
+        description (str): Server description in launcher.
     """
 
     display_name: str
@@ -49,6 +51,8 @@ class ServerConfig(BaseModel):
     minecraft_profile: str
     minecraft_server_ip: str
     minecraft_server_port: str
+    description: str
+    server_icon: FileInfo
 
 
 class Modpack(BaseModel):
@@ -89,3 +93,42 @@ class MapJson(BaseModel):
         if not modpacks:
             raise ValueError("modpacks dictionary could not be empty")
         return modpacks
+
+
+class AuthData(BaseModel):
+    """
+    Represents user credential data.
+    """
+
+    status: str
+    username: str
+    uuid: str
+    accessToken: str
+
+
+class HashInfo(BaseModel):
+    """Represents the hash information."""
+
+    value: str
+    algorithm: str = "sha256"
+
+
+class S3Credentials(BaseModel):
+    """
+    Pydantic model representing AWS S3 credentials for object storage.
+
+    Attributes:
+        aws_access_key_id (str): AWS access key ID for S3 authentication.
+        aws_secret_access_key (str): AWS secret access key for S3
+            authentication.
+        bucket_name (str): Name of the S3 bucket.
+        endpoint_url (str): URL of the S3 endpoint.
+        region_name (Optional[str]): AWS region name. Optional,
+            defaults to None.
+    """
+
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    bucket_name: str
+    endpoint_url: str
+    region_name: Optional[str] = None
