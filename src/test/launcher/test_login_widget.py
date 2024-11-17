@@ -125,8 +125,8 @@ class TestLoginWidget:
     ):
         """Test that the login button is disabled with invalid input."""
         widget = main_window._login_widget
-        widget._ui.lineEdit_nickname.setText("abc")
-        widget._ui.lineEdit_password.setText("123")
+        widget._ui.lineEdit_nickname.setText("ab")
+        widget._ui.lineEdit_password.setText("12")
         widget._validate_user_input_login()  # Call method directly
         assert not widget._ui.pushButton_login.isEnabled()
 

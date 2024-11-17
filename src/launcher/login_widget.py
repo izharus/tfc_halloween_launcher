@@ -260,7 +260,7 @@ class LoginWidget(BaseWidget):
         )
 
     def _validate_user_input(
-        self, button: QPushButton, line_edit: List[QLineEdit], min_length=5
+        self, button: QPushButton, line_edit: List[QLineEdit], min_length=3
     ):
         """Validate user input."""
         button.setEnabled(
