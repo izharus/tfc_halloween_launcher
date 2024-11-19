@@ -157,6 +157,7 @@ class ModsInstaller(QThread):
     def check_and_download(
         self,
         files_info_list: List[FileInfo],
+        is_skip_existing: bool = False,
         callback: Optional[Dict[str, Callable]] = None,
     ) -> bool:
         """
@@ -165,6 +166,8 @@ class ModsInstaller(QThread):
         Args:
         Args:
             files_info_list (List[FileInfo]): Files to be downloaded.
+            is_skip_existing (bool): If True, existing files will be skipped;
+                otherwise, the file hash will be checked.
             callback (dict): A dictionary of callback functions for
                 updating the UI.
         Returns:
@@ -176,6 +179,11 @@ class ModsInstaller(QThread):
         def install_file(file_info: FileInfo) -> None:
             file_name = file_info.file_name
             file_path = self.minecraft_directory / file_info.dist_file_path
+
+            if is_skip_existing:
+                if os.path.exists(file_path):
+                    log.debug(f"Skipping existing file: {file_name}")
+                    return
 
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
