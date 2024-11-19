@@ -284,6 +284,7 @@ class FileYOSDownloader(FileDownloaderProtocol):
             return data
 
         except Exception as e:
+            log.error(f"Failed to download file: {object_key}")
             raise FileDownloadError(
                 f"Failed to download file from S3: {e}"
             ) from e
