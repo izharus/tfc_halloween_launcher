@@ -65,11 +65,15 @@ class Modpack(BaseModel):
         main_data (List[FileInfo]): Essential data files.
         client_additional_data [Dict[str, List[FileInfo]]]:
             Additional files that can be added if needed.
+        mutable_data (List[FileInfo]): Files that are mutable,
+            not subject to hash checks or downloads (e.g.,
+            user-configurable settings).
     """
 
     server_config: ServerConfig
     main_data: List[FileInfo]
     client_additional_data: Dict[str, List[FileInfo]]
+    mutable_data: List[FileInfo]
 
 
 class MapJson(BaseModel):
