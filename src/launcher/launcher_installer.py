@@ -29,6 +29,7 @@ import os
 import subprocess
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from loguru import logger as log
@@ -106,13 +107,13 @@ class ModsInstaller(QThread):
 
     def __init__(
         self,
-        minecraft_directory: str,
+        minecraft_directory: os.PathLike,
         file_downloader: FileDownloaderProtocol,
         mods_directory: str = "mods",
     ):
         QThread.__init__(self)
-        self.minecraft_directory = minecraft_directory
-        self.mods_directory = os.path.join(minecraft_directory, mods_directory)
+        self.minecraft_directory = Path(minecraft_directory)
+        self.mods_directory = self.minecraft_directory / mods_directory
 
         self._file_downloader = file_downloader
 
@@ -174,8 +175,7 @@ class ModsInstaller(QThread):
 
         def install_file(file_info: FileInfo) -> None:
             file_name = file_info.file_name
-            dist_file_path = file_info.dist_file_path
-            file_path = os.path.join(self.minecraft_directory, dist_file_path)
+            file_path = self.minecraft_directory / file_info.dist_file_path
 
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
