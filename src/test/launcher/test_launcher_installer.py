@@ -4,6 +4,8 @@
 
 import json
 import subprocess
+from pathlib import Path
+from typing import Dict
 from unittest.mock import MagicMock
 
 import pytest
@@ -13,9 +15,26 @@ from src.launcher.launcher_installer import (
     ConfigInstallerThread,
     InstallThread,
     MinecraftExecutorThread,
+    ModsInstaller,
 )
 from src.launcher.utility.custom_exceptions import FileDownloadError
-from src.launcher.utility.pydantic_models import AuthData
+from src.launcher.utility.pydantic_models import AuthData, FileInfo
+
+
+@pytest.fixture
+def installer(
+    tmp_path: Path,
+) -> ModsInstaller:
+    """Mock ModsInstaller."""
+    mine_dir = tmp_path / "minecraft_directory"
+    downloader = MagicMock()
+    downloader.download_file = MagicMock()
+
+    installer = ModsInstaller(
+        minecraft_directory=mine_dir,
+        file_downloader=downloader,
+    )
+    return installer
 
 
 @pytest.fixture
@@ -233,3 +252,78 @@ class TestInstallThread:
         thread.run()
 
         assert server_config.is_minecraft_installed is False
+
+
+class TestModsInstaller:
+    """Tests for ModsInstaller."""
+
+    def test_check_and_download_file_not_exists(
+        self,
+        installer: ModsInstaller,
+        mock_file_info: Dict,
+    ):
+        """
+        Tests that the `check_and_download` method correctly downloads
+        a file when it does not exist locally.
+        """
+        file_info = FileInfo(**mock_file_info)
+
+        dst_file_path = (
+            installer.minecraft_directory / file_info.dist_file_path
+        )
+
+        installer.check_and_download([file_info])
+
+        installer._file_downloader.download_file.assert_called_once_with(
+            file_info.yan_obj_storage,
+            dst_file_path,
+            hash_info=file_info.hash,
+        )
+
+    def test_check_and_download_file_exists(
+        self,
+        installer: ModsInstaller,
+        mock_file_info: Dict,
+    ):
+        """
+        Tests that the `check_and_download` method downloads a file
+        even when it already exists locally.
+        """
+        file_info = FileInfo(**mock_file_info)
+
+        dst_file_path = (
+            installer.minecraft_directory / file_info.dist_file_path
+        )
+        dst_file_path.parent.mkdir(parents=True)
+        dst_file_path.write_text("test")
+        installer.check_and_download([file_info])
+
+        installer._file_downloader.download_file.assert_called_once_with(
+            file_info.yan_obj_storage,
+            dst_file_path,
+            hash_info=file_info.hash,
+        )
+
+    def test_check_and_download_file_exists_with_skip_existing(
+        self,
+        installer: ModsInstaller,
+        mock_file_info: Dict,
+    ):
+        """
+        Tests that the `check_and_download` method skips downloading
+        a file if it exists locally and the `is_skip_existing` flag
+        is set to True.
+        """
+        file_info = FileInfo(**mock_file_info)
+
+        dst_file_path = (
+            installer.minecraft_directory / file_info.dist_file_path
+        )
+        dst_file_path.parent.mkdir(parents=True)
+        dst_file_path.write_text("test")
+        installer.check_and_download(
+            files_info_list=[file_info],
+            is_skip_existing=True,
+        )
+
+        installer._file_downloader.download_file.assert_not_called()

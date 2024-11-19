@@ -397,6 +397,7 @@ class ServerConfig:
             launcher_config (LauncherConfig): The launcher configuration.
         """
         self.main_data: Final = modpack.main_data
+        self.mutable_data: Final = modpack.mutable_data
         self.client_additional_data: Final = modpack.client_additional_data
         self.server_config: Final = modpack.server_config
         self.internal_name: Final = internal_name

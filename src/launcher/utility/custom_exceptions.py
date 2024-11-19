@@ -38,9 +38,6 @@ class FileDownloadError(Exception):
     def __init__(self, message="Failed to download a file.") -> None:
         super().__init__(message)
 
-    def __str__(self):
-        return "Ошибка во время загрузки файла."
-
 
 class ConfigDownloadError(FileDownloadError):
     """
@@ -65,9 +62,6 @@ class FileHashMismatchError(FileDownloadError):
         self, message="File hash does not match the expected hash."
     ) -> None:
         super().__init__(message)
-
-    def __str__(self):
-        return "Хэш загруженного файла не соответствует ожидаемому значению."
 
 
 class ConfigProcessingError(Exception):

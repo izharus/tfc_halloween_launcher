@@ -32,7 +32,7 @@ def mock_file_info():
         "api_url": "http://example.com/test_file1.txt",
         "yan_obj_storage": "test_object_key1",
         "hash": {"value": "abcdef123456", "algorithm": "sha256"},
-        "dist_file_path": "/path/to/test_file1.txt",
+        "dist_file_path": "path/to/test_file1.txt",
     }
 
 
@@ -58,9 +58,10 @@ def mock_config_data(mock_file_info):
                         "api_url": "http://example.com/test_file1.txt",
                         "yan_obj_storage": "test_object_key1",
                         "hash": {"value": "abf123456", "algorithm": "sha256"},
-                        "dist_file_path": "/path/to/test_file1.txt",
+                        "dist_file_path": "path/to/test_file1.txt",
                     }
                 ],
+                "mutable_data": [],
                 "client_additional_data": {},
             },
             CONFIG_NAME_2: {
@@ -83,8 +84,20 @@ def mock_config_data(mock_file_info):
                             "value": "abcde66f123456",
                             "algorithm": "sha256",
                         },
-                        "dist_file_path": "/path/to/test_file2.txt",
+                        "dist_file_path": "path/to/test_file2.txt",
                     }
+                ],
+                "mutable_data": [
+                    {
+                        "file_name": "test_file100.txt",
+                        "api_url": "http://example.com/test_file100.txt",
+                        "yan_obj_storage": "test_object_key100",
+                        "hash": {
+                            "value": "abcde66f123456123",
+                            "algorithm": "sha256",
+                        },
+                        "dist_file_path": "path/to/test_file100.txt",
+                    },
                 ],
                 "client_additional_data": {},
             },
@@ -112,8 +125,20 @@ def mock_modpack_data(mock_file_info):
                 "api_url": "http://example.com/test_file3.txt",
                 "yan_obj_storage": "test_object_key3",
                 "hash": {"value": "abcdef123456", "algorithm": "sha256"},
-                "dist_file_path": "/path/to/test_file3.txt",
+                "dist_file_path": "path/to/test_file3.txt",
             }
+        ],
+        "mutable_data": [
+            {
+                "file_name": "test_file100.txt",
+                "api_url": "http://example.com/test_file100.txt",
+                "yan_obj_storage": "test_object_key100",
+                "hash": {
+                    "value": "abcde66f123456123",
+                    "algorithm": "sha256",
+                },
+                "dist_file_path": "path/to/test_file100.txt",
+            },
         ],
         "client_additional_data": {},
     }

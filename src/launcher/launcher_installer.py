@@ -29,6 +29,7 @@ import os
 import subprocess
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from loguru import logger as log
@@ -106,29 +107,33 @@ class ModsInstaller(QThread):
 
     def __init__(
         self,
-        files_info_list: List[FileInfo],
-        minecraft_directory: str,
+        minecraft_directory: os.PathLike,
         file_downloader: FileDownloaderProtocol,
         mods_directory: str = "mods",
     ):
         QThread.__init__(self)
-        self.files_info_list = files_info_list
-        self.minecraft_directory = minecraft_directory
-        self.mods_directory = os.path.join(minecraft_directory, mods_directory)
+        self.minecraft_directory = Path(minecraft_directory)
+        self.mods_directory = self.minecraft_directory / mods_directory
 
         self._file_downloader = file_downloader
 
-    def delete_unknown_mods(self):
+    def delete_unknown_mods(
+        self,
+        files_info_list: List[FileInfo],
+    ):
         """
         Deletes all files in directory 'mods' which do not exists in
         self.files_info_list.
 
+        Args:
+            files_info_list (List[FileInfo]): A list of `FileInfo` objects
+                representing the valid mod files.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
         validate_file_names = list(
             file_info.file_name
-            for file_info in self.files_info_list
+            for file_info in files_info_list
             if file_info.file_name.split(".")[-1] == "jar"
         )
 
@@ -151,27 +156,34 @@ class ModsInstaller(QThread):
 
     def check_and_download(
         self,
+        files_info_list: List[FileInfo],
+        is_skip_existing: bool = False,
         callback: Optional[Dict[str, Callable]] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
         them again if hash incorrect or if files do not exist.
         Args:
-            bucket_name: (str): A bucket name for downloading from
-                object storage.
-            boto3_client: (boto3.client): A boto3 client instance.
+        Args:
+            files_info_list (List[FileInfo]): Files to be downloaded.
+            is_skip_existing (bool): If True, existing files will be skipped;
+                otherwise, the file hash will be checked.
             callback (dict): A dictionary of callback functions for
-            updating the UI.
+                updating the UI.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
         if callback:
-            callback["setMax"](len(self.files_info_list))
+            callback["setMax"](len(files_info_list))
 
         def install_file(file_info: FileInfo) -> None:
             file_name = file_info.file_name
-            dist_file_path = file_info.dist_file_path
-            file_path = os.path.join(self.minecraft_directory, dist_file_path)
+            file_path = self.minecraft_directory / file_info.dist_file_path
+
+            if is_skip_existing:
+                if os.path.exists(file_path):
+                    log.debug(f"Skipping existing file: {file_name}")
+                    return
 
             if callback:
                 callback["setStatus"](f"Downloading file: {file_name}...")
@@ -186,7 +198,7 @@ class ModsInstaller(QThread):
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = [
                 executor.submit(install_file, file_info)
-                for file_info in self.files_info_list
+                for file_info in files_info_list
             ]
 
             for future in futures:
@@ -303,19 +315,23 @@ class InstallThread(QThread):
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        map_dirs = self.config.main_data
 
         installer = ModsInstaller(
-            files_info_list=map_dirs,
             minecraft_directory=self.config.minecraft_directory,
             file_downloader=self._file_downloader,
         )
+
         status = installer.check_and_download(
+            files_info_list=self.config.main_data,
+            callback=self._callback_dict,
+        ) and installer.check_and_download(
+            files_info_list=self.config.mutable_data,
+            is_skip_existing=True,
             callback=self._callback_dict,
         )
         if not status:
             self.runtime_error = True
-        status = installer.delete_unknown_mods()
+        status = installer.delete_unknown_mods(self.config.main_data)
         if not status:
             self.runtime_error = True
         self._callback_dict["setStatus"]("Launching minecraft...")
