@@ -315,19 +315,23 @@ class InstallThread(QThread):
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
-        main_data_files = self.config.main_data
 
         installer = ModsInstaller(
             minecraft_directory=self.config.minecraft_directory,
             file_downloader=self._file_downloader,
         )
+
         status = installer.check_and_download(
-            files_info_list=main_data_files,
+            files_info_list=self.config.main_data,
+            callback=self._callback_dict,
+        ) and installer.check_and_download(
+            files_info_list=self.config.mutable_data,
+            is_skip_existing=True,
             callback=self._callback_dict,
         )
         if not status:
             self.runtime_error = True
-        status = installer.delete_unknown_mods(main_data_files)
+        status = installer.delete_unknown_mods(self.config.main_data)
         if not status:
             self.runtime_error = True
         self._callback_dict["setStatus"]("Launching minecraft...")
