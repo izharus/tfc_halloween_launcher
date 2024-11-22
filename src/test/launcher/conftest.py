@@ -63,6 +63,7 @@ def mock_config_data(mock_file_info):
                 ],
                 "mutable_data": [],
                 "client_additional_data": {},
+                "modpack_options": {},
             },
             CONFIG_NAME_2: {
                 "server_config": {
@@ -100,6 +101,7 @@ def mock_config_data(mock_file_info):
                     },
                 ],
                 "client_additional_data": {},
+                "modpack_options": {},
             },
         }
     }
@@ -141,6 +143,7 @@ def mock_modpack_data(mock_file_info):
             },
         ],
         "client_additional_data": {},
+        "modpack_options": {},
     }
 
 
