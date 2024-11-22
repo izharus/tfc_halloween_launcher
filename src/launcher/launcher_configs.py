@@ -182,6 +182,11 @@ class LauncherConfig:
 
         self._create_general_dirs()
 
+    @property
+    def general_lib_dir(self) -> Path:
+        """Return current path to the general libs."""
+        return self._general_lib_dir
+
     def _create_launcher_dirs(self):
         self.LAUNCHER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
         self.LOGGING_DIR.mkdir(parents=True, exist_ok=True)
@@ -416,9 +421,15 @@ class ServerConfig:
         self,
     ) -> bool:
         """True if current minecraft server is installed, False otherwise."""
-        if not self.minecraft_directory.exists():
-            self.is_minecraft_installed = False
         self._launcher_config.init_server_directory(self.minecraft_directory)
+
+        if (
+            not self.minecraft_directory.exists()
+            or not self._is_minecraft_profile_installed()
+        ):
+            self.is_minecraft_installed = False
+            return False
+
         return bool(
             self._settings.get_user_value(self._is_minecraft_installed_key)
         )
@@ -459,3 +470,13 @@ class ServerConfig:
                 )
         except OSError:
             log.error("Failed to update default minecraft options.")
+
+    def _is_minecraft_profile_installed(self):
+        profile_path = (
+            self._launcher_config.general_lib_dir
+            / "versions"
+            / self.server_config.minecraft_profile
+        )
+        if profile_path.exists():
+            return True
+        return False
