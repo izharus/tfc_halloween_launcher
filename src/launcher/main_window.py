@@ -418,7 +418,7 @@ class Window(QtWidgets.QMainWindow):
 
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
-            self.log_msg_box(
+            self.log_msg_box.show_message(
                 title="Ошибка при запуске игры.",
                 msg="Подробная информация в логе.",
             )
