@@ -225,6 +225,7 @@ class Window(QtWidgets.QMainWindow):
             config=self.config_manager,
             ui_instance=self._ui_instance,
             login=self._login_widget.auth_data.username,
+            settings=self._settings,
         )
         self._server_page.check_game_files.connect(
             lambda modpack_name: self._install_minecraft_multi_thread(

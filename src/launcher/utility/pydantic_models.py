@@ -29,6 +29,27 @@ class FileInfo(BaseModel):
     dist_file_path: str
 
 
+class OptionManifest(BaseModel):
+    """Manifest for the modpack option."""
+
+    # Is option should be enabled initially
+    is_default_enabled: bool = False
+    # A name of ui element for enabling this feature
+    feature_name: str = "indefinite"
+    # unique option key
+    option_key: str
+
+
+class OptionData(BaseModel):
+    """
+    Represent an option data.
+    Users can enable or disable this modpack options in the launcher.
+    """
+
+    manifest: OptionManifest
+    files: List[FileInfo]
+
+
 class ServerConfig(BaseModel):
     """
     Represents configuration data for installing and executing
@@ -68,12 +89,14 @@ class Modpack(BaseModel):
         mutable_data (List[FileInfo]): Files that are mutable,
             not subject to hash checks or downloads (e.g.,
             user-configurable settings).
+        modpack_options (Dict[str, OptionData]): Modpack options.
     """
 
     server_config: ServerConfig
     main_data: List[FileInfo]
     client_additional_data: Dict[str, List[FileInfo]]
     mutable_data: List[FileInfo]
+    modpack_options: Dict[str, OptionData]
 
 
 class MapJson(BaseModel):

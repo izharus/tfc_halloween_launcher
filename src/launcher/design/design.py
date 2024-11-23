@@ -8,7 +8,6 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-
 from qtpy.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -22,6 +21,7 @@ from qtpy.QtWidgets import (QApplication, QFormLayout, QGridLayout, QGroupBox,
     QSpacerItem, QStackedWidget, QVBoxLayout, QWidget)
 from resources import resources
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1050, 625)
         MainWindow.setMinimumSize(QSize(1050, 625))
         MainWindow.setMaximumSize(QSize(1050, 600))
-        MainWindow.setStyleSheet(u"#scrollArea, #scrollArea_2, #scrollAreaWidgetContents, #scrollAreaWidgetContents_2 {\n"
+        MainWindow.setStyleSheet(u"#scrollArea, #scrollArea_2, #scrollAreaWidgetContents, #scrollAreaWidgetContents_2{\n"
 "    background-color: rgba(255, 255, 255, 0);  /* \u041f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u043f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u044b\u0439 \u0444\u043e\u043d */\n"
 "    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u0442 \u0433\u0440\u0430\u043d\u0438\u0446\u0443 */\n"
 "}\n"
@@ -39,8 +39,8 @@ class Ui_MainWindow(object):
 "QScrollBar:horizontal {\n"
 "    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u043c \u0433\u0440\u0430\u043d\u0438\u0446\u044b */\n"
 "    background: rgba(0, 51, 102, 200); /* \u0422\u0435\u043c\u043d\u043e-\u0441\u0438\u043d\u0438\u0439 \u0444\u043e\u043d \u0434\u043b\u044f \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043f\u043e\u043b\u043e\u0441\u044b */\n"
-"    height: 10px; /"
-                        "* \u0412\u044b\u0441\u043e\u0442\u0430 \u043f\u043e\u043b\u043e\u0441\u044b \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u043a\u0438 */\n"
+"    height: 10px; /*"
+                        " \u0412\u044b\u0441\u043e\u0442\u0430 \u043f\u043e\u043b\u043e\u0441\u044b \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u043a\u0438 */\n"
 "    margin: 0px 22px; /* \u041e\u0442\u0441\u0442\u0443\u043f\u044b \u0434\u043b\u044f \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043a\u043d\u043e\u043f\u043a\u0430\u043c\u0438 */\n"
 "}\n"
 "\n"
@@ -50,8 +50,8 @@ class Ui_MainWindow(object):
 "    border-radius: 5px; /* \u0421\u043a\u0440\u0443\u0433\u043b\u0435\u043d\u0438\u0435 \u0443\u0433\u043b\u043e\u0432 \u043f\u043e\u043b\u0437\u0443\u043d\u043a\u0430 */\n"
 "}\n"
 "\n"
-"QScrollBar::h"
-                        "andle:horizontal:hover {\n"
+"QScrollBar::ha"
+                        "ndle:horizontal:hover {\n"
 "    background: rgba(0, 102, 204, 200); /* \u0421\u0432\u0435\u0442\u043b\u044b\u0439 \u0441\u0438\u043d\u0438\u0439 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438 */\n"
 "}\n"
 "\n"
@@ -684,8 +684,8 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.choose_server_page)
         self.server_settings_page = QWidget()
         self.server_settings_page.setObjectName(u"server_settings_page")
-        self.formLayout_3 = QFormLayout(self.server_settings_page)
-        self.formLayout_3.setObjectName(u"formLayout_3")
+        self.horizontalLayout_7 = QHBoxLayout(self.server_settings_page)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
         self.widget_server_widget = QWidget(self.server_settings_page)
         self.widget_server_widget.setObjectName(u"widget_server_widget")
         self.widget_server_widget.setMinimumSize(QSize(300, 400))
@@ -694,14 +694,26 @@ class Ui_MainWindow(object):
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
+        self.scrollArea_2 = QScrollArea(self.widget_server_widget)
+        self.scrollArea_2.setObjectName(u"scrollArea_2")
+        self.scrollArea_2.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_2 = QWidget()
+        self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 280, 452))
+        self.verticalLayout_7 = QVBoxLayout(self.scrollAreaWidgetContents_2)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
+
+        self.gridLayout.addWidget(self.scrollArea_2, 0, 0, 1, 1)
+
 
         self.gridLayout_8.addLayout(self.gridLayout, 0, 0, 1, 1)
 
 
-        self.formLayout_3.setWidget(0, QFormLayout.LabelRole, self.widget_server_widget)
+        self.horizontalLayout_7.addWidget(self.widget_server_widget)
 
-        self.verticalLayout_4 = QVBoxLayout()
-        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_13 = QVBoxLayout()
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.pushButton_check_server_files = QPushButton(self.server_settings_page)
@@ -733,6 +745,33 @@ class Ui_MainWindow(object):
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_8)
+
+        self.pushButton_modpack_options = QPushButton(self.server_settings_page)
+        self.pushButton_modpack_options.setObjectName(u"pushButton_modpack_options")
+        self.pushButton_modpack_options.setStyleSheet(u"QPushButton {\n"
+"  background-color: #3A92F7;\n"
+"  border: none;\n"
+"  border-radius: 15px;\n"
+"  padding: 12px 24px;\n"
+"  color: #FFFFFF;\n"
+"  font-weight: bold;\n"
+"  text-align: center;\n"
+"  text-decoration: none;\n"
+"  font-size: 16px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"  background-color: #303EF7;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed {\n"
+"  background-color: #1000F7;\n"
+"  border: 1px solid #00274D;\n"
+"}\n"
+"")
+
+        self.horizontalLayout_4.addWidget(self.pushButton_modpack_options)
 
         self.pushButton_open_modpack_dir = QPushButton(self.server_settings_page)
         self.pushButton_open_modpack_dir.setObjectName(u"pushButton_open_modpack_dir")
@@ -770,17 +809,28 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.addWidget(self.pushButton_back_from_server_settings)
 
 
-        self.verticalLayout_4.addLayout(self.horizontalLayout_4)
+        self.verticalLayout_13.addLayout(self.horizontalLayout_4)
 
-        self.scrollArea_2 = QScrollArea(self.server_settings_page)
-        self.scrollArea_2.setObjectName(u"scrollArea_2")
-        self.scrollArea_2.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_2 = QWidget()
-        self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 588, 398))
-        self.verticalLayout_7 = QVBoxLayout(self.scrollAreaWidgetContents_2)
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.label_server_description = QLabel(self.scrollAreaWidgetContents_2)
+        self.stackedWidget_modpack_options = QStackedWidget(self.server_settings_page)
+        self.stackedWidget_modpack_options.setObjectName(u"stackedWidget_modpack_options")
+        self.stackedWidget_modpack_options.setMinimumSize(QSize(600, 0))
+        self.stackedWidget_modpack_options.setStyleSheet(u"\n"
+"    background-color: rgba(255, 255, 255, 0);  /* \u041f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u043f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u044b\u0439 \u0444\u043e\u043d */\n"
+"    border: none; /* \u0423\u0431\u0438\u0440\u0430\u0435\u0442 \u0433\u0440\u0430\u043d\u0438\u0446\u0443 */\n"
+"")
+        self.page_server_description = QWidget()
+        self.page_server_description.setObjectName(u"page_server_description")
+        self.verticalLayout_4 = QVBoxLayout(self.page_server_description)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.scrollArea_serve_description = QScrollArea(self.page_server_description)
+        self.scrollArea_serve_description.setObjectName(u"scrollArea_serve_description")
+        self.scrollArea_serve_description.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_3 = QWidget()
+        self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 582, 380))
+        self.verticalLayout_14 = QVBoxLayout(self.scrollAreaWidgetContents_3)
+        self.verticalLayout_14.setObjectName(u"verticalLayout_14")
+        self.label_server_description = QLabel(self.scrollAreaWidgetContents_3)
         self.label_server_description.setObjectName(u"label_server_description")
         self.label_server_description.setStyleSheet(u"QLabel {\n"
 "    font-family: 'Arial', sans-serif; /* \u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0448\u0440\u0438\u0444\u0442 */\n"
@@ -798,18 +848,44 @@ class Ui_MainWindow(object):
 "}\n"
 "")
 
-        self.verticalLayout_7.addWidget(self.label_server_description)
+        self.verticalLayout_14.addWidget(self.label_server_description)
 
-        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.verticalLayout_7.addItem(self.verticalSpacer_6)
+        self.verticalLayout_14.addItem(self.verticalSpacer_5)
 
-        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
+        self.scrollArea_serve_description.setWidget(self.scrollAreaWidgetContents_3)
 
-        self.verticalLayout_4.addWidget(self.scrollArea_2)
+        self.verticalLayout_4.addWidget(self.scrollArea_serve_description)
+
+        self.stackedWidget_modpack_options.addWidget(self.page_server_description)
+        self.page_modpack_options = QWidget()
+        self.page_modpack_options.setObjectName(u"page_modpack_options")
+        self.verticalLayout_15 = QVBoxLayout(self.page_modpack_options)
+        self.verticalLayout_15.setObjectName(u"verticalLayout_15")
+        self.scrollArea_modpack_options = QScrollArea(self.page_modpack_options)
+        self.scrollArea_modpack_options.setObjectName(u"scrollArea_modpack_options")
+        self.scrollArea_modpack_options.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_4 = QWidget()
+        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 582, 380))
+        self.verticalLayout_17 = QVBoxLayout(self.scrollAreaWidgetContents_4)
+        self.verticalLayout_17.setObjectName(u"verticalLayout_17")
+        self.verticalLayout_modpack_options = QVBoxLayout()
+        self.verticalLayout_modpack_options.setObjectName(u"verticalLayout_modpack_options")
+
+        self.verticalLayout_17.addLayout(self.verticalLayout_modpack_options)
+
+        self.scrollArea_modpack_options.setWidget(self.scrollAreaWidgetContents_4)
+
+        self.verticalLayout_15.addWidget(self.scrollArea_modpack_options)
+
+        self.stackedWidget_modpack_options.addWidget(self.page_modpack_options)
+
+        self.verticalLayout_13.addWidget(self.stackedWidget_modpack_options)
 
 
-        self.formLayout_3.setLayout(0, QFormLayout.FieldRole, self.verticalLayout_4)
+        self.horizontalLayout_7.addLayout(self.verticalLayout_13)
 
         self.stackedWidget.addWidget(self.server_settings_page)
         self.launcher_settings_page = QWidget()
@@ -1174,8 +1250,9 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(2)
         self.stackedWidget_auth.setCurrentIndex(0)
+        self.stackedWidget_modpack_options.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1205,6 +1282,7 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 1", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0435\u0440\u0432\u0435\u0440 2", None))
         self.pushButton_check_server_files.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0444\u0430\u0439\u043b\u043e\u0432", None))
+        self.pushButton_modpack_options.setText(QCoreApplication.translate("MainWindow", u"\u041d\u0430\u0441\u0442\u0440\u043e\u043a\u0439\u043a\u0438", None))
         self.pushButton_open_modpack_dir.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u043f\u043a\u0430 \u0438\u0433\u0440\u044b", None))
         self.pushButton_back_from_server_settings.setText("")
         self.label_server_description.setText(QCoreApplication.translate("MainWindow", u"\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0441\u0435\u0440\u0432\u0435\u0440\u0430", None))

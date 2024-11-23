@@ -63,6 +63,27 @@ def mock_config_data(mock_file_info):
                 ],
                 "mutable_data": [],
                 "client_additional_data": {},
+                "modpack_options": {
+                    "shaders": {
+                        "manifest": {
+                            "is_default_enabled": "true",
+                            "feature_name": "Шейдеры",
+                            "option_key": "some_unique_key",
+                        },
+                        "files": [
+                            {
+                                "file_name": "test_file1.txt",
+                                "api_url": "http://example.com/test_file1.txt",
+                                "yan_obj_storage": "test_object_key1",
+                                "hash": {
+                                    "value": "abf123456",
+                                    "algorithm": "sha256",
+                                },
+                                "dist_file_path": "path/to/test_file1.txt",
+                            }
+                        ],
+                    }
+                },
             },
             CONFIG_NAME_2: {
                 "server_config": {
@@ -100,6 +121,7 @@ def mock_config_data(mock_file_info):
                     },
                 ],
                 "client_additional_data": {},
+                "modpack_options": {},
             },
         }
     }
@@ -141,6 +163,7 @@ def mock_modpack_data(mock_file_info):
             },
         ],
         "client_additional_data": {},
+        "modpack_options": {},
     }
 
 
