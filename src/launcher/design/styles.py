@@ -177,3 +177,47 @@ QSlider::add-page:horizontal {
     color: white;
 }
 """
+
+MODPACK_OPTION_CHECKBOX = """
+QCheckBox {
+    color: #1E90FF; /* Синий цвет текста */
+    font: bold 24px;
+}
+
+QCheckBox::indicator {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #1E90FF; /* Синий цвет границы */
+    background-color: white;
+    border-radius: 4px; /* Округленные углы */
+}
+
+QCheckBox::indicator:checked {
+    background-color: #1E90FF; /* Синий цвет при включении */
+    border: 2px solid #104E8B; /* Темно-синий цвет границы */
+}
+
+QCheckBox::indicator:unchecked {
+    background-color: white;
+    border: 2px solid #1E90FF;
+}
+
+QCheckBox::indicator:disabled {
+    background-color: #B0C4DE; /* Светло-серый с синим оттенком */
+    border: 2px solid #A9A9A9; /* Серый цвет границы */
+}
+
+QCheckBox::indicator:checked:disabled {
+    background-color: #A9A9A9;
+    border: 2px solid #6E7B8B; /* Темный серо-синий цвет */
+}
+
+QCheckBox:hover {
+    color: #4682B4; /* Осветленный синий при наведении */
+}
+
+QCheckBox::indicator:hover {
+    border-color: #4682B4; /* Осветленный синий цвет границы */
+}
+
+"""
