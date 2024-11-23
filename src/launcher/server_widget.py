@@ -107,6 +107,12 @@ class ServerWidgetPage(QObject):
         self._server_widget = widget
         self._ui.gridLayout.addWidget(widget)
 
+        self._set_description_page()
+        if not server_config.modpack_options:
+            self._ui.pushButton_modpack_options.hide()
+        else:
+            self._ui.pushButton_modpack_options.show()
+
     @Slot(str)
     def _restore_server_files(self):
         """Start the process of checking game files."""
@@ -123,3 +129,15 @@ class ServerWidgetPage(QObject):
         modpack_dir = LauncherConfig().get_servers_data_dir(modpack_name)
         if modpack_dir.exists():
             open_directory(str(modpack_dir))
+
+    def _set_modpack_options_page(self):
+        self._ui.pushButton_modpack_options.setText("Описание")
+        self._ui.stackedWidget_modpack_options.setCurrentWidget(
+            self._ui.page_modpack_options,
+        )
+
+    def _set_description_page(self):
+        self._ui.pushButton_modpack_options.setText("Настройки")
+        self._ui.stackedWidget_modpack_options.setCurrentWidget(
+            self._ui.page_server_description,
+        )

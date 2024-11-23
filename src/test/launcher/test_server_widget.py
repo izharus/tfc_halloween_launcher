@@ -124,3 +124,49 @@ class TestServerWidgetPage:
             auth_window._ui_instance.horizontalLayout_2.indexOf(server_widget)
             == expected_pos
         )
+
+    def test_modpack_option_button_visibility_if_option_exists(
+        self, auth_window: Window, qtbot: QtBot
+    ):
+        """
+        Tests the visibility of the "Modpack Options" button when
+        the modpack options exist.
+        """
+        # Arrange
+        server_widget = auth_window._choose_server._buttons[0]
+        auth_window._server_page.switch_to_server_page(
+            CONFIG_NAME_1, server_widget
+        )
+
+        # Assert
+        cur_page = (
+            auth_window._ui_instance.stackedWidget_modpack_options.currentWidget()  # pylint: disable=C0301
+        )
+        assert cur_page == auth_window._ui_instance.page_server_description
+        assert (
+            auth_window._ui_instance.pushButton_modpack_options.isHidden()
+            is False
+        )
+
+    def test_modpack_option_button_visibility_if_option_is_not_exists(
+        self, auth_window: Window, qtbot: QtBot
+    ):
+        """
+        Tests the visibility of the "Modpack Options" button when
+        the modpack options do not exist.
+        """
+        # Arrange
+        server_widget = auth_window._choose_server._buttons[1]
+        auth_window._server_page.switch_to_server_page(
+            CONFIG_NAME_2, server_widget
+        )
+
+        # Assert
+        cur_page = (
+            auth_window._ui_instance.stackedWidget_modpack_options.currentWidget()  # pylint: disable=C0301
+        )
+        assert cur_page == auth_window._ui_instance.page_server_description
+        assert (
+            auth_window._ui_instance.pushButton_modpack_options.isHidden()
+            is True
+        )
