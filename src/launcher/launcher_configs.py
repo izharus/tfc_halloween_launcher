@@ -12,7 +12,7 @@ import json
 import os
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Optional
+from typing import TYPE_CHECKING, Final, List, Optional
 
 from loguru import logger as log
 from pydantic import ValidationError
@@ -27,7 +27,7 @@ from .utility.custom_exceptions import (
     ModpackNotfound,
 )
 from .utility.file_downloader import FileDownloaderProtocol
-from .utility.pydantic_models import MapJson, Modpack
+from .utility.pydantic_models import FileInfo, MapJson, Modpack
 
 if TYPE_CHECKING:
     from .design.thread_data_utils import SettingsManager
@@ -403,6 +403,7 @@ class ServerConfig:
         """
         self.main_data: Final = modpack.main_data
         self.mutable_data: Final = modpack.mutable_data
+        self.modpack_options: Final = modpack.modpack_options
         self.client_additional_data: Final = modpack.client_additional_data
         self.server_config: Final = modpack.server_config
         self.internal_name: Final = internal_name
@@ -480,3 +481,32 @@ class ServerConfig:
         if profile_path.exists():
             return True
         return False
+
+    def get_options(self, is_installed: bool) -> List[FileInfo]:
+        """
+        Retrieves a list of files corresponding to modpack options based
+        on their installation status.
+
+        Args:
+            is_installed (bool): The installation status to filter
+                the modpack options.
+                - `True` to retrieve files for installed options.
+                - `False` to retrieve files for uninstalled options.
+
+        Returns:
+            List[FileInfo]: A list of `FileInfo` objects for modpack options
+                matching the specified status.
+
+        Notes:
+            - Iterates through all modpack options.
+            - Filters options by comparing the user setting value with
+                the given `is_installed` parameter.
+        """
+        files: List[FileInfo] = []
+        for option in self.modpack_options.values():
+            if (
+                self._settings.get_user_value(option.manifest.option_key)
+                == is_installed
+            ):
+                files.extend(option.files)
+        return files
