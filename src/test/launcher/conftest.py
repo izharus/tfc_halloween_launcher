@@ -70,7 +70,7 @@ def mock_config_data(mock_file_info):
                             "feature_name": "Шейдеры",
                             "option_key": "some_unique_key",
                         },
-                        "files": [
+                        "main_data": [
                             {
                                 "file_name": "test_file1.txt",
                                 "api_url": "http://example.com/test_file1.txt",
@@ -82,6 +82,7 @@ def mock_config_data(mock_file_info):
                                 "dist_file_path": "path/to/test_file1.txt",
                             }
                         ],
+                        "mutable_data": [],
                     }
                 },
             },

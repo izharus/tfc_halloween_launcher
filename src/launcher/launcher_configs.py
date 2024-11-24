@@ -12,7 +12,7 @@ import json
 import os
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, List, Optional
+from typing import TYPE_CHECKING, Final, List, Optional, Tuple
 
 from loguru import logger as log
 from pydantic import ValidationError
@@ -482,31 +482,30 @@ class ServerConfig:
             return True
         return False
 
-    def get_options(self, is_installed: bool) -> List[FileInfo]:
+    def get_options(
+        self, is_installed: bool
+    ) -> Tuple[List[FileInfo], List[FileInfo]]:
         """
-        Retrieves a list of files corresponding to modpack options based
-        on their installation status.
+        Retrieves a list of file options based on their installation status.
 
         Args:
-            is_installed (bool): The installation status to filter
-                the modpack options.
-                - `True` to retrieve files for installed options.
-                - `False` to retrieve files for uninstalled options.
+            is_installed (bool): A flag indicating whether to retrieve options
+                that are installed (`True`) or not installed (`False`).
 
         Returns:
-            List[FileInfo]: A list of `FileInfo` objects for modpack options
-                matching the specified status.
-
-        Notes:
-            - Iterates through all modpack options.
-            - Filters options by comparing the user setting value with
-                the given `is_installed` parameter.
+            Tuple[List[FileInfo], List[FileInfo]]: A tuple containing
+                two lists:
+                - `main_data`: The main data files of the selected options.
+                - `mutable_data`: The mutable data files of the selected
+                    options.
         """
-        files: List[FileInfo] = []
+        main_data: List[FileInfo] = []
+        mutable_data: List[FileInfo] = []
         for option in self.modpack_options.values():
             if (
                 self._settings.get_user_value(option.manifest.option_key)
                 == is_installed
             ):
-                files.extend(option.files)
-        return files
+                main_data.extend(option.main_data)
+                mutable_data.extend(option.mutable_data)
+        return main_data, mutable_data

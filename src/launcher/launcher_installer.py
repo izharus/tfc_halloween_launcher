@@ -342,13 +342,15 @@ class InstallThread(QThread):
             minecraft_directory=self.config.minecraft_directory,
             file_downloader=self._file_downloader,
         )
-        installer.delete_files(self.config.get_options(is_installed=False))
-        modpack_options = self.config.get_options(is_installed=True)
+        del_main, del_mutable = self.config.get_options(is_installed=False)
+        installer.delete_files(del_main + del_mutable)
+
+        main_data, mutable_data = self.config.get_options(is_installed=True)
         status = installer.check_and_download(
-            files_info_list=self.config.main_data + modpack_options,
+            files_info_list=self.config.main_data + main_data,
             callback=self._callback_dict,
         ) and installer.check_and_download(
-            files_info_list=self.config.mutable_data,
+            files_info_list=self.config.mutable_data + mutable_data,
             is_skip_existing=True,
             callback=self._callback_dict,
         )

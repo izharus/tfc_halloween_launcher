@@ -47,7 +47,8 @@ class OptionData(BaseModel):
     """
 
     manifest: OptionManifest
-    files: List[FileInfo]
+    main_data: List[FileInfo]
+    mutable_data: List[FileInfo]
 
 
 class ServerConfig(BaseModel):
