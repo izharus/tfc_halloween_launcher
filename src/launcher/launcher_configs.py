@@ -12,7 +12,7 @@ import json
 import os
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Optional
+from typing import TYPE_CHECKING, Final, List, Optional, Tuple
 
 from loguru import logger as log
 from pydantic import ValidationError
@@ -27,7 +27,7 @@ from .utility.custom_exceptions import (
     ModpackNotfound,
 )
 from .utility.file_downloader import FileDownloaderProtocol
-from .utility.pydantic_models import MapJson, Modpack
+from .utility.pydantic_models import FileInfo, MapJson, Modpack
 
 if TYPE_CHECKING:
     from .design.thread_data_utils import SettingsManager
@@ -181,6 +181,11 @@ class LauncherConfig:
         self._general_lib_dir.mkdir(parents=True, exist_ok=True)
 
         self._create_general_dirs()
+
+    @property
+    def general_lib_dir(self) -> Path:
+        """Return current path to the general libs."""
+        return self._general_lib_dir
 
     def _create_launcher_dirs(self):
         self.LAUNCHER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -398,6 +403,7 @@ class ServerConfig:
         """
         self.main_data: Final = modpack.main_data
         self.mutable_data: Final = modpack.mutable_data
+        self.modpack_options: Final = modpack.modpack_options
         self.client_additional_data: Final = modpack.client_additional_data
         self.server_config: Final = modpack.server_config
         self.internal_name: Final = internal_name
@@ -416,9 +422,15 @@ class ServerConfig:
         self,
     ) -> bool:
         """True if current minecraft server is installed, False otherwise."""
-        if not self.minecraft_directory.exists():
-            self.is_minecraft_installed = False
         self._launcher_config.init_server_directory(self.minecraft_directory)
+
+        if (
+            not self.minecraft_directory.exists()
+            or not self._is_minecraft_profile_installed()
+        ):
+            self.is_minecraft_installed = False
+            return False
+
         return bool(
             self._settings.get_user_value(self._is_minecraft_installed_key)
         )
@@ -459,3 +471,41 @@ class ServerConfig:
                 )
         except OSError:
             log.error("Failed to update default minecraft options.")
+
+    def _is_minecraft_profile_installed(self):
+        profile_path = (
+            self._launcher_config.general_lib_dir
+            / "versions"
+            / self.server_config.minecraft_profile
+        )
+        if profile_path.exists():
+            return True
+        return False
+
+    def get_options(
+        self, is_installed: bool
+    ) -> Tuple[List[FileInfo], List[FileInfo]]:
+        """
+        Retrieves a list of file options based on their installation status.
+
+        Args:
+            is_installed (bool): A flag indicating whether to retrieve options
+                that are installed (`True`) or not installed (`False`).
+
+        Returns:
+            Tuple[List[FileInfo], List[FileInfo]]: A tuple containing
+                two lists:
+                - `main_data`: The main data files of the selected options.
+                - `mutable_data`: The mutable data files of the selected
+                    options.
+        """
+        main_data: List[FileInfo] = []
+        mutable_data: List[FileInfo] = []
+        for option in self.modpack_options.values():
+            if (
+                self._settings.get_user_value(option.manifest.option_key)
+                == is_installed
+            ):
+                main_data.extend(option.main_data)
+                mutable_data.extend(option.mutable_data)
+        return main_data, mutable_data

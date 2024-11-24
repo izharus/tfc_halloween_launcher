@@ -57,7 +57,7 @@ from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.pydantic_models import S3Credentials
 
-APP_VERSION = "3.1.0"
+APP_VERSION = "3.2.0"
 
 
 def hide_console() -> None:
@@ -225,6 +225,7 @@ class Window(QtWidgets.QMainWindow):
             config=self.config_manager,
             ui_instance=self._ui_instance,
             login=self._login_widget.auth_data.username,
+            settings=self._settings,
         )
         self._server_page.check_game_files.connect(
             lambda modpack_name: self._install_minecraft_multi_thread(
@@ -418,7 +419,7 @@ class Window(QtWidgets.QMainWindow):
 
     def _executor_thread_finished(self):
         if self._executor.runtime_error:
-            self.log_msg_box(
+            self.log_msg_box.show_message(
                 title="Ошибка при запуске игры.",
                 msg="Подробная информация в логе.",
             )

@@ -154,6 +154,30 @@ class ModsInstaller(QThread):
                         return False
         return True
 
+    def delete_files(
+        self,
+        files_info_list: List[FileInfo],
+    ):
+        """
+        Deletes the specified files from the Minecraft directory.
+
+        Args:
+            files_info_list (List[FileInfo]): A list of `FileInfo` objects
+                representing the files to be deleted.
+        """
+
+        for fileinfo in files_info_list:
+            filepath = self.minecraft_directory / fileinfo.dist_file_path
+            try:
+                os.remove(filepath)
+                log.info(f"Optional file was deleted: {filepath}")
+            except FileNotFoundError:
+                continue
+            except Exception as error:
+                log.error(
+                    "Error filed deleting the file:" f"{filepath}, {error}"
+                )
+
     def check_and_download(
         self,
         files_info_list: List[FileInfo],
@@ -321,17 +345,26 @@ class InstallThread(QThread):
             file_downloader=self._file_downloader,
         )
 
+        op_main_data, op_mutable_data = self.config.get_options(
+            is_installed=True
+        )
         status = installer.check_and_download(
-            files_info_list=self.config.main_data,
+            files_info_list=self.config.main_data + op_main_data,
             callback=self._callback_dict,
         ) and installer.check_and_download(
-            files_info_list=self.config.mutable_data,
+            files_info_list=self.config.mutable_data + op_mutable_data,
             is_skip_existing=True,
             callback=self._callback_dict,
         )
         if not status:
             self.runtime_error = True
-        status = installer.delete_unknown_mods(self.config.main_data)
+
+        del_main, del_mutable = self.config.get_options(is_installed=False)
+        installer.delete_files(del_main + del_mutable)
+        status = installer.delete_unknown_mods(
+            self.config.main_data + op_main_data + op_mutable_data
+        )
+
         if not status:
             self.runtime_error = True
         self._callback_dict["setStatus"]("Launching minecraft...")

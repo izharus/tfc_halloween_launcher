@@ -437,6 +437,63 @@ class TestServerConfig:
         assert server_config.is_minecraft_installed == install_status
 
     @pytest.mark.parametrize("install_status", (True, False))
+    def test_is_minecraft_installed_if_minecraft_profile_exists(
+        self,
+        mocker: MockerFixture,
+        tmp_path: Path,
+        install_status: bool,
+    ):
+        """
+        Tests if is_minecraft_installed if minecraft profile is exists.
+        """
+        profile_id = "forge_5000"
+        profile_path = tmp_path / "versions" / profile_id
+        profile_path.mkdir(parents=True)
+        server_config = ServerConfig(
+            internal_name="mock_name",
+            modpack=MagicMock(),
+            launcher_config=MagicMock(),
+            settings=MagicMock(),
+        )
+        server_config.minecraft_profile = profile_id
+        server_config._launcher_config.general_lib_dir = tmp_path
+
+        server_config.minecraft_directory = tmp_path  # type: ignore
+        mocker.patch.object(
+            server_config._settings,
+            "get_user_value",
+            return_value=install_status,
+        )
+
+        assert server_config.is_minecraft_installed is False
+
+    @pytest.mark.parametrize("install_status", (True, False))
+    def test_is_minecraft_installed_if_minecraft_profile_not_exists(
+        self,
+        mocker: MockerFixture,
+        tmp_path: Path,
+        install_status: bool,
+    ):
+        """
+        Tests if is_minecraft_installed if minecraft profile is not exists.
+        """
+        profile_id = "forge_5000"
+        (tmp_path / "versions").mkdir()
+
+        server_config = ServerConfig(
+            internal_name="mock_name",
+            modpack=MagicMock(),
+            launcher_config=MagicMock(),
+            settings=MagicMock(),
+        )
+        server_config.minecraft_profile = profile_id
+        server_config._launcher_config.general_lib_dir = tmp_path
+
+        server_config.minecraft_directory = tmp_path  # type: ignore
+
+        assert server_config.is_minecraft_installed is False
+
+    @pytest.mark.parametrize("install_status", (True, False))
     def test_is_minecraft_installed_setter(
         self,
         install_status: bool,
