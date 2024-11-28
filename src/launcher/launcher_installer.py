@@ -359,8 +359,8 @@ class InstallThread(QThread):
         if not status:
             self.runtime_error = True
 
-        del_main, del_mutable = self.config.get_options(is_installed=False)
-        installer.delete_files(del_main + del_mutable)
+        del_main, _ = self.config.get_options(is_installed=False)
+        installer.delete_files(del_main)
         status = installer.delete_unknown_mods(
             self.config.main_data + op_main_data + op_mutable_data
         )
