@@ -87,6 +87,7 @@ def save_file(
         file.write_bytes(file_content)
 
     except OSError as error:
+        log.error(f"Failed to save file: {file.name}")
         raise FilesSaveError from error
 
 
