@@ -87,9 +87,6 @@ class FilesSaveError(Exception):
     ) -> None:
         super().__init__(message)
 
-    def __str__(self):
-        return "Файловая ошибка I/O."
-
 
 class CalculateHashFailed(RuntimeError):
     """Raises if calculate_hash func raises any exception."""

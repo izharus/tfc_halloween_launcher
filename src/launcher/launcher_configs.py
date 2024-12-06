@@ -108,7 +108,7 @@ class LauncherConfig:
                 os.path.dirname(mine_lib.utils.get_minecraft_directory())
             )
         )
-        / LAUNCHER_NAME
+        / f".{LAUNCHER_NAME}"
     )
     LOGGING_DIR = LAUNCHER_ROOT_DIR / "logs"
     LAUNCHER_DATA_DIR = LAUNCHER_ROOT_DIR / "data"

@@ -180,44 +180,43 @@ QSlider::add-page:horizontal {
 
 MODPACK_OPTION_CHECKBOX = """
 QCheckBox {
-    color: #1E90FF; /* Синий цвет текста */
+    color: #D3D3D3; /* Светло-серый цвет текста */
     font: bold 24px;
 }
 
 QCheckBox::indicator {
     width: 32px;
     height: 32px;
-    border: 2px solid #1E90FF; /* Синий цвет границы */
+    border: 2px solid #D3D3D3; /* Светло-серый цвет границы */
     background-color: white;
     border-radius: 4px; /* Округленные углы */
 }
 
 QCheckBox::indicator:checked {
-    background-color: #1E90FF; /* Синий цвет при включении */
-    border: 2px solid #104E8B; /* Темно-синий цвет границы */
+    background-color: #FF6347; /* Контрастный красный цвет при включении */
+    border: 2px solid #D3D3D3; /* Светло-серый цвет границы */
 }
 
 QCheckBox::indicator:unchecked {
     background-color: white;
-    border: 2px solid #1E90FF;
+    border: 2px solid #D3D3D3;
 }
 
 QCheckBox::indicator:disabled {
-    background-color: #B0C4DE; /* Светло-серый с синим оттенком */
-    border: 2px solid #A9A9A9; /* Серый цвет границы */
+    background-color: #F8F8FF; /* Очень светлый серо-белый оттенок */
+    border: 2px solid #E0E0E0; /* Очень светлый серый цвет границы */
 }
 
 QCheckBox::indicator:checked:disabled {
-    background-color: #A9A9A9;
-    border: 2px solid #6E7B8B; /* Темный серо-синий цвет */
+    background-color: #E0E0E0;
+    border: 2px solid #C8C8C8; /* Очень светлый серо-белый цвет */
 }
 
 QCheckBox:hover {
-    color: #4682B4; /* Осветленный синий при наведении */
+    color: #A9A9A9; /* Темно-серый цвет текста при наведении */
 }
 
 QCheckBox::indicator:hover {
-    border-color: #4682B4; /* Осветленный синий цвет границы */
+    border-color: #A9A9A9; /* Темно-серый цвет границы при наведении */
 }
-
 """
