@@ -57,7 +57,7 @@ from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.pydantic_models import S3Credentials
 
-APP_VERSION = "3.2.1"
+APP_VERSION = "3.2.2"
 
 
 def hide_console() -> None:
@@ -464,7 +464,7 @@ def main():
     elevate(show_console=False)
     app = QtWidgets.QApplication(sys.argv)
 
-    w = Window(settings=QSettings("IzharusTest", "TestProdApp"))
+    w = Window(settings=QSettings("Aulecraft", "Launcher"))
     w.show()
 
     sys.exit(app.exec())
