@@ -31,7 +31,7 @@ LAUNCHER_BINARY_PATH = (
     launcher_config.LAUNCHER_ROOT_DIR / f"{launcher_config.LAUNCHER_NAME}.exe"
 )
 
-INSTALLER_VERSION = "1.1.0"
+INSTALLER_VERSION = "1.1.1"
 
 
 def write_os_version():
@@ -192,6 +192,9 @@ class DownloaderApp:
             )
         except FileDownloadError as error:
             log.critical(f"Failed to download launcher: {repr(error)}")
+            return
+        except Exception as error:
+            log.critical(f"Unknown exception: {repr(error)}")
             return
         self._is_installation_complete = True
 
