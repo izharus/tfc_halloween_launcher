@@ -60,6 +60,8 @@ class ServerWidgetPage(QObject):
             self._settings,
             self._ui.verticalLayout_modpack_options,
         )
+        for modpack in self._config.map_json.modpacks.values():
+            self._options_manager.create_modpack_options_page(modpack)
 
     def _create_signals(self):
         """Sets up signal connections for UI components."""
