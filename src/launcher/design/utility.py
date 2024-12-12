@@ -59,9 +59,7 @@ class MessageBox(QDialog):
         and a close button.
         """
         super().__init__(parent)
-        self.setWindowFlags(
-            Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-        )
+        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
         # Implement the custom widget to avoid visual bugs with border-radius
