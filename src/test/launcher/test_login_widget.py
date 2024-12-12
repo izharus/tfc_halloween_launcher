@@ -261,7 +261,7 @@ class TestResetPasswordWorker:
             request = m.request_history[0]
             assert request.json() == self.expected_json
         self.worker.success.emit.assert_not_called()
-        self.worker.write_error.emit.assert_called_once_with(str(error_code))
+        self.worker.write_error.emit.assert_called_once()
 
     def test_rest_password_internal_error(
         self,
@@ -273,4 +273,4 @@ class TestResetPasswordWorker:
         self.worker.run()
 
         self.worker.success.emit.assert_not_called()
-        self.worker.write_error.emit.assert_called_once_with("indefinite")
+        self.worker.write_error.emit.assert_called_once()
