@@ -318,13 +318,28 @@ class ResetPasswordWorker(QThread):  # pylint: disable=R0903
                 timeout=3,
             )
         except Exception as error:
-            self.write_error.emit("indefinite")
+            self.write_error.emit("Неизвестная ошибка.")
             log.error(f"Failed make restore email request: {error}")
             return
+        # pylint: disable=C0301
         if resp.status_code == 200:
             self.success.emit()
+        elif resp.status_code == 429:
+            self.write_error.emit(
+                str(
+                    "Письмо уже отправлено. Проверьте папку 'спам' или сделайте новый запрос позже."
+                )
+            )
+        elif resp.status_code == 404:
+            self.write_error.emit(
+                str("Пользователь с такими именем/почтой не найден.")
+            )
         else:
-            self.write_error.emit(str(resp.status_code))
+            self.write_error.emit(
+                str(
+                    f"Не удалось отправить письмо на почту, код ошибки: {resp.status_code}"
+                )
+            )
 
 
 class LoginRecoveryWidget(LoginWidget):
@@ -380,13 +395,6 @@ class LoginRecoveryWidget(LoginWidget):
             self._send_reset_password_request
         )
 
-        # Goto the login page after clicking on the restore password button
-        self._ui.pushButton_restore_password.clicked.connect(
-            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
-                self._ui.page_auth,
-            )
-        )
-
         # Enable ui when info widget closed
         self._msg_box.close_button.clicked.connect(self.enable_ui)
 
@@ -401,6 +409,13 @@ class LoginRecoveryWidget(LoginWidget):
             self._launcher_config.RECOVERY_PWD_URL,
         )
         self._reset_password_worker.success.connect(self._show_message_success)
+        # Goto the login page after successful restore operation
+        self._reset_password_worker.success.connect(
+            lambda: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
         self._reset_password_worker.write_error.connect(
             self._show_message_error
         )
@@ -415,10 +430,10 @@ class LoginRecoveryWidget(LoginWidget):
         )
 
     @Slot()
-    def _show_message_error(self, code: str):
+    def _show_message_error(self, error: str):
         self._msg_box.show_message(
             "Ошибка!",
-            f"Не удалось отправить письмо на почту, код ошибки: {code}",
+            error,
         )
 
     @Slot()
