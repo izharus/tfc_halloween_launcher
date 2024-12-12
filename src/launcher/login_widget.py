@@ -380,13 +380,6 @@ class LoginRecoveryWidget(LoginWidget):
             self._send_reset_password_request
         )
 
-        # Goto the login page after clicking on the restore password button
-        self._ui.pushButton_restore_password.clicked.connect(
-            lambda _: self._ui.stackedWidget_auth.setCurrentWidget(
-                self._ui.page_auth,
-            )
-        )
-
         # Enable ui when info widget closed
         self._msg_box.close_button.clicked.connect(self.enable_ui)
 
@@ -401,6 +394,13 @@ class LoginRecoveryWidget(LoginWidget):
             self._launcher_config.RECOVERY_PWD_URL,
         )
         self._reset_password_worker.success.connect(self._show_message_success)
+        # Goto the login page after successful restore operation
+        self._reset_password_worker.success.connect(
+            lambda: self._ui.stackedWidget_auth.setCurrentWidget(
+                self._ui.page_auth,
+            )
+        )
+
         self._reset_password_worker.write_error.connect(
             self._show_message_error
         )
