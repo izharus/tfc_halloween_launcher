@@ -11,7 +11,6 @@ from tkinter import messagebox, ttk
 from typing import Optional
 
 import requests
-from elevate import elevate
 from loguru import logger as log
 from src.launcher.launcher_configs import BinariesObjectKey, LauncherConfig
 from src.launcher.utility._helper import init_loguru_logger
@@ -31,7 +30,7 @@ LAUNCHER_BINARY_PATH = (
     launcher_config.LAUNCHER_ROOT_DIR / f"{launcher_config.LAUNCHER_NAME}.exe"
 )
 
-INSTALLER_VERSION = "1.1.1"
+INSTALLER_VERSION = "1.1.2"
 
 
 def write_os_version():
@@ -239,7 +238,6 @@ class DownloaderApp:
 
 def main():
     """Main entry point."""
-    elevate(show_console=False)
     init_loguru_logger(launcher_config.LOGGING_DIR)
     log.debug("====================INSTALLER STARTED====================")
     log.debug(f"Installer version: {INSTALLER_VERSION}")
