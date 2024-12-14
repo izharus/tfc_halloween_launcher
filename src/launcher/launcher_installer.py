@@ -27,13 +27,16 @@ launching a customized Minecraft environment.
 # pylint: disable=unnecessary-lambda
 import os
 import subprocess
+import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 from loguru import logger as log
 from qtpy.QtCore import QThread, Signal
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
@@ -53,7 +56,110 @@ from .utility.custom_exceptions import (
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import AuthData, FileInfo
 
+if TYPE_CHECKING:
+    from watchdog.observers.api import BaseObserver
 MAX_WORKERS = (os.cpu_count() or 4) * 4
+
+
+class RecursiveModValidator(FileSystemEventHandler):
+    """
+    This class extends `FileSystemEventHandler` to provide a unified handler
+    for all file system events. It logs recognized events and optionally
+    executes a user-defined callback function.
+    """
+
+    def __init__(self, callback: Optional[Callable] = None):
+        self.callback = callback
+
+    def on_any_event(self, event) -> None:
+        event_text = f"Operation recognized: {event.event_type}"
+        log.info(event_text)
+        if self.callback:
+            self.callback()
+
+
+class SecurityWorker:
+    """
+    Handles security-related operations for a running Minecraft server.
+
+    This class monitors file changes in the game's directory (specifically
+    in the "mods" folder) and terminates the Minecraft process if any issues
+    are detected during the monitoring process.
+    """
+
+    def __init__(
+        self,
+        minecraft_process: subprocess.Popen,
+        server_config: ServerConfig,
+    ):
+        """
+        Initializes the SecurityWorker with the given Minecraft process
+        and server configuration.
+
+        Args:
+            minecraft_process (subprocess.Popen): The running
+                Minecraft process.
+            server_config (ServerConfig): Configuration details
+                for the Minecraft server.
+        """
+        self._process = minecraft_process
+        self._server_config = server_config
+
+    def start(self, is_need_observer: bool = True) -> None:
+        """
+        Starts the security worker, optionally initializing a file observer.
+
+        This method handles the Minecraft process execution and optionally
+        sets up an observer to monitor server-related file changes.
+
+        Args:
+            is_need_observer (bool): If True, starts a file observer.
+                Defaults to True.
+        """
+        if is_need_observer:
+            self._execute_observer()
+
+        _, stderr = self._process.communicate()
+
+        if stderr:
+            log.error(f"Minecraft stderr: {stderr}")
+        else:
+            log.debug("Minecraft stderr is empty")
+
+    def terminate_minecraft_process(self) -> None:
+        """
+        Terminates a Minecraft process gracefully, with a fallback
+        to force termination.
+        """
+        if self._process.poll() is None:  # Check if process is still running
+            log.debug("Terminating Minecraft process after timeout.")
+            self._process.terminate()
+            time.sleep(5)  # Give it some time to terminate gracefully
+            if self._process.poll() is None:
+                log.warning("Minecraft process did not terminate. Killing it.")
+                self._process.kill()
+        else:
+            log.info("Minecraft process is not running.")
+
+    def _create_observer(self) -> "BaseObserver":
+        observer = Observer()
+        event_handler = RecursiveModValidator(
+            self.terminate_minecraft_process,
+        )
+        observer.schedule(
+            event_handler,
+            path=self._server_config.minecraft_directory / "mods",
+            recursive=True,
+        )
+        return observer
+
+    def _execute_observer(self) -> None:
+        observer = self._create_observer()
+        observer.start()
+        while not self._process.poll():
+            time.sleep(1)
+        observer.stop()
+        observer.join()
 
 
 class ConfigInstallerThread(QThread):
@@ -466,12 +572,10 @@ class MinecraftExecutorThread(QThread):
                 stderr=subprocess.PIPE,
                 universal_newlines=True,  # Use text mode for stdout/stderr
             ) as minecraft_process:
-                # first var is stdout
-                _, stderr = minecraft_process.communicate()
-                if stderr:
-                    log.error(f"Minecraft stderr: {stderr}")
-                else:
-                    log.debug("Minecraft stderr is empty")
+                SecurityWorker(
+                    minecraft_process,
+                    self._config,
+                ).start()
         except Exception as error:
             self.runtime_error = error
             log.debug(
