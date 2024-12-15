@@ -31,7 +31,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from loguru import logger as log
 from qtpy.QtCore import QThread, Signal
@@ -40,6 +40,7 @@ from watchdog.observers import Observer
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
+    CallbackDict,
     MinecraftOptions,
 )
 from .design.thread_data_utils import SettingsManager
@@ -288,7 +289,7 @@ class ModsInstaller(QThread):
         self,
         files_info_list: List[FileInfo],
         is_skip_existing: bool = False,
-        callback: Optional[Dict[str, Callable]] = None,
+        callback: Optional[CallbackDict] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
@@ -298,8 +299,8 @@ class ModsInstaller(QThread):
             files_info_list (List[FileInfo]): Files to be downloaded.
             is_skip_existing (bool): If True, existing files will be skipped;
                 otherwise, the file hash will be checked.
-            callback (dict): A dictionary of callback functions for
-                updating the UI.
+            callback (Optional[CallbackDict]): A dictionary of
+                callback functions for updating the UI.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
@@ -425,6 +426,64 @@ class InstallThread(QThread):
                 log.error("closeEvent was triggered, installation failed.")
                 self.runtime_error = error
 
+    @staticmethod
+    def install_server_files(
+        config: ServerConfig,
+        file_downloader: FileDownloaderProtocol,
+        callback: Optional[CallbackDict] = None,
+    ):
+        """
+        Installs or updates the server files, ensuring necessary mods
+        are downloaded and unwanted mods are removed.
+
+        This method uses the provided configuration and downloader to:
+        1. Download required mods and associated files, optionally
+            using a callback for progress updates.
+        2. Remove deprecated files that are no longer needed.
+        3. Delete unknown or unlisted mods from the server
+            directory to maintain consistency.
+
+        Args:
+            config (ServerConfig): The server configuration,
+                containing file paths and mod data information.
+            file_downloader (FileDownloaderProtocol): A downloader
+                for retrieving necessary files.
+            callback (Optional[CallbackDict]): Optional callback dictionary
+                for tracking download progress.
+
+        Returns:
+            bool: True if all operations (download, deletion, and cleanup)
+                were successful, False otherwise.
+        """
+        installer = ModsInstaller(
+            minecraft_directory=config.minecraft_directory,
+            file_downloader=file_downloader,
+        )
+
+        op_main_data, op_mutable_data = config.get_options(is_installed=True)
+        status = installer.check_and_download(
+            files_info_list=config.main_data + op_main_data,
+            callback=callback,
+        ) and installer.check_and_download(
+            files_info_list=config.mutable_data + op_mutable_data,
+            is_skip_existing=True,
+            callback=callback,
+        )
+        if not status:
+            log.error("Check_and_download operations failed.")
+            return False
+
+        del_main, _ = config.get_options(is_installed=False)
+        installer.delete_files(del_main)
+        status = installer.delete_unknown_mods(
+            config.main_data + op_main_data + op_mutable_data
+        )
+
+        if not status:
+            log.error("Delete_unknown_mods failed.")
+            return False
+        return True
+
     def main_worker(self):
         """
         Run the installation process in a separate thread.
@@ -446,33 +505,13 @@ class InstallThread(QThread):
                 callback=self._callback_dict,
             )
 
-        installer = ModsInstaller(
-            minecraft_directory=self.config.minecraft_directory,
-            file_downloader=self._file_downloader,
-        )
-
-        op_main_data, op_mutable_data = self.config.get_options(
-            is_installed=True
-        )
-        status = installer.check_and_download(
-            files_info_list=self.config.main_data + op_main_data,
-            callback=self._callback_dict,
-        ) and installer.check_and_download(
-            files_info_list=self.config.mutable_data + op_mutable_data,
-            is_skip_existing=True,
-            callback=self._callback_dict,
-        )
-        if not status:
+        if not self.install_server_files(
+            self.config,
+            self._file_downloader,
+            self._callback_dict,
+        ):
             self.runtime_error = True
-
-        del_main, _ = self.config.get_options(is_installed=False)
-        installer.delete_files(del_main)
-        status = installer.delete_unknown_mods(
-            self.config.main_data + op_main_data + op_mutable_data
-        )
-
-        if not status:
-            self.runtime_error = True
+            return
         self._callback_dict["setStatus"]("Launching minecraft...")
 
 
