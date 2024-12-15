@@ -147,6 +147,8 @@ urllib3==1.26.20
     # via
     #   botocore
     #   requests
+watchdog==4.0.2
+    # via -r 3_8.in
 wheel==0.44.0
     # via pip-tools
 win32-setctime==1.1.0

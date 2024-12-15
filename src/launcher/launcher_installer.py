@@ -27,16 +27,21 @@ launching a customized Minecraft environment.
 # pylint: disable=unnecessary-lambda
 import os
 import subprocess
+import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from threading import Thread
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from loguru import logger as log
 from qtpy.QtCore import QThread, Signal
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
+    CallbackDict,
     MinecraftOptions,
 )
 from .design.thread_data_utils import SettingsManager
@@ -53,7 +58,133 @@ from .utility.custom_exceptions import (
 from .utility.file_downloader import FileDownloaderProtocol
 from .utility.pydantic_models import AuthData, FileInfo
 
+if TYPE_CHECKING:
+    from watchdog.observers.api import BaseObserver
 MAX_WORKERS = (os.cpu_count() or 4) * 4
+
+
+def file_checker(
+    config: ServerConfig,
+    file_downloader: FileDownloaderProtocol,
+):
+    """
+    This function waits for a short duration to ensure that the WatchDog
+    service is fully initialized and then invokes the installation process
+    for server files using the provided configuration and file downloader.
+
+    Args:
+        config (ServerConfig): The configuration object containing server
+            file and directory information.
+        file_downloader (FileDownloaderProtocol): An instance responsible for
+            downloading required files.
+    """
+    # Wait until WatchDog starts
+    time.sleep(10)
+    InstallThread.install_server_files(
+        config,
+        file_downloader,
+    )
+
+
+class RecursiveModValidator(FileSystemEventHandler):
+    """
+    This class extends `FileSystemEventHandler` to provide a unified handler
+    for all file system events. It logs recognized events and optionally
+    executes a user-defined callback function.
+    """
+
+    def __init__(self, callback: Optional[Callable] = None):
+        self.callback = callback
+
+    def on_any_event(self, event) -> None:
+        event_text = f"Operation recognized: {event.event_type}"
+        log.info(event_text)
+        if self.callback:
+            self.callback()
+
+
+class SecurityWorker:
+    """
+    Handles security-related operations for a running Minecraft server.
+
+    This class monitors file changes in the game's directory (specifically
+    in the "mods" folder) and terminates the Minecraft process if any issues
+    are detected during the monitoring process.
+    """
+
+    def __init__(
+        self,
+        minecraft_process: subprocess.Popen,
+        server_config: ServerConfig,
+    ):
+        """
+        Initializes the SecurityWorker with the given Minecraft process
+        and server configuration.
+
+        Args:
+            minecraft_process (subprocess.Popen): The running
+                Minecraft process.
+            server_config (ServerConfig): Configuration details
+                for the Minecraft server.
+        """
+        self._process = minecraft_process
+        self._server_config = server_config
+
+    def start(self, is_need_observer: bool = True) -> None:
+        """
+        Starts the security worker, optionally initializing a file observer.
+
+        This method handles the Minecraft process execution and optionally
+        sets up an observer to monitor server-related file changes.
+
+        Args:
+            is_need_observer (bool): If True, starts a file observer.
+                Defaults to True.
+        """
+        if is_need_observer:
+            self._execute_observer()
+
+        _, stderr = self._process.communicate()
+
+        if stderr:
+            log.error(f"Minecraft stderr: {stderr}")
+        else:
+            log.debug("Minecraft stderr is empty")
+
+    def terminate_minecraft_process(self) -> None:
+        """
+        Terminates a Minecraft process gracefully, with a fallback
+        to force termination.
+        """
+        if self._process.poll() is None:  # Check if process is still running
+            log.debug("Terminating Minecraft process after timeout.")
+            self._process.terminate()
+            time.sleep(5)  # Give it some time to terminate gracefully
+            if self._process.poll() is None:
+                log.warning("Minecraft process did not terminate. Killing it.")
+                self._process.kill()
+        else:
+            log.info("Minecraft process is not running.")
+
+    def _create_observer(self) -> "BaseObserver":
+        observer = Observer()
+        event_handler = RecursiveModValidator(
+            self.terminate_minecraft_process,
+        )
+        observer.schedule(
+            event_handler,
+            path=self._server_config.minecraft_directory / "mods",
+            recursive=True,
+        )
+        return observer
+
+    def _execute_observer(self) -> None:
+        observer = self._create_observer()
+        observer.start()
+        while not self._process.poll():
+            time.sleep(1)
+        observer.stop()
+        observer.join()
 
 
 class ConfigInstallerThread(QThread):
@@ -182,7 +313,7 @@ class ModsInstaller(QThread):
         self,
         files_info_list: List[FileInfo],
         is_skip_existing: bool = False,
-        callback: Optional[Dict[str, Callable]] = None,
+        callback: Optional[CallbackDict] = None,
     ) -> bool:
         """
         Checks hash for all file in self.files_info_list and downloads
@@ -192,8 +323,8 @@ class ModsInstaller(QThread):
             files_info_list (List[FileInfo]): Files to be downloaded.
             is_skip_existing (bool): If True, existing files will be skipped;
                 otherwise, the file hash will be checked.
-            callback (dict): A dictionary of callback functions for
-                updating the UI.
+            callback (Optional[CallbackDict]): A dictionary of
+                callback functions for updating the UI.
         Returns:
             bool: True if all files were deleted, False otherwise.
         """
@@ -319,6 +450,64 @@ class InstallThread(QThread):
                 log.error("closeEvent was triggered, installation failed.")
                 self.runtime_error = error
 
+    @staticmethod
+    def install_server_files(
+        config: ServerConfig,
+        file_downloader: FileDownloaderProtocol,
+        callback: Optional[CallbackDict] = None,
+    ):
+        """
+        Installs or updates the server files, ensuring necessary mods
+        are downloaded and unwanted mods are removed.
+
+        This method uses the provided configuration and downloader to:
+        1. Download required mods and associated files, optionally
+            using a callback for progress updates.
+        2. Remove deprecated files that are no longer needed.
+        3. Delete unknown or unlisted mods from the server
+            directory to maintain consistency.
+
+        Args:
+            config (ServerConfig): The server configuration,
+                containing file paths and mod data information.
+            file_downloader (FileDownloaderProtocol): A downloader
+                for retrieving necessary files.
+            callback (Optional[CallbackDict]): Optional callback dictionary
+                for tracking download progress.
+
+        Returns:
+            bool: True if all operations (download, deletion, and cleanup)
+                were successful, False otherwise.
+        """
+        installer = ModsInstaller(
+            minecraft_directory=config.minecraft_directory,
+            file_downloader=file_downloader,
+        )
+
+        op_main_data, op_mutable_data = config.get_options(is_installed=True)
+        status = installer.check_and_download(
+            files_info_list=config.main_data + op_main_data,
+            callback=callback,
+        ) and installer.check_and_download(
+            files_info_list=config.mutable_data + op_mutable_data,
+            is_skip_existing=True,
+            callback=callback,
+        )
+        if not status:
+            log.error("Check_and_download operations failed.")
+            return False
+
+        del_main, _ = config.get_options(is_installed=False)
+        installer.delete_files(del_main)
+        status = installer.delete_unknown_mods(
+            config.main_data + op_main_data + op_mutable_data
+        )
+
+        if not status:
+            log.error("Delete_unknown_mods failed.")
+            return False
+        return True
+
     def main_worker(self):
         """
         Run the installation process in a separate thread.
@@ -340,33 +529,13 @@ class InstallThread(QThread):
                 callback=self._callback_dict,
             )
 
-        installer = ModsInstaller(
-            minecraft_directory=self.config.minecraft_directory,
-            file_downloader=self._file_downloader,
-        )
-
-        op_main_data, op_mutable_data = self.config.get_options(
-            is_installed=True
-        )
-        status = installer.check_and_download(
-            files_info_list=self.config.main_data + op_main_data,
-            callback=self._callback_dict,
-        ) and installer.check_and_download(
-            files_info_list=self.config.mutable_data + op_mutable_data,
-            is_skip_existing=True,
-            callback=self._callback_dict,
-        )
-        if not status:
+        if not self.install_server_files(
+            self.config,
+            self._file_downloader,
+            self._callback_dict,
+        ):
             self.runtime_error = True
-
-        del_main, _ = self.config.get_options(is_installed=False)
-        installer.delete_files(del_main)
-        status = installer.delete_unknown_mods(
-            self.config.main_data + op_main_data + op_mutable_data
-        )
-
-        if not status:
-            self.runtime_error = True
+            return
         self._callback_dict["setStatus"]("Launching minecraft...")
 
 
@@ -381,6 +550,8 @@ class MinecraftExecutorThread(QThread):
         auth_data (AuthData): Represents user credential data.
         server_config (ServerConfig): Current server config data.
         settings (SettingsManager): An instance of SettingsManager.
+        file_downloader (FileDownloaderProtocol): A downloader
+            for retrieving necessary files.
     """
 
     def __init__(
@@ -388,11 +559,13 @@ class MinecraftExecutorThread(QThread):
         auth_data: AuthData,
         server_config: ServerConfig,
         settings: SettingsManager,
+        file_downloader: FileDownloaderProtocol,
     ):
         QThread.__init__(self)
         self._auth_data = auth_data
         self._config = server_config
         self._settings = settings
+        self._file_downloader = file_downloader
 
         self.runtime_error: Optional[Exception] = None
 
@@ -466,12 +639,15 @@ class MinecraftExecutorThread(QThread):
                 stderr=subprocess.PIPE,
                 universal_newlines=True,  # Use text mode for stdout/stderr
             ) as minecraft_process:
-                # first var is stdout
-                _, stderr = minecraft_process.communicate()
-                if stderr:
-                    log.error(f"Minecraft stderr: {stderr}")
-                else:
-                    log.debug("Minecraft stderr is empty")
+                thread = Thread(
+                    target=file_checker,
+                    args=[self._config, self._file_downloader],
+                )
+                thread.start()
+                SecurityWorker(
+                    minecraft_process,
+                    self._config,
+                ).start()
         except Exception as error:
             self.runtime_error = error
             log.debug(

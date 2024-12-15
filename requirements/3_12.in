@@ -8,6 +8,7 @@ unidecode
 psutil
 elevate
 mcstatus
+watchdog
 
 pyinstaller
 pytest
