@@ -31,6 +31,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Thread
 from typing import TYPE_CHECKING, Callable, List, Optional
 
 from loguru import logger as log
@@ -60,6 +61,29 @@ from .utility.pydantic_models import AuthData, FileInfo
 if TYPE_CHECKING:
     from watchdog.observers.api import BaseObserver
 MAX_WORKERS = (os.cpu_count() or 4) * 4
+
+
+def file_checker(
+    config: ServerConfig,
+    file_downloader: FileDownloaderProtocol,
+):
+    """
+    This function waits for a short duration to ensure that the WatchDog
+    service is fully initialized and then invokes the installation process
+    for server files using the provided configuration and file downloader.
+
+    Args:
+        config (ServerConfig): The configuration object containing server
+            file and directory information.
+        file_downloader (FileDownloaderProtocol): An instance responsible for
+            downloading required files.
+    """
+    # Wait until WatchDog starts
+    time.sleep(10)
+    InstallThread.install_server_files(
+        config,
+        file_downloader,
+    )
 
 
 class RecursiveModValidator(FileSystemEventHandler):
@@ -526,6 +550,8 @@ class MinecraftExecutorThread(QThread):
         auth_data (AuthData): Represents user credential data.
         server_config (ServerConfig): Current server config data.
         settings (SettingsManager): An instance of SettingsManager.
+        file_downloader (FileDownloaderProtocol): A downloader
+            for retrieving necessary files.
     """
 
     def __init__(
@@ -533,11 +559,13 @@ class MinecraftExecutorThread(QThread):
         auth_data: AuthData,
         server_config: ServerConfig,
         settings: SettingsManager,
+        file_downloader: FileDownloaderProtocol,
     ):
         QThread.__init__(self)
         self._auth_data = auth_data
         self._config = server_config
         self._settings = settings
+        self._file_downloader = file_downloader
 
         self.runtime_error: Optional[Exception] = None
 
@@ -611,6 +639,11 @@ class MinecraftExecutorThread(QThread):
                 stderr=subprocess.PIPE,
                 universal_newlines=True,  # Use text mode for stdout/stderr
             ) as minecraft_process:
+                thread = Thread(
+                    target=file_checker,
+                    args=[self._config, self._file_downloader],
+                )
+                thread.start()
                 SecurityWorker(
                     minecraft_process,
                     self._config,

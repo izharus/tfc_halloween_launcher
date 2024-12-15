@@ -413,6 +413,7 @@ class Window(QtWidgets.QMainWindow):
             auth_data=auth_data,
             server_config=self._server_config,
             settings=self._settings,
+            file_downloader=self.file_downloader,
         )
         self._executor.finished.connect(self._executor_thread_finished)
         self._executor.start()
