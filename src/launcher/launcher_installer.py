@@ -97,8 +97,8 @@ class RecursiveModValidator(FileSystemEventHandler):
         self.callback = callback
 
     def on_any_event(self, event) -> None:
-        event_text = f"Operation recognized: {event.event_type}"
-        log.info(event_text)
+        event_text = f"Operation recognized '{event.event_type}'"
+        log.info(f"{event_text}: {event.src_path}")
         if self.callback:
             self.callback()
 
