@@ -188,6 +188,7 @@ class SecurityWorker:
         self,
         minecraft_process: subprocess.Popen,
         server_config: ServerConfig,
+        file_downloader: FileDownloaderProtocol,
     ):
         """
         Initializes the SecurityWorker with the given Minecraft process
@@ -198,9 +199,12 @@ class SecurityWorker:
                 Minecraft process.
             server_config (ServerConfig): Configuration details
                 for the Minecraft server.
+            file_downloader (FileDownloaderProtocol): An instance
+                responsible for downloading required files.
         """
         self._process = minecraft_process
         self._server_config = server_config
+        self._file_downloader = file_downloader
 
     def start(self, is_need_observer: bool = True) -> None:
         """
@@ -261,6 +265,13 @@ class SecurityWorker:
     def _execute_observer(self) -> None:
         observer = self._create_observer()
         observer.start()
+
+        checker_thread = Thread(
+            target=file_checker,
+            args=[self._server_config, self._file_downloader],
+        )
+        checker_thread.start()
+
         while not self._process.poll():
             time.sleep(1)
         observer.stop()
@@ -722,14 +733,10 @@ class MinecraftExecutorThread(QThread):
                 stderr=subprocess.PIPE,
                 universal_newlines=True,  # Use text mode for stdout/stderr
             ) as minecraft_process:
-                thread = Thread(
-                    target=file_checker,
-                    args=[self._config, self._file_downloader],
-                )
-                thread.start()
                 SecurityWorker(
                     minecraft_process,
                     self._config,
+                    self._file_downloader,
                 ).start()
         except Exception as error:
             self.runtime_error = error
