@@ -64,6 +64,12 @@ class FileHashMismatchError(FileDownloadError):
         super().__init__(message)
 
 
+class HashCheckFailed(Exception):
+    """
+    Raises if any error occurs due file_checker operation in WatchDog.
+    """
+
+
 class ConfigProcessingError(Exception):
     """
     Raises if any error occurs due processing a config file.

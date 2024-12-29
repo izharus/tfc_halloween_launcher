@@ -53,6 +53,7 @@ from .utility.custom_exceptions import (
     ConfigProcessingError,
     FileDownloadError,
     FilesSaveError,
+    HashCheckFailed,
     MinecraftLauncherConfigNotSet,
 )
 from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
@@ -78,12 +79,24 @@ def file_checker(
         file_downloader (FileDownloaderProtocol): An instance responsible for
             downloading required files.
     """
-    # Wait until WatchDog starts
-    time.sleep(10)
-    InstallThread.install_server_files(
-        config,
-        file_downloader,
-    )
+
+    # Just check the hash, we don't need to download file here
+    def simulate_failed_download(*args, **kwargs) -> bytes:
+        raise HashCheckFailed
+
+    original_download_bytes = file_downloader.download_bytes
+
+    # pylint: disable=C0301
+    try:
+        file_downloader.download_bytes = simulate_failed_download  # type: ignore
+        # Wait until WatchDog starts
+        time.sleep(1)
+        InstallThread.install_server_files(
+            config,
+            file_downloader,
+        )
+    finally:
+        file_downloader.download_bytes = original_download_bytes  # type: ignore
 
 
 class RecursiveModValidator(FileSystemEventHandler):
@@ -434,6 +447,9 @@ class ModsInstaller(QThread):
                         "Failed to download file from object storage: "
                         f"{error}"
                     )
+                    return False
+                except HashCheckFailed:
+                    log.error("File hash was changed due program execution.")
                     return False
                 if callback:
                     count += 1
