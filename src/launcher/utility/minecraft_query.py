@@ -33,8 +33,8 @@ class JavaServerData:
         try:
             port = int(server_config.minecraft_server_port)
         except Exception as error:
-            log.error(f"Failed to fetch port for: {server_ip}")
-            log.error(error)
+            log.debug(f"Failed to fetch port for: {server_ip}")
+            log.debug(error)
             return
 
         log.info(f"'{server_ip}'")

@@ -265,17 +265,22 @@ class SecurityWorker:
     def _execute_observer(self) -> None:
         observer = self._create_observer()
         observer.start()
+        log.debug("File observer started.")
 
         checker_thread = Thread(
             target=file_checker,
             args=[self._server_config, self._file_downloader],
         )
         checker_thread.start()
+        log.debug("File checker thread started.")
+        checker_thread.join()
+        log.debug("File checker finished.")
 
         while not self._process.poll():
             time.sleep(1)
         observer.stop()
         observer.join()
+        log.debug("File observer finished.")
 
 
 class ConfigInstallerThread(QThread):
@@ -428,7 +433,6 @@ class ModsInstaller(QThread):
 
             if is_skip_existing:
                 if os.path.exists(file_path):
-                    log.debug(f"Skipping existing file: {file_name}")
                     return
 
             if callback:
