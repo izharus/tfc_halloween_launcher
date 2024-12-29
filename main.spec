@@ -3,6 +3,9 @@ import platform
 import os
 import sys
 
+icon_path = "resources/data/icon.ico"
+
+
 
 def get_version():
     """
@@ -29,12 +32,11 @@ def get_version():
 
 root_path = os.getcwd()
 data_files = []
-data_files.append(('icon.ico', "root_dir"))
 data_files.append(("data\\image", "data\\image"))
 
 data_files.append(("src\\minecraft_launcher_lib\\minecraft_launcher_lib", "src\\minecraft_launcher_lib\\minecraft_launcher_lib"))
 
-icon_path = 'icon.ico'
+icon_path = 'resources\\data\\icon.ico'
 
 main_module_name = 'main.py'
 exe_file_name = "AuleCraft" + get_version()
@@ -83,5 +85,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-	icon=icon_path,  # Add the icon file here
+	#icon=icon_path,  # Add the icon file here
 )

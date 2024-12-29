@@ -101,9 +101,6 @@ class Window(QtWidgets.QMainWindow):
 
         script_dir = os.getcwd()
         self.path_manager = PathManager(script_dir)
-        self.icon_file_path = self.path_manager.get_current_root_path(
-            "icon.ico"
-        )
         self._validator = Validator()
         self.msg_box = MessageBox(self._ui_instance.widget_main_window)
         self.log_msg_box = LogMessageBox(self._ui_instance.widget_main_window)
@@ -188,7 +185,7 @@ class Window(QtWidgets.QMainWindow):
             )
         )
 
-        self.setWindowIcon(QIcon(self.icon_file_path))
+        self.setWindowIcon(QIcon(":/data/icon.ico"))
         self._executor: MinecraftExecutorThread
         self._setup_ui()
         hide_console()
