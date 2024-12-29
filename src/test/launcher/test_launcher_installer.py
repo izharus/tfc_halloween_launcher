@@ -49,6 +49,7 @@ def executor_thread() -> MinecraftExecutorThread:
         ),
         server_config=MagicMock(),
         settings=MagicMock(),
+        file_downloader=MagicMock(),
     )
 
 

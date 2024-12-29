@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 
 from loguru import logger as log
 from qtpy.QtCore import QThread, Signal
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
@@ -55,7 +55,7 @@ from .utility.custom_exceptions import (
     FilesSaveError,
     MinecraftLauncherConfigNotSet,
 )
-from .utility.file_downloader import FileDownloaderProtocol
+from .utility.file_downloader import FileDownloaderProtocol, calculate_hash
 from .utility.pydantic_models import AuthData, FileInfo
 
 if TYPE_CHECKING:
@@ -93,12 +93,71 @@ class RecursiveModValidator(FileSystemEventHandler):
     executes a user-defined callback function.
     """
 
-    def __init__(self, callback: Optional[Callable] = None):
+    def __init__(
+        self,
+        hash_dict: dict[str, FileInfo],
+        callback: Optional[Callable] = None,
+    ):
+        """
+        Initializes the RecursiveModValidator with a hash dictionary and
+        an optional callback function.
+
+        Args:
+            hash_dict (dict): A dictionary containing hashes for validation.
+            callback (Optional[Callable], optional): An optional callback
+                function to be executed after handling a file system event.
+                Defaults to None.
+        """
+        self._hash_dict = hash_dict
         self.callback = callback
 
-    def on_any_event(self, event) -> None:
-        event_text = f"Operation recognized '{event.event_type}'"
-        log.info(f"{event_text}: {event.src_path}")
+    def on_any_event(self, event: FileSystemEvent) -> None:
+        """
+        Handles all file system events by logging the event and checking
+        file hashes if the event is a file modification.
+
+        Args:
+            event (FileSystemEvent): The file system event to be handled.
+        """
+        # Log the event with a standardized format
+        log.info(
+            f"Recognized operation '{event.event_type}': {event.src_path}"
+        )
+
+        # If the event is a file modification, check the file's hash
+        if event.event_type == "modified":
+            file_path = event.src_path
+
+            # Retrieve the expected hash from the dictionary
+            expected_hash_info = self._hash_dict.get(file_path)
+            # Calculate the new hash and compare it with the expected one
+            if expected_hash_info:
+                try:
+                    # Calculate the new hash using the same algorithm as the
+                    # expected hash
+                    new_hash = calculate_hash(
+                        file_path,
+                        hash_algorithm=expected_hash_info.hash.algorithm,
+                    )
+
+                    # If the new hash does not match the expected hash, log
+                    # an error
+                    if new_hash != expected_hash_info.hash.value:
+                        log.error(f"Incorrect hash: {file_path}")
+                    else:
+                        # If the hash is correct, return without executing
+                        # the callback
+                        return
+                except CalculateHashFailed as error:
+                    # If the hash calculation fails, log an error
+                    log.error(
+                        f"Failed to calculate hash: {file_path}, {error}"
+                    )
+            else:
+                # If the file is unknown, log an error
+                log.error(f"Unknown file: {file_path}")
+
+        # Execute the user-defined callback if one is provided
         if self.callback:
             self.callback()
 
@@ -168,8 +227,16 @@ class SecurityWorker:
 
     def _create_observer(self) -> "BaseObserver":
         observer = Observer()
+        hash_dict = {
+            str(
+                Path(self._server_config.minecraft_directory)
+                / info.dist_file_path
+            ): info
+            for info in self._server_config.main_data
+        }
         event_handler = RecursiveModValidator(
-            self.terminate_minecraft_process,
+            hash_dict=hash_dict,
+            callback=self.terminate_minecraft_process,
         )
         observer.schedule(
             event_handler,
