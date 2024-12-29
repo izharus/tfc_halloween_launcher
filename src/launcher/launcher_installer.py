@@ -34,6 +34,7 @@ from pathlib import Path
 from threading import Thread
 from typing import TYPE_CHECKING, Callable, List, Optional
 
+import psutil
 from loguru import logger as log
 from qtpy.QtCore import QThread, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -265,22 +266,23 @@ class SecurityWorker:
     def _execute_observer(self) -> None:
         observer = self._create_observer()
         observer.start()
-        log.debug("File observer started.")
 
         checker_thread = Thread(
             target=file_checker,
             args=[self._server_config, self._file_downloader],
         )
         checker_thread.start()
-        log.debug("File checker thread started.")
         checker_thread.join()
-        log.debug("File checker finished.")
 
-        while not self._process.poll():
-            time.sleep(1)
+        try:
+            ps_process = psutil.Process(self._process.pid)
+            while ps_process.is_running():
+                time.sleep(1)
+        except psutil.NoSuchProcess:
+            log.error("Minecraft process was not found.")
+        log.debug("Minecraft process stopped.")
         observer.stop()
         observer.join()
-        log.debug("File observer finished.")
 
 
 class ConfigInstallerThread(QThread):
