@@ -1,4 +1,4 @@
-﻿"""
+"""
 thread_data_utils.py
 
 A module containing utility classes for handling threaded data and user
