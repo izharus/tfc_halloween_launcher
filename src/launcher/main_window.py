@@ -424,6 +424,7 @@ class Window(QtWidgets.QMainWindow):
                 title="Ошибка при запуске игры.",
                 msg="Подробная информация в логе.",
             )
+        self._minecraft_query_thread.start()
         self._choose_server.enable_ui()
         self.show()
 
