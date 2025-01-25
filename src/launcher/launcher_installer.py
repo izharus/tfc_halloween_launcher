@@ -40,13 +40,13 @@ from qtpy.QtCore import QThread, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
-from ..minecraft_launcher_lib.minecraft_launcher_lib.types import (
+from .design.thread_data_utils import SettingsManager
+from .launcher_configs import ServerConfig, ServerConfigManager
+from .minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
+from .minecraft_launcher_lib.minecraft_launcher_lib.types import (
     CallbackDict,
     MinecraftOptions,
 )
-from .design.thread_data_utils import SettingsManager
-from .launcher_configs import ServerConfig, ServerConfigManager
 from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,

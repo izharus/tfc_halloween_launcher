@@ -18,8 +18,8 @@ from loguru import logger as log
 from pydantic import ValidationError
 from unidecode import unidecode
 
-from ..minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .boto3_cred import BOTO3_BUCKET_NAME
+from .minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,
