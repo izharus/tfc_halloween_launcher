@@ -62,6 +62,8 @@ mccabe==0.7.0
     # via pylint
 mcstatus==11.1.1
     # via -r requirements/3_8.in
+minecraft-launcher-lib @ git+https://codeberg.org/izharus/minecraft-launcher-lib.git@python_3_8
+    # via -r requirements/3_8.in
 packaging==24.1
     # via
     #   build
@@ -121,7 +123,9 @@ pywin32-ctypes==0.2.3
 qtpy==2.4.1
     # via -r requirements/3_8.in
 requests==2.32.3
-    # via requests-mock
+    # via
+    #   minecraft-launcher-lib
+    #   requests-mock
 requests-mock==1.12.1
     # via -r requirements/3_8.in
 s3transfer==0.10.3

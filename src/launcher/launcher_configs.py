@@ -14,12 +14,12 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, List, Optional, Tuple
 
+import minecraft_launcher_lib as mine_lib
 from loguru import logger as log
 from pydantic import ValidationError
 from unidecode import unidecode
 
 from .boto3_cred import BOTO3_BUCKET_NAME
-from .minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
 from .utility.custom_exceptions import (
     ConfigDownloadError,
     ConfigProcessingError,

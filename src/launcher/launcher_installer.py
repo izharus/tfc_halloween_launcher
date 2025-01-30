@@ -32,21 +32,18 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Thread
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
+import minecraft_launcher_lib as mine_lib
 import psutil
 from loguru import logger as log
+from minecraft_launcher_lib.types import CallbackDict, MinecraftOptions
 from qtpy.QtCore import QThread, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from .design.thread_data_utils import SettingsManager
 from .launcher_configs import ServerConfig, ServerConfigManager
-from .minecraft_launcher_lib import minecraft_launcher_lib as mine_lib
-from .minecraft_launcher_lib.minecraft_launcher_lib.types import (
-    CallbackDict,
-    MinecraftOptions,
-)
 from .utility._helper import SUBPROCESS_CREATION_FLAGS
 from .utility.custom_exceptions import (
     CalculateHashFailed,
@@ -109,7 +106,7 @@ class RecursiveModValidator(FileSystemEventHandler):
 
     def __init__(
         self,
-        hash_dict: dict[str, FileInfo],
+        hash_dict: Dict[str, FileInfo],
         callback: Optional[Callable] = None,
     ):
         """
