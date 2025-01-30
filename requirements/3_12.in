@@ -9,7 +9,9 @@ psutil
 elevate
 mcstatus
 watchdog
+pyarmor
 
+pip-tools
 pyinstaller
 pytest
 pytest-mock

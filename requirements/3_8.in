@@ -9,6 +9,7 @@ psutil
 elevate
 mcstatus
 watchdog
+pyarmor
 
 pip-tools
 pyinstaller
