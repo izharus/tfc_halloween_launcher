@@ -174,3 +174,4 @@ src/launcher/boto3_cred.py
 3_12_designer.exe.lnk
 
 *.patched.spec
+*.dist
