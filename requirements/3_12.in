@@ -9,7 +9,10 @@ psutil
 elevate
 mcstatus
 watchdog
+pyarmor
+git+https://codeberg.org/izharus/minecraft-launcher-lib.git@3baa759474da331fbb999ff9f5d0d01af56b7f3e#egg=minecraft-launcher-lib
 
+pip-tools
 pyinstaller
 pytest
 pytest-mock

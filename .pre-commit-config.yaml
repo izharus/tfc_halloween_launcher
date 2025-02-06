@@ -34,10 +34,15 @@ repos:
       rev: '7.4.1'
       hooks:
       -   id: pip-compile
-          name: pip-compile requirements/prod.in
-          args: [requirements/prod.in]
-          files: ^requirements/prod\.(in|txt)$     
-      -   id: pip-compile
-          name: pip-compile requirements/dev.in
-          args: [requirements/dev.in]
-          files: ^requirements/dev\.(in|txt)$    
+          name: pip-compile requirements/prod.in (Python 3.8 x64)
+          args: [requirements/3_8.in]
+          files: ^requirements/3.8\.(in|txt)$
+          language: system
+          entry: .venv_3_8x64/Scripts/python.exe -m piptools compile
+
+      -  id: pip-compile
+         name: pip-compile requirements/prod.in (Python 3.12 x64)
+         args: [requirements/3_12.in]
+         files: ^requirements/3_12\.(in|txt)$
+         language: system
+         entry: .venv_3_12x64/Scripts/python.exe -m piptools compile

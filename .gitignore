@@ -30,7 +30,6 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
 
 # Installer logs
 pip-log.txt
@@ -173,3 +172,6 @@ src/launcher/boto3_cred.py
 !.venv_3_12x64/Lib/site-packages/minecraft_launcher_lib/install.py
 !.venv_3_12x64/Lib/site-packages/minecraft_launcher_lib/runtime/install_jvm_runtime.py
 3_12_designer.exe.lnk
+
+*.patched.spec
+*.dist

@@ -1,8 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 import platform
-import os
-import sys
-
 
 def get_version():
     """
@@ -26,31 +23,15 @@ def get_version():
 
     return res
 
-
-root_path = os.getcwd()
-data_files = []
-data_files.append(('icon.ico', "root_dir"))
-data_files.append(("data\\image", "data\\image"))
-
-data_files.append(("src\\minecraft_launcher_lib\\minecraft_launcher_lib", "src\\minecraft_launcher_lib\\minecraft_launcher_lib"))
-
-icon_path = 'icon.ico'
-
-main_module_name = 'main.py'
-exe_file_name = "AuleCraft" + get_version()
-
-block_cipher = None
-
-from PyInstaller.utils.hooks import collect_submodules
-
-# Получите список всех подмодулей PySide
-
+ICON_PATH = "icon.ico"
+ENTRY_POINT = 'launcher.py'
+EXE_FILE_NAME = "AuleCraft" + get_version()
 
 a = Analysis(
-    [main_module_name],
+    [ENTRY_POINT],
     pathex=[],
     binaries=[],
-    datas= data_files,
+    datas= [],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -58,10 +39,10 @@ a = Analysis(
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
+    cipher=None,
     noarchive=False,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
@@ -70,7 +51,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name=exe_file_name,
+    name=EXE_FILE_NAME,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -83,5 +64,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-	icon=icon_path,  # Add the icon file here
+	icon=ICON_PATH,  # Add the icon file here
 )
