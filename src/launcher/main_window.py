@@ -57,7 +57,7 @@ from .utility.file_downloader import FileYOSDownloader
 from .utility.path_manager import PathManager
 from .utility.pydantic_models import S3Credentials
 
-APP_VERSION = "3.4.0a2"
+APP_VERSION = "4.0.0"
 
 
 def hide_console() -> None:
