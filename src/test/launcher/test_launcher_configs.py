@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import minecraft_launcher_lib as mine_lib
 import pytest
-import src.minecraft_launcher_lib.minecraft_launcher_lib as mine_lib
 from pytest_mock import MockerFixture
 from src.launcher.launcher_configs import (
     DEFAULT_USER_SETTINGS,
