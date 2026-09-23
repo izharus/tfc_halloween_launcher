@@ -55,7 +55,7 @@ mccabe==0.7.0
     # via pylint
 mcstatus==11.1.1
     # via -r requirements/3_12.in
-minecraft-launcher-lib @ git+https://codeberg.org/izharus/minecraft-launcher-lib.git@python_3_12
+minecraft-launcher-lib==8.0
     # via -r requirements/3_12.in
 packaging==24.1
     # via

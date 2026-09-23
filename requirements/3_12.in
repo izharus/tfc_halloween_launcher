@@ -10,7 +10,7 @@ elevate
 mcstatus
 watchdog
 pyarmor
-git+https://codeberg.org/izharus/minecraft-launcher-lib.git@python_3_12#egg=minecraft-launcher-lib
+minecraft-launcher-lib
 
 pip-tools
 pyinstaller
