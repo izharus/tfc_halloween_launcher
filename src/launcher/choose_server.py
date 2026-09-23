@@ -97,7 +97,7 @@ class ChoseServer(BaseWidget):
             button = ServerWidget(
                 config_name=name,
                 title=data.server_config.display_name,
-                subtitle=f"Minecraft {data.server_config.minecraft_version}",
+                subtitle=f"Minecraft {data.server_config.vanilla_version}",
                 parent=self._ui.scrollAreaWidgetContents,
                 image=icon_image,
             )

@@ -59,8 +59,9 @@ class ServerConfig(BaseModel):
     Attributes:
         display_name (str): The visible name for the current modpack
             configuration.
-        minecraft_version (str): The version of Minecraft.
-        forge_version (str): The Forge version.
+        vanilla_version (str): The version of Minecraft.
+        loader_type (str): The Loader version (Forge, NeoForge...).
+        loader_version (str): Version of the loader.
         minecraft_profile (str): The name of the Minecraft profile.
         minecraft_server_ip (str): The IP address of the Minecraft server.
         minecraft_server_port (str): The port of the Minecraft server.
@@ -68,8 +69,9 @@ class ServerConfig(BaseModel):
     """
 
     display_name: str
-    minecraft_version: str
-    forge_version: str
+    vanilla_version: str
+    loader_type: str
+    loader_version: str
     minecraft_profile: str
     minecraft_server_ip: str
     minecraft_server_port: str

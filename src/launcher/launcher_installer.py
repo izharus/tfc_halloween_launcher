@@ -620,11 +620,28 @@ class InstallThread(QThread):
         """
 
         if not self.config.is_minecraft_installed:
-            mine_lib.forge.install_forge_version(
-                self.config.server_config.forge_version,
+            log.info("Installing vanilla version...")
+            mine_lib.install.install_minecraft_version(
+                self.config.server_config.vanilla_version,
                 self.config.minecraft_directory,
                 callback=self._callback_dict,
             )
+            loader_type = self.config.server_config.loader_type
+
+            if loader_type:
+                log.info(f"Installing {loader_type}...")
+                if loader_type not in mine_lib.mod_loader.list_mod_loader():
+                    log.error(f"Unknown loader type: {loader_type}")
+                    self.runtime_error = True
+                    return
+                loader = mine_lib.mod_loader.get_mod_loader(loader_type)
+                loader.install(
+                    self.config.server_config.vanilla_version,
+                    self.config.minecraft_directory,
+                    callback=self._callback_dict,
+                    loader_version=self.config.server_config.loader_version
+                    or None,
+                )
 
         if not self.install_server_files(
             self.config,
